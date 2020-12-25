@@ -58,10 +58,117 @@ void test_multiple_tokens()
   assert(token_literal_is(tok, ""), "Token literal should be <empty>", t);
 }
 
+void test_skips_whitespace()
+{
+  char t[] = "skips_whitespace";
+  Token *tok;
+  lexer_set("= =");
+
+  tok = next_token();
+  assert(token_is(tok, TOKEN_ASSIGN), "Token type should be ASSIGN", t);
+
+  tok = next_token();
+  assert(token_is(tok, TOKEN_ASSIGN), "Token type should be ASSIGN", t);
+
+  tok = next_token();
+  assert(token_is(tok, TOKEN_EOF), "Token type should be EOF", t);
+}
+
+void test_understands_let()
+{
+  char t[] = "understands_let";
+  lexer_set("let");
+  Token *tok = next_token();
+  assert(token_is(tok, TOKEN_LET), "Token type should be LET", t);
+  assert(token_literal_is(tok, "let"), "Token literal should be let", t);
+}
+
+void test_understands_identifiers()
+{
+  char t[] = "understands_identifiers";
+  lexer_set("foo");
+  Token *tok = next_token();
+  assert(token_is(tok, TOKEN_IDENTIFIER), "Token type should be IDENTIFIER", t);
+  assert(token_literal_is(tok, "foo"), "Token literal should be foo", t);
+}
+
+void test_realistic_code()
+{
+  char t[] = "realistic_code";
+  char input[] =
+      "let five = 5;\n"
+      "let ten = 10;\n"
+      "\n"
+      "let add = fn(x, y) {\n"
+      "  x + y;\n"
+      "};\n"
+      "\n"
+      "let result = add(five, ten);\n";
+
+  Token expected[] = {
+      {TOKEN_LET, "let"},
+      {TOKEN_IDENTIFIER, "five"},
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_INTEGER, "5"},
+      {TOKEN_SEMICOLON, ";"},
+      {TOKEN_LET, "let"},
+      {TOKEN_IDENTIFIER, "ten"},
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_INTEGER, "10"},
+      {TOKEN_SEMICOLON, ";"},
+      {TOKEN_LET, "let"},
+      {TOKEN_IDENTIFIER, "add"},
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_FUNCTION, "fn"},
+      {TOKEN_LEFT_PAREN, "("},
+      {TOKEN_IDENTIFIER, "x"},
+      {TOKEN_COMMA, ","},
+      {TOKEN_IDENTIFIER, "y"},
+      {TOKEN_RIGHT_PAREN, ")"},
+      {TOKEN_LEFT_BRACE, "{"},
+      {TOKEN_IDENTIFIER, "x"},
+      {TOKEN_PLUS, "+"},
+      {TOKEN_IDENTIFIER, "y"},
+      {TOKEN_SEMICOLON, ";"},
+      {TOKEN_RIGHT_BRACE, "}"},
+      {TOKEN_SEMICOLON, ";"},
+      {TOKEN_LET, "let"},
+      {TOKEN_IDENTIFIER, "result"},
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_IDENTIFIER, "add"},
+      {TOKEN_LEFT_PAREN, "("},
+      {TOKEN_IDENTIFIER, "five"},
+      {TOKEN_COMMA, ","},
+      {TOKEN_IDENTIFIER, "ten"},
+      {TOKEN_RIGHT_PAREN, ")"},
+      {TOKEN_SEMICOLON, ";"},
+      {TOKEN_EOF, ""},
+  };
+  int expected_len = sizeof(expected) / sizeof(Token);
+  lexer_set(input);
+  int i;
+  Token expected_tok;
+  Token *tok;
+  char msg[50];
+  for (i = 0; i < expected_len; i += 1)
+  {
+    tok = next_token();
+    expected_tok = expected[i];
+    sprintf(msg, "Token type should be %s", expected_tok.type);
+    assert(token_is(tok, expected_tok.type), msg, t);
+    sprintf(msg, "Token literal should be %s", expected_tok.literal);
+    assert(token_literal_is(tok, expected_tok.literal), msg, t);
+  }
+}
+
 int main(void)
 {
   test_single_token();
   test_multiple_tokens();
+  test_skips_whitespace();
+  test_understands_let();
+  test_understands_identifiers();
+  test_realistic_code();
   return 0;
 }
 

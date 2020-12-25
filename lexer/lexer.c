@@ -1,16 +1,26 @@
 #include "../token.c"
 
 #include <stdlib.h>
+#include <stdbool.h>
+#include <ctype.h>
 #include <string.h>
 
 #define MAX_SRC_LEN 4096
+#define MAX_IDENTIFIER_LEN 100
 
 static char input[MAX_SRC_LEN];
 static int position = 0;
 static int read_position = 0;
 static int input_length = 0;
 static char ch;
+static bool is_letter(char);
+static bool is_number(char);
 static void read_char();
+static void skip_whitespace();
+static char *read_identifier();
+static char *read_number();
+static char *char_to_str(char);
+static char *lookup_ident(char *);
 
 extern void lexer_push(char *pushed_src)
 {
@@ -35,6 +45,7 @@ extern void lexer_set(char *str)
 extern Token *next_token()
 {
   Token *tok;
+  skip_whitespace();
   switch (ch)
   {
   case '=':
@@ -65,6 +76,15 @@ extern Token *next_token()
     tok = new_token(TOKEN_EOF, "");
     break;
   default:
+    if (is_letter(ch))
+    {
+      char *ident = read_identifier();
+      return new_token(lookup_ident(ident), ident);
+    }
+    else if (is_number(ch))
+      return new_token(TOKEN_INTEGER, read_number());
+    else
+      return new_token(TOKEN_ILLEGAL, char_to_str(ch));
     break;
   }
 
@@ -80,4 +100,65 @@ static void read_char()
     ch = input[read_position];
   position = read_position;
   read_position += 1;
+}
+
+static void skip_whitespace()
+{
+  while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
+    read_char();
+}
+
+static bool is_number(char c)
+{
+  return isdigit(c);
+}
+
+static bool is_letter(char c)
+{
+  return c == '_' || isalpha(c);
+}
+
+static char *read_identifier()
+{
+  char *ident = (char *)malloc(MAX_IDENTIFIER_LEN);
+  char *loc = ident;
+  while (is_letter(ch))
+  {
+    *loc = ch;
+    loc += 1;
+    read_char();
+  }
+  *loc = '\0';
+  return ident;
+}
+
+static char *lookup_ident(char *ident)
+{
+  if (strcmp(ident, "let") == 0)
+    return TOKEN_LET;
+  if (strcmp(ident, "fn") == 0)
+    return TOKEN_FUNCTION;
+  return TOKEN_IDENTIFIER;
+}
+
+static char *read_number()
+{
+  char *num = (char *)malloc(MAX_IDENTIFIER_LEN);
+  char *current = num;
+  while (is_number(ch))
+  {
+    *current = ch;
+    current += 1;
+    read_char();
+  }
+  *current = '\0';
+  return num;
+}
+
+static char *char_to_str(char c)
+{
+  char *str = (char *)malloc(2);
+  str[0] = c;
+  str[1] = '\0';
+  return str;
 }
