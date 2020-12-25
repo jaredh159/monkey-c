@@ -1,0 +1,11 @@
+.DS_Store
+*.dSYM
+*.out
+*
+!*.c
+!*.h
+lexer/*
+!lexer/*.c
+!lexer/*.h
+!.vscode/launch.json
+!.vscode/settings.json
