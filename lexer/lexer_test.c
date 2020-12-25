@@ -95,12 +95,52 @@ void test_realistic_code()
   assert_lexing(input, expected, sizeof(expected) / sizeof(Token), "realistic_code");
 }
 
+void test_more_single_char_tokens()
+{
+  char *input = "- / * < > !";
+  Token expected[] = {
+      {TOKEN_MINUS, "-"},
+      {TOKEN_SLASH, "/"},
+      {TOKEN_ASTERISK, "*"},
+      {TOKEN_LT, "<"},
+      {TOKEN_GT, ">"},
+      {TOKEN_BANG, "!"},
+  };
+  assert_lexing(input, expected, 6, "more_single_char_tokens");
+}
+
+void test_more_keywords()
+{
+  char *input = "true false if else return";
+  Token expected[] = {
+      {TOKEN_TRUE, "true"},
+      {TOKEN_FALSE, "false"},
+      {TOKEN_IF, "if"},
+      {TOKEN_ELSE, "else"},
+      {TOKEN_RETURN, "return"},
+  };
+  assert_lexing(input, expected, 5, "more_keywords");
+}
+
+void test_two_char_tokens()
+{
+  char *input = "== !=";
+  Token expected[] = {
+      {TOKEN_EQ, "=="},
+      {TOKEN_NOT_EQ, "!="},
+  };
+  assert_lexing(input, expected, 2, "two_char_tokens");
+}
+
 int main(void)
 {
   test_single_token();
   test_multiple_tokens();
   test_skips_whitespace();
   test_realistic_code();
+  test_more_single_char_tokens();
+  test_more_keywords();
+  test_two_char_tokens();
   return 0;
 }
 

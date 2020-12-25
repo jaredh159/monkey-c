@@ -16,6 +16,7 @@ static char ch;
 static bool is_letter(char);
 static bool is_number(char);
 static void read_char();
+static char peek_char();
 static void skip_whitespace();
 static char *read_identifier();
 static char *read_number();
@@ -48,8 +49,38 @@ extern Token *next_token()
   skip_whitespace();
   switch (ch)
   {
+  case '-':
+    tok = new_token(TOKEN_MINUS, "-");
+    break;
+  case '/':
+    tok = new_token(TOKEN_SLASH, "/");
+    break;
+  case '*':
+    tok = new_token(TOKEN_ASTERISK, "*");
+    break;
+  case '<':
+    tok = new_token(TOKEN_LT, "<");
+    break;
+  case '>':
+    tok = new_token(TOKEN_GT, ">");
+    break;
   case '=':
-    tok = new_token(TOKEN_ASSIGN, "=");
+    if (peek_char() == '=')
+    {
+      tok = new_token(TOKEN_EQ, "==");
+      read_char();
+    }
+    else
+      tok = new_token(TOKEN_ASSIGN, "=");
+    break;
+  case '!':
+    if (peek_char() == '=')
+    {
+      tok = new_token(TOKEN_NOT_EQ, "!=");
+      read_char();
+    }
+    else
+      tok = new_token(TOKEN_BANG, "!");
     break;
   case '+':
     tok = new_token(TOKEN_PLUS, "+");
@@ -102,6 +133,14 @@ static void read_char()
   read_position += 1;
 }
 
+static char peek_char()
+{
+  if (read_position >= input_length)
+    return 0;
+  else
+    return input[read_position];
+}
+
 static void skip_whitespace()
 {
   while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
@@ -138,6 +177,16 @@ static char *lookup_ident(char *ident)
     return TOKEN_LET;
   if (strcmp(ident, "fn") == 0)
     return TOKEN_FUNCTION;
+  if (strcmp(ident, "true") == 0)
+    return TOKEN_TRUE;
+  if (strcmp(ident, "false") == 0)
+    return TOKEN_FALSE;
+  if (strcmp(ident, "if") == 0)
+    return TOKEN_IF;
+  if (strcmp(ident, "else") == 0)
+    return TOKEN_ELSE;
+  if (strcmp(ident, "return") == 0)
+    return TOKEN_RETURN;
   return TOKEN_IDENTIFIER;
 }
 
