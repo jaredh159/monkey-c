@@ -7,94 +7,42 @@
 bool token_is(Token *token, char *type);
 bool token_literal_is(Token *token, char *literal);
 void assert(bool, char *, char *);
+void assert_lexing(char *, Token[], int, char *);
 
 void test_single_token()
 {
-  lexer_set("=");
-  Token *token = next_token();
-  assert(token_is(token, TOKEN_ASSIGN), "Token should be =", "single_token");
+  Token expected[] = {{TOKEN_ASSIGN, "="}};
+  assert_lexing("=", expected, 1, "single_token");
 }
 
 void test_multiple_tokens()
 {
-  char t[] = "multiple_tokens";
-  Token *tok;
-  lexer_set("=+(){},;");
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_ASSIGN), "Token type should be ASSIGN", t);
-  assert(token_literal_is(tok, "="), "Token literal should be =", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_PLUS), "Token type should be PLUS", t);
-  assert(token_literal_is(tok, "+"), "Token literal should be +", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_LEFT_PAREN), "Token type should be LEFT_PAREN", t);
-  assert(token_literal_is(tok, "("), "Token literal should be (", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_RIGHT_PAREN), "Token type should be RIGHT_PAREN", t);
-  assert(token_literal_is(tok, ")"), "Token literal should be )", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_LEFT_BRACE), "Token type should be LEFT_BRACE", t);
-  assert(token_literal_is(tok, "{"), "Token literal should be {", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_RIGHT_BRACE), "Token type should be RIGHT_BRACE", t);
-  assert(token_literal_is(tok, "}"), "Token literal should be }", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_COMMA), "Token type should be COMMA", t);
-  assert(token_literal_is(tok, ","), "Token literal should be ,", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_SEMICOLON), "Token type should be SEMICOLON", t);
-  assert(token_literal_is(tok, ";"), "Token literal should be ;", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_EOF), "Token type should be EOF", t);
-  assert(token_literal_is(tok, ""), "Token literal should be <empty>", t);
+  Token expected[] = {
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_PLUS, "+"},
+      {TOKEN_LEFT_PAREN, "("},
+      {TOKEN_RIGHT_PAREN, ")"},
+      {TOKEN_LEFT_BRACE, "{"},
+      {TOKEN_RIGHT_BRACE, "}"},
+      {TOKEN_COMMA, ","},
+      {TOKEN_SEMICOLON, ";"},
+      {TOKEN_EOF, ""},
+  };
+  assert_lexing("=+(){},;", expected, 9, "multiple_tokens");
 }
 
 void test_skips_whitespace()
 {
-  char t[] = "skips_whitespace";
-  Token *tok;
-  lexer_set("= =");
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_ASSIGN), "Token type should be ASSIGN", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_ASSIGN), "Token type should be ASSIGN", t);
-
-  tok = next_token();
-  assert(token_is(tok, TOKEN_EOF), "Token type should be EOF", t);
-}
-
-void test_understands_let()
-{
-  char t[] = "understands_let";
-  lexer_set("let");
-  Token *tok = next_token();
-  assert(token_is(tok, TOKEN_LET), "Token type should be LET", t);
-  assert(token_literal_is(tok, "let"), "Token literal should be let", t);
-}
-
-void test_understands_identifiers()
-{
-  char t[] = "understands_identifiers";
-  lexer_set("foo");
-  Token *tok = next_token();
-  assert(token_is(tok, TOKEN_IDENTIFIER), "Token type should be IDENTIFIER", t);
-  assert(token_literal_is(tok, "foo"), "Token literal should be foo", t);
+  Token expected[] = {
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_ASSIGN, "="},
+      {TOKEN_EOF, ""},
+  };
+  assert_lexing("= =", expected, 3, "skips_whitespace");
 }
 
 void test_realistic_code()
 {
-  char t[] = "realistic_code";
   char input[] =
       "let five = 5;\n"
       "let ten = 10;\n"
@@ -144,21 +92,7 @@ void test_realistic_code()
       {TOKEN_SEMICOLON, ";"},
       {TOKEN_EOF, ""},
   };
-  int expected_len = sizeof(expected) / sizeof(Token);
-  lexer_set(input);
-  int i;
-  Token expected_tok;
-  Token *tok;
-  char msg[50];
-  for (i = 0; i < expected_len; i += 1)
-  {
-    tok = next_token();
-    expected_tok = expected[i];
-    sprintf(msg, "Token type should be %s", expected_tok.type);
-    assert(token_is(tok, expected_tok.type), msg, t);
-    sprintf(msg, "Token literal should be %s", expected_tok.literal);
-    assert(token_literal_is(tok, expected_tok.literal), msg, t);
-  }
+  assert_lexing(input, expected, sizeof(expected) / sizeof(Token), "realistic_code");
 }
 
 int main(void)
@@ -166,8 +100,6 @@ int main(void)
   test_single_token();
   test_multiple_tokens();
   test_skips_whitespace();
-  test_understands_let();
-  test_understands_identifiers();
   test_realistic_code();
   return 0;
 }
@@ -190,4 +122,24 @@ void assert(bool predicate, char *msg, char *test_name)
     exit(1);
   }
   printf(COLOR_GREEN "√" COLOR_RESET COLOR_GREY " %s: %s\n" COLOR_RESET, test_name, msg);
+}
+
+void assert_lexing(char *input, Token expected_tokens[], int num_expected, char *test_name)
+{
+  int i;
+  Token expected;
+  Token *actual;
+  char msg[50];
+
+  lexer_set(input);
+
+  for (i = 0; i < num_expected; i += 1)
+  {
+    actual = next_token();
+    expected = expected_tokens[i];
+    sprintf(msg, "Token type should be %s", expected.type);
+    assert(token_is(actual, expected.type), msg, test_name);
+    sprintf(msg, "Token literal should be %s", expected.literal);
+    assert(token_literal_is(actual, expected.literal), msg, test_name);
+  }
 }
