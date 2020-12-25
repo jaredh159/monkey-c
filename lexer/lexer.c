@@ -115,7 +115,7 @@ extern Token *next_token()
     else if (is_number(ch))
       return new_token(TOKEN_INTEGER, read_number());
     else
-      return new_token(TOKEN_ILLEGAL, char_to_str(ch));
+      tok = new_token(TOKEN_ILLEGAL, char_to_str(ch));
     break;
   }
 

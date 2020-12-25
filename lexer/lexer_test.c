@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "../test-utils.c"
+#include "../colors.c"
 
 bool token_is(Token *token, char *type);
 bool token_literal_is(Token *token, char *literal);

@@ -7,5 +7,8 @@
 lexer/*
 !lexer/*.c
 !lexer/*.h
+repl/*
+!repl/*.c
+!repl/*.h
 !.vscode/launch.json
 !.vscode/settings.json
