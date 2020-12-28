@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "colors.c"
-#include "repl/repl.c"
+#include "colors.h"
+#include "repl/repl.h"
 
 int main(void)
 {

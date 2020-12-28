@@ -1,8 +1,9 @@
-#include "lexer.c"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "../colors.c"
+#include <stdlib.h>
+#include "../colors.h"
+#include "lexer.h"
 
 bool token_is(Token *token, char *type);
 bool token_literal_is(Token *token, char *literal);

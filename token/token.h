@@ -1,6 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "colors.c"
+#ifndef __TOKEN_H__
+#define __TOKEN_H__
+
+typedef struct Token
+{
+  char *type;
+  char *literal;
+} Token;
+
+Token *new_token(char *type, char *literal);
+
+void print_token(Token *tok);
 
 /* operators */
 #define TOKEN_ASSIGN "ASSIGN"
@@ -44,24 +53,4 @@
 #define TOKEN_ILLEGAL "ILLEGAL"
 #define TOKEN_EOF "EOF"
 
-typedef struct Token
-{
-  char *type;
-  char *literal;
-} Token;
-
-extern Token *new_token(char *type, char *literal)
-{
-  Token *token = (Token *)malloc(sizeof(Token));
-  token->type = type;
-  token->literal = literal;
-  return token;
-}
-
-extern void print_token(Token *tok)
-{
-  printf(
-      COLOR_GREY "  -> { type: %s, literal: \"%s\" }\n" COLOR_RESET,
-      tok->type,
-      tok->literal);
-}
+#endif // __TOKEN_H__

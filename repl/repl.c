@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../colors.c"
-#include "../lexer/lexer.c"
+#include "../colors.h"
+#include "../lexer/lexer.h"
+#include "../token/token.h"
 
 #define MAX_LINE_LEN 100
 

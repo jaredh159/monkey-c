@@ -1,9 +1,9 @@
-#include "../token.c"
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+
+#include "../token/token.h"
 
 #define MAX_SRC_LEN 4096
 #define MAX_IDENTIFIER_LEN 100
