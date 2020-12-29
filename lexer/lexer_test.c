@@ -3,11 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../colors.h"
+#include "../test/test.h"
 #include "lexer.h"
 
-bool token_is(Token *token, char *type);
-bool token_literal_is(Token *token, char *literal);
-void assert(bool, char *, char *);
 void assert_lexing(char *, Token[], int, char *);
 
 void test_single_token()
@@ -145,26 +143,6 @@ int main(void)
   return 0;
 }
 
-bool token_literal_is(Token *token, char *literal)
-{
-  return strcmp(token->literal, literal) == 0;
-}
-
-bool token_is(Token *token, char *type)
-{
-  return strcmp(token->type, type) == 0;
-}
-
-void assert(bool predicate, char *msg, char *test_name)
-{
-  if (!predicate)
-  {
-    printf(COLOR_RED "X %s\n" COLOR_RESET, msg);
-    exit(1);
-  }
-  printf(COLOR_GREEN "√" COLOR_RESET COLOR_GREY " %s: %s\n" COLOR_RESET, test_name, msg);
-}
-
 void assert_lexing(char *input, Token expected_tokens[], int num_expected, char *test_name)
 {
   int i;
@@ -176,7 +154,7 @@ void assert_lexing(char *input, Token expected_tokens[], int num_expected, char 
 
   for (i = 0; i < num_expected; i += 1)
   {
-    actual = next_token();
+    actual = lexer_next_token();
     expected = expected_tokens[i];
     sprintf(msg, "Token type should be %s", expected.type);
     assert(token_is(actual, expected.type), msg, test_name);

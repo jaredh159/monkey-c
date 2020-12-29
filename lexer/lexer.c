@@ -43,7 +43,7 @@ extern void lexer_set(char *str)
   read_char();
 }
 
-extern Token *next_token()
+extern Token *lexer_next_token()
 {
   Token *tok;
   skip_whitespace();
