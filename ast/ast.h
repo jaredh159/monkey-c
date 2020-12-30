@@ -21,6 +21,12 @@ typedef struct LetStatement
   Expression *value;
 } LetStatement;
 
+typedef struct ReturnStatement
+{
+  Token *token;
+  Expression *return_value;
+} ReturnStatement;
+
 typedef struct StatementType
 {
   unsigned int is_statement : 1;
@@ -32,6 +38,7 @@ typedef struct Statement
   char *token_literal;
   StatementType type;
   LetStatement *let_statement;
+  ReturnStatement *return_statement;
 } Statement;
 
 typedef struct Statements

@@ -12,6 +12,7 @@ static Token *peek_token = NULL;
 static void parser_next_token();
 static Statement *parse_statement();
 static Statement *parse_let_statement();
+static Statement *parse_return_statement();
 static bool is_token_type(Token *token, char *token_type);
 static bool expect_peek(char *token_type);
 static void append_statement(Program *program, Statement *statement);
@@ -49,7 +50,38 @@ Statement *parse_statement()
 {
   if (is_token_type(current_token, TOKEN_LET))
     return parse_let_statement();
+  if (is_token_type(current_token, TOKEN_RETURN))
+    return parse_return_statement();
   return NULL;
+}
+
+Statement *parse_return_statement()
+{
+  Statement *statement = malloc(sizeof(Statement));
+  statement->token_literal = current_token->literal;
+  if (statement == NULL)
+    return NULL;
+
+  ReturnStatement *return_statement = malloc(sizeof(ReturnStatement));
+  Expression *return_value = malloc(sizeof(Expression));
+  if (return_statement == NULL || return_value == NULL)
+    return NULL;
+
+  return_statement->token = current_token;
+  return_statement->return_value = return_value;
+  statement->return_statement = return_statement;
+  statement->let_statement = NULL;
+  statement->type.is_statement = true;
+  statement->type.is_expression = false;
+
+  // move past return token
+  parser_next_token();
+
+  // skip parsing expression for now
+  while (!is_token_type(current_token, TOKEN_SEMICOLON))
+    parser_next_token();
+
+  return statement;
 }
 
 Statement *parse_let_statement()
@@ -73,6 +105,7 @@ Statement *parse_let_statement()
   let_statement->token = current_token;
   let_statement->name = name;
   let_statement->value = value;
+  statement->return_statement = NULL;
   statement->let_statement = let_statement;
   statement->type.is_statement = true;
   statement->type.is_expression = false;

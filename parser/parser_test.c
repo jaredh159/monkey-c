@@ -12,7 +12,8 @@
 #pragma clang diagnostic push
 
 void check_parser_errors(char *test_name);
-void assert_let_statement(Statement *, char *, bool, bool, char *, char *);
+void assert_let_statement(Statement *, char *identifier, char *test_name);
+void assert_return_statement(Statement *stmt, char *test_name);
 
 void test_parses_one_let_statement()
 {
@@ -25,7 +26,7 @@ void test_parses_one_let_statement()
   assert(num_program_statements(program) == 1, "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
-  assert_let_statement(stmt, "let", true, false, "x", t);
+  assert_let_statement(stmt, "x", t);
 }
 
 void test_parses_multiple_let_statements()
@@ -44,41 +45,66 @@ void test_parses_multiple_let_statements()
   assert(num_program_statements(program) == 3, "program has 3 statements", t);
 
   stmt = program->statements->statement;
-  assert_let_statement(stmt, "let", true, false, "x", t);
+  assert_let_statement(stmt, "x", t);
   stmt = program->statements->next->statement;
-  assert_let_statement(stmt, "let", true, false, "y", t);
+  assert_let_statement(stmt, "y", t);
   stmt = program->statements->next->next->statement;
-  assert_let_statement(stmt, "let", true, false, "foobar", t);
+  assert_let_statement(stmt, "foobar", t);
+}
+
+void test_parses_return_statements()
+{
+  char *t = "parses_return_statements";
+  Program *program = parse_program(
+      "return 5;\n"
+      "return 10;\n"
+      "return 993322;\n");
+
+  if (program == NULL)
+    fail("parse_program() returned NULL", t);
+
+  check_parser_errors(t);
+  assert(num_program_statements(program) == 3, "program has 3 statements", t);
+
+  assert_return_statement(program->statements->statement, t);
+  assert_return_statement(program->statements->next->statement, t);
+  assert_return_statement(program->statements->next->next->statement, t);
 }
 
 int main(void)
 {
+  test_parses_return_statements();
   test_parses_one_let_statement();
   test_parses_multiple_let_statements();
   return 0;
 }
 
-void assert_let_statement(
-    Statement *stmt,
-    char *token_literal,
-    bool is_statement,
-    bool is_expression,
-    char *identifier_value,
-    char *test_name)
+void assert_let_statement(Statement *stmt, char *identifier, char *test_name)
 {
+  assert_str_is(
+      stmt->token_literal,
+      "let",
+      "statement->token_literal is \"let\"",
+      test_name);
+
+  assert(stmt->type.is_statement, "statement TYPE is `statement`", test_name);
+  assert(!stmt->type.is_expression, "statement TYPE is NOT `expression`", test_name);
+
   char msg[50];
+  sprintf(msg, "identifier is \"%s\"", identifier);
+  assert_str_is(stmt->let_statement->name->value, identifier, msg, test_name);
+}
 
-  sprintf(msg, "statement->token_literal is \"%s\"", token_literal);
-  assert_str_is(stmt->token_literal, token_literal, msg, test_name);
+void assert_return_statement(Statement *stmt, char *test_name)
+{
+  assert_str_is(
+      stmt->token_literal,
+      "return",
+      "statement->token_literal is \"return\"",
+      test_name);
 
-  sprintf(msg, "statement TYPE is %sstatement", is_statement ? "" : "NOT ");
-  assert(stmt->type.is_statement == is_statement, msg, test_name);
-
-  sprintf(msg, "statement TYPE is %sexpression", is_expression ? "" : "NOT ");
-  assert(stmt->type.is_expression == is_expression, msg, test_name);
-
-  sprintf(msg, "identifier is \"%s\"", identifier_value);
-  assert_str_is(stmt->let_statement->name->value, identifier_value, msg, test_name);
+  assert(stmt->type.is_statement, "statement TYPE is `statement`", test_name);
+  assert(!stmt->type.is_expression, "statement TYPE is NOT `expression`", test_name);
 }
 
 void check_parser_errors(char *test_name)
