@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include "parser.h"
+#include "../colors.h"
 #include "../ast/ast.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"
@@ -14,9 +15,12 @@ static Statement *parse_let_statement();
 static bool is_token_type(Token *token, char *token_type);
 static bool expect_peek(char *token_type);
 static void append_statement(Program *program, Statement *statement);
+static void clear_error_stack();
 
 Program *parse_program(char *input)
 {
+  clear_error_stack();
+
   Program *program = malloc(sizeof(Program));
   if (program == NULL)
     return program;
@@ -121,5 +125,43 @@ static bool expect_peek(char *token_type)
     parser_next_token();
     return true;
   }
+
+  char msg[100];
+  sprintf(msg, "expected next token to be %s, got %s instead\n", token_type, peek_token->type);
+  parser_push_error(msg);
   return false;
+}
+
+#define MAX_ERRORS 50
+static char *errors[MAX_ERRORS];
+static int error_index = 0;
+
+void parser_push_error(char *error_msg)
+{
+  if (error_index < MAX_ERRORS)
+  {
+    errors[error_index] = strdup(error_msg);
+    error_index += 1;
+  }
+}
+
+bool parser_has_error()
+{
+  return error_index > 0;
+}
+
+void parser_print_errors()
+{
+  for (int i = 0; i < error_index; i++)
+    printf(COLOR_RED "  -> PARSE ERROR! %s" COLOR_RESET, errors[i]);
+}
+
+int parser_num_errors()
+{
+  return error_index;
+}
+
+static void clear_error_stack()
+{
+  error_index = 0;
 }

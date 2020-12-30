@@ -11,6 +11,7 @@
 #define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
 #pragma clang diagnostic push
 
+void check_parser_errors(char *test_name);
 void assert_let_statement(Statement *, char *, bool, bool, char *, char *);
 
 void test_parses_one_let_statement()
@@ -20,6 +21,7 @@ void test_parses_one_let_statement()
   if (program == NULL)
     fail("parse_program() returned NULL", t);
 
+  check_parser_errors(t);
   assert(num_program_statements(program) == 1, "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
@@ -30,11 +32,15 @@ void test_parses_multiple_let_statements()
 {
   char *t = "parses_multiple_let_statements";
   Statement *stmt;
-  Program *program = parse_program("let x = 5;\nlet y = 10;\nlet foobar = 838383;");
+  Program *program = parse_program(
+      "let x = 5;\n"
+      "let y = 10;\n"
+      "let foobar = 838383;");
 
   if (program == NULL)
     fail("parse_program() returned NULL", t);
 
+  check_parser_errors(t);
   assert(num_program_statements(program) == 3, "program has 3 statements", t);
 
   stmt = program->statements->statement;
@@ -73,4 +79,15 @@ void assert_let_statement(
 
   sprintf(msg, "identifier is \"%s\"", identifier_value);
   assert_str_is(stmt->let_statement->name->value, identifier_value, msg, test_name);
+}
+
+void check_parser_errors(char *test_name)
+{
+  if (!parser_has_error())
+    return;
+
+  parser_print_errors();
+  char msg[50];
+  sprintf(msg, "parser had %i errors\n", parser_num_errors());
+  fail(msg, test_name);
 }
