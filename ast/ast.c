@@ -26,7 +26,7 @@ void print_program(Program *program)
 {
   int num_statements = num_program_statements(program);
   printf(COLOR_GREY "Program {\n");
-  printf("  address: %p\n", program);
+  printf("  address: %p\n", (void *)program);
   printf("  num_statements: %d\n", num_statements);
   if (num_statements == 0)
     printf("  statements: []\n");
@@ -50,7 +50,7 @@ void print_statement(Statement *statement)
 void print_statement_indented(Statement *statement, char *indent)
 {
   printf("%sStatement {\n", indent);
-  printf("%s  address: %p\n", indent, statement);
+  printf("%s  address: %p\n", indent, (void *)statement);
   printf("%s  type: %s\n", indent, statement->type.is_expression ? "expression" : "let");
   printf("%s  token_literal: \"%s\"\n", indent, statement->token_literal);
   if (statement->type.is_statement)
@@ -62,10 +62,10 @@ void print_statement_indented(Statement *statement, char *indent)
 
 void print_expression(Expression *expression)
 {
-  printf("expression pointer: %p\n", expression);
+  printf("expression pointer: %p\n", (void *)expression);
 }
 
 void print_identifier(Identifier *identifier)
 {
-  printf("identifier pointer: %p\n", identifier);
+  printf("identifier pointer: %p\n", (void *)identifier);
 }

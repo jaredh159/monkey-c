@@ -24,7 +24,10 @@ void fail(char *msg, char *test_name)
 void assert(bool predicate, char *msg, char *test_name)
 {
   if (!predicate)
-    return fail(msg, test_name);
+  {
+    fail(msg, test_name);
+    return;
+  }
 
   printf(COLOR_GREEN "√" COLOR_RESET COLOR_GREY " %s: %s\n" COLOR_RESET, test_name, msg);
 }

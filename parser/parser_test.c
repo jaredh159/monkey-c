@@ -5,8 +5,11 @@
 #include "../test/test.h"
 #include "../ast/ast.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvariadic-macros"
 // TODO: move this elsewhere
 #define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
+#pragma clang diagnostic push
 
 void assert_let_statement(Statement *, char *, bool, bool, char *, char *);
 
