@@ -87,7 +87,8 @@ void assert_let_statement(Statement *stmt, char *identifier, char *test_name)
       "statement->token_literal is \"let\"",
       test_name);
 
-  assert(stmt->type.is_statement, "statement TYPE is `statement`", test_name);
+  assert(stmt->type.is_let, "statement TYPE is `let`", test_name);
+  assert(!stmt->type.is_return, "statement TYPE is NOT `return`", test_name);
   assert(!stmt->type.is_expression, "statement TYPE is NOT `expression`", test_name);
 
   char msg[50];
@@ -103,7 +104,8 @@ void assert_return_statement(Statement *stmt, char *test_name)
       "statement->token_literal is \"return\"",
       test_name);
 
-  assert(stmt->type.is_statement, "statement TYPE is `statement`", test_name);
+  assert(stmt->type.is_return, "statement TYPE is `return`", test_name);
+  assert(!stmt->type.is_let, "statement TYPE is NOT `let`", test_name);
   assert(!stmt->type.is_expression, "statement TYPE is NOT `expression`", test_name);
 }
 

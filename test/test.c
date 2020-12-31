@@ -34,5 +34,12 @@ void assert(bool predicate, char *msg, char *test_name)
 
 void assert_str_is(char *str1, char *str2, char *msg, char *test_name)
 {
-  assert(strcmp(str1, str2) == 0, msg, test_name);
+  if (strcmp(str1, str2) == 0)
+    assert(true, msg, test_name);
+  else
+  {
+    char failmsg[200];
+    sprintf(failmsg, "expected string to be `%s`, got `%s` instead", str1, str2);
+    fail(failmsg, test_name);
+  }
 }

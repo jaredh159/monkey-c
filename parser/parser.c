@@ -58,7 +58,8 @@ Statement *parse_statement()
 Statement *parse_return_statement()
 {
   Statement *statement = malloc(sizeof(Statement));
-  statement->token_literal = current_token->literal;
+  Token *initial_token = current_token;
+  statement->token_literal = initial_token->literal;
   if (statement == NULL)
     return NULL;
 
@@ -67,11 +68,12 @@ Statement *parse_return_statement()
   if (return_statement == NULL || return_value == NULL)
     return NULL;
 
-  return_statement->token = current_token;
+  return_statement->token = initial_token;
   return_statement->return_value = return_value;
   statement->return_statement = return_statement;
   statement->let_statement = NULL;
-  statement->type.is_statement = true;
+  statement->type.is_return = true;
+  statement->type.is_let = false;
   statement->type.is_expression = false;
 
   // move past return token
@@ -87,7 +89,8 @@ Statement *parse_return_statement()
 Statement *parse_let_statement()
 {
   Statement *statement = malloc(sizeof(Statement));
-  statement->token_literal = current_token->literal;
+  Token *initial_token = current_token;
+  statement->token_literal = initial_token->literal;
   if (statement == NULL)
     return NULL;
 
@@ -102,12 +105,13 @@ Statement *parse_let_statement()
 
   name->token = current_token;
   name->value = current_token->literal;
-  let_statement->token = current_token;
+  let_statement->token = initial_token;
   let_statement->name = name;
   let_statement->value = value;
   statement->return_statement = NULL;
   statement->let_statement = let_statement;
-  statement->type.is_statement = true;
+  statement->type.is_let = true;
+  statement->type.is_return = false;
   statement->type.is_expression = false;
 
   if (!expect_peek(TOKEN_ASSIGN))
