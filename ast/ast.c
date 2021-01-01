@@ -58,7 +58,8 @@ void print_statement_indented(Statement *statement, char *indent)
   printf("%s  token_literal: \"%s\"\n", indent, statement->token_literal);
   if (statement->type.is_let)
   {
-    printf("%s  let_statement->identifier: \"%s\"\n", indent, statement->let_statement->name->value);
+    LetStatement *ls = (LetStatement *)(statement->node);
+    printf("%s  let_statement->identifier: \"%s\"\n", indent, ls->name->value);
   }
   printf("%s}\n", indent);
 }
@@ -94,11 +95,11 @@ char *program_string(Program *program)
 char *statement_string(Statement *statement)
 {
   if (statement->type.is_let)
-    return let_statement_string(statement->let_statement);
+    return let_statement_string(statement->node);
   else if (statement->type.is_return)
-    return return_statement_string(statement->return_statement);
+    return return_statement_string(statement->node);
   else
-    return expression_statement_string(statement->expression_statement);
+    return expression_statement_string(statement->node);
 }
 
 char *let_statement_string(LetStatement *ls)

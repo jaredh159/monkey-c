@@ -70,8 +70,7 @@ Statement *parse_return_statement()
 
   return_statement->token = initial_token;
   return_statement->return_value = return_value;
-  statement->return_statement = return_statement;
-  statement->let_statement = NULL;
+  statement->node = return_statement;
   statement->type.is_return = true;
   statement->type.is_let = false;
   statement->type.is_expression = false;
@@ -108,8 +107,7 @@ Statement *parse_let_statement()
   let_statement->token = initial_token;
   let_statement->name = name;
   let_statement->value = value;
-  statement->return_statement = NULL;
-  statement->let_statement = let_statement;
+  statement->node = let_statement;
   statement->type.is_let = true;
   statement->type.is_return = false;
   statement->type.is_expression = false;

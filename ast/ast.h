@@ -44,9 +44,7 @@ typedef struct Statement
 {
   char *token_literal;
   StatementType type;
-  LetStatement *let_statement;
-  ReturnStatement *return_statement;
-  ExpressionStatement *expression_statement;
+  void *node;
 } Statement;
 
 typedef struct Statements
