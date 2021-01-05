@@ -6,6 +6,8 @@
 typedef struct Expression
 {
   char *token_literal;
+  int type;
+  void *node;
 } Expression;
 
 typedef struct Identifier
@@ -30,6 +32,7 @@ typedef struct ReturnStatement
 typedef struct ExpressionStatement
 {
   Token *token;
+  Identifier *identifier;
   Expression *expression;
 } ExpressionStatement;
 
@@ -43,6 +46,7 @@ typedef struct StatementType
 typedef struct Statement
 {
   char *token_literal;
+  // @TODO change this out for int type, like in `Expression` above ^
   StatementType type;
   void *node;
 } Statement;
@@ -70,5 +74,8 @@ void print_statement(Statement *statement);
 void print_expression(Expression *expression);
 void print_identifier(Identifier *identifier);
 int num_program_statements(Program *program);
+ReturnStatement *get_return(Statement *statement);
+LetStatement *get_let(Statement *statement);
+ExpressionStatement *get_expression(Statement *statement);
 
 #endif // __AST_H__

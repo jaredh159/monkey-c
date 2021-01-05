@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
@@ -74,6 +75,33 @@ void print_identifier(Identifier *identifier)
   printf("identifier pointer: %p\n", (void *)identifier);
 }
 
+void statement_invariant(Statement *statement, bool type_predicate, char *type)
+{
+  if (type_predicate)
+    return;
+  printf(COLOR_RED "statement not of required type `%s`\n" COLOR_RESET, type);
+  print_statement(statement);
+  exit(1);
+}
+
+ReturnStatement *get_return(Statement *statement)
+{
+  statement_invariant(statement, statement->type.is_return, "return");
+  return (ReturnStatement *)statement->node;
+}
+
+LetStatement *get_let(Statement *statement)
+{
+  statement_invariant(statement, statement->type.is_let, "let");
+  return (LetStatement *)statement->node;
+}
+
+ExpressionStatement *get_expression(Statement *statement)
+{
+  statement_invariant(statement, statement->type.is_expression, "expression");
+  return (ExpressionStatement *)statement->node;
+}
+
 #define MAX_STMT_STR_LEN 100
 
 char *program_string(Program *program)
@@ -125,7 +153,7 @@ char *return_statement_string(ReturnStatement *rs)
 
 char *expression_statement_string(ExpressionStatement *es)
 {
-  return expression_string(es->expression);
+  return identifier_string(es->identifier);
 }
 
 char *identifier_string(Identifier *identifier)
@@ -133,6 +161,7 @@ char *identifier_string(Identifier *identifier)
   return identifier->value;
 }
 
+// TODO... is this necessary any more?
 static char *expression_string(Expression *exp)
 {
   char *exp_str = malloc(MAX_STMT_STR_LEN);

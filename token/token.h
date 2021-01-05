@@ -1,6 +1,8 @@
 #ifndef __TOKEN_H__
 #define __TOKEN_H__
 
+#include <stdbool.h>
+
 typedef struct Token
 {
   char *type;
@@ -10,6 +12,8 @@ typedef struct Token
 Token *new_token(char *type, char *literal);
 
 void print_token(Token *tok);
+bool str_is(char *, char *);
+bool token_prop_is(char *, char *);
 
 /* operators */
 #define TOKEN_ASSIGN "ASSIGN"

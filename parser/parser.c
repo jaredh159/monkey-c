@@ -13,6 +13,7 @@ static void parser_next_token();
 static Statement *parse_statement();
 static Statement *parse_let_statement();
 static Statement *parse_return_statement();
+static Statement *parse_expression_statement();
 static bool is_token_type(Token *token, char *token_type);
 static bool expect_peek(char *token_type);
 static void append_statement(Program *program, Statement *statement);
@@ -52,7 +53,45 @@ Statement *parse_statement()
     return parse_let_statement();
   if (is_token_type(current_token, TOKEN_RETURN))
     return parse_return_statement();
-  return NULL;
+  return parse_expression_statement();
+}
+
+Expression *parse_expression(int precedence)
+{
+  PrefixParselet prefix = get_prefix_parselet(current_token->type);
+  if (prefix == NULL)
+    return NULL;
+  Expression *left_exp = prefix();
+  return left_exp;
+}
+
+Statement *parse_expression_statement()
+{
+  Statement *statement = malloc(sizeof(Statement));
+  Token *initial_token = current_token;
+  statement->token_literal = initial_token->literal;
+  if (statement == NULL)
+    return NULL;
+
+  ExpressionStatement *expression_statement = malloc(sizeof(ExpressionStatement));
+  if (expression_statement == NULL)
+    return NULL;
+
+  expression_statement->token = current_token;
+  Expression *expression = parse_expression(PRECEDENCE_LOWEST);
+  if (expression == NULL)
+    return NULL;
+
+  expression_statement->expression = expression;
+  statement->node = expression_statement;
+  statement->type.is_return = false;
+  statement->type.is_let = false;
+  statement->type.is_expression = true;
+
+  if (is_token_type(peek_token, TOKEN_SEMICOLON))
+    parser_next_token();
+
+  return statement;
 }
 
 Statement *parse_return_statement()
@@ -199,4 +238,14 @@ int parser_num_errors()
 static void clear_error_stack()
 {
   error_index = 0;
+}
+
+Token *parser_current_token()
+{
+  return current_token;
+}
+
+Token *parser_peek_token()
+{
+  return peek_token;
 }

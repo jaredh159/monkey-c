@@ -23,23 +23,32 @@ void test_parses_identifier_expression()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert(num_program_statements(program) == 1, "program has 1 statement", t);
+  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
   assert(stmt->type.is_expression, "statement is expression", t);
   assert(!stmt->type.is_let, "statement is NOT let", t);
   assert(!stmt->type.is_return, "statement is NOT return", t);
+
+  ExpressionStatement *es = get_expression(stmt);
+  Expression *exp = es->expression;
+  assert_int_is(exp->type, EXPRESSION_IDENTIFIER, "expression is identifier", t);
+  assert_str_is(exp->token_literal, "foobar", "expression token_literal is foobar", t);
+  Identifier *ident = exp->node;
+  assert_str_is(ident->value, "foobar", "identifier value is foobar", t);
+  assert_str_is(ident->token->literal, "foobar", "identifier->token->literal is foobar", t);
 }
 
 void test_parses_one_let_statement()
 {
   char *t = "parses_one_let_statement";
   Program *program = parse_program("let x = 5;");
+
   if (program == NULL)
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert(num_program_statements(program) == 1, "program has 1 statement", t);
+  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
   assert_let_statement(stmt, "x", t);
@@ -58,7 +67,7 @@ void test_parses_multiple_let_statements()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert(num_program_statements(program) == 3, "program has 3 statements", t);
+  assert_int_is(3, num_program_statements(program), "program has 3 statements", t);
 
   stmt = program->statements->statement;
   assert_let_statement(stmt, "x", t);
@@ -89,7 +98,7 @@ void test_parses_return_statements()
 
 int main(void)
 {
-  // test_parses_identifier_expression();
+  test_parses_identifier_expression();
   test_parses_return_statements();
   test_parses_one_let_statement();
   test_parses_multiple_let_statements();
@@ -111,8 +120,7 @@ void assert_let_statement(Statement *stmt, char *identifier, char *test_name)
   char msg[50];
   sprintf(msg, "identifier is \"%s\"", identifier);
 
-  LetStatement *ls = (LetStatement *)stmt->node;
-  assert_str_is(ls->name->value, identifier, msg, test_name);
+  assert_str_is(get_let(stmt)->name->value, identifier, msg, test_name);
 }
 
 void assert_return_statement(Statement *stmt, char *test_name)

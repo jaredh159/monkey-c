@@ -7,12 +7,12 @@
 
 bool token_literal_is(Token *token, char *literal)
 {
-  return strcmp(token->literal, literal) == 0;
+  return token_prop_is(token->literal, literal);
 }
 
 bool token_is(Token *token, char *type)
 {
-  return strcmp(token->type, type) == 0;
+  return token_prop_is(token->type, type);
 }
 
 void fail(char *msg, char *test_name)
@@ -40,6 +40,18 @@ void assert_str_is(char *str1, char *str2, char *msg, char *test_name)
   {
     char failmsg[200];
     sprintf(failmsg, "expected string to be `%s`, got `%s` instead", str1, str2);
+    fail(failmsg, test_name);
+  }
+}
+
+void assert_int_is(int expected, int actual, char *msg, char *test_name)
+{
+  if (expected == actual)
+    assert(true, msg, test_name);
+  else
+  {
+    char failmsg[200];
+    sprintf(failmsg, "expected `%d`, got `%d` --  %s", expected, actual, msg);
     fail(failmsg, test_name);
   }
 }

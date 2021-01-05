@@ -5,26 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "CodeLLDB",
+      "name": "test_parser",
       "type": "lldb",
       "request": "launch",
-      "program": "${fileDirname}/${fileBasenameNoExtension}",
-      "args": ["-xn", "foo", "bar"],
-      "cwd": "${workspaceFolder}",
-      "preLaunchTask": "C/C++: clang build active file"
-    },
-    {
-      "name": "clang - Build and debug active file",
-      "type": "cppdbg",
-      "request": "launch",
-      "program": "${fileDirname}/${fileBasenameNoExtension}",
+      "program": "${workspaceFolder}/.bin/test_parser",
       "args": [],
-      "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
-      "environment": [],
-      "externalConsole": true,
-      "MIMode": "lldb",
-      "preLaunchTask": "C/C++: clang build active file"
-    }
+      "preLaunchTask": "make test_parser"
+    },
   ]
 }
