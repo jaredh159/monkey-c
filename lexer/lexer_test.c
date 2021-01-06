@@ -131,8 +131,9 @@ void test_two_char_tokens()
   assert_lexing(input, expected, 2, "two_char_tokens");
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+  pass_argv(argc, argv);
   test_single_token();
   test_multiple_tokens();
   test_skips_whitespace();
@@ -140,6 +141,7 @@ int main(void)
   test_more_single_char_tokens();
   test_more_keywords();
   test_two_char_tokens();
+  printf("\n");
   return 0;
 }
 

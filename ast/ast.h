@@ -3,6 +3,12 @@
 
 #include "../token/token.h"
 
+typedef struct IntegerLiteral
+{
+  Token *token;
+  int value;
+} IntegerLiteral;
+
 typedef struct Expression
 {
   char *token_literal;

@@ -23,8 +23,10 @@ void test_string()
       "test_string");
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+  pass_argv(argc, argv);
   test_string();
+  printf("\n");
   return 0;
 }

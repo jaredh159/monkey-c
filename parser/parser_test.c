@@ -87,19 +87,42 @@ void test_parses_return_statements()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert(num_program_statements(program) == 3, "program has 3 statements", t);
+  assert_int_is(3, num_program_statements(program), "program has 3 statements", t);
 
   assert_return_statement(program->statements->statement, t);
   assert_return_statement(program->statements->next->statement, t);
   assert_return_statement(program->statements->next->next->statement, t);
 }
 
-int main(void)
+void test_parses_integer_literal_expression()
 {
+  char *t = "parses_integer_literal_expression";
+  Program *program = parse_program("5;");
+
+  if (program == NULL)
+    fail("parse_program() returned NULL", t);
+
+  check_parser_errors(t);
+  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+  Statement *stmt = program->statements->statement;
+  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  ExpressionStatement *es = get_expression(stmt);
+  Expression *exp = es->expression;
+  assert_int_is(exp->type, EXPRESSION_INTEGER_LITERAL, "expression is integer literal", t);
+  IntegerLiteral *int_literal = exp->node;
+  assert_int_is(5, int_literal->value, "int literal is int 5", t);
+  assert_str_is("5", int_literal->token->literal, "int_literal->token->literal is \"5\"", t);
+}
+
+int main(int argc, char **argv)
+{
+  pass_argv(argc, argv);
   test_parses_identifier_expression();
   test_parses_return_statements();
   test_parses_one_let_statement();
   test_parses_multiple_let_statements();
+  test_parses_integer_literal_expression();
+  printf("\n");
   return 0;
 }
 

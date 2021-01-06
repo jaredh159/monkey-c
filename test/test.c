@@ -4,6 +4,15 @@
 #include <stdbool.h>
 #include "../colors.h"
 #include "../token/token.h"
+#include "../utils/argv.h"
+
+static bool verbose = false;
+
+void pass_argv(int argc, char *argv[])
+{
+  if (argv_has_flag('v', argc, argv) || argv_idx("--verbose", argc, argv) != -1)
+    verbose = true;
+}
 
 bool token_literal_is(Token *token, char *literal)
 {
@@ -17,7 +26,7 @@ bool token_is(Token *token, char *type)
 
 void fail(char *msg, char *test_name)
 {
-  printf(COLOR_RED "X %s: %s\n" COLOR_RESET, test_name, msg);
+  printf(COLOR_RED "%sX %s: %s\n" COLOR_RESET, verbose ? "" : "\n", test_name, msg);
   exit(1);
 }
 
@@ -29,6 +38,11 @@ void assert(bool predicate, char *msg, char *test_name)
     return;
   }
 
+  if (!verbose)
+  {
+    printf(COLOR_GREEN "•" COLOR_RESET);
+    return;
+  }
   printf(COLOR_GREEN "√" COLOR_RESET COLOR_GREY " %s: %s\n" COLOR_RESET, test_name, msg);
 }
 
