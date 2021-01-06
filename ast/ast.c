@@ -4,7 +4,7 @@
 #include <string.h>
 #include "ast.h"
 #include "../parser/parser.h"
-#include "../colors.h"
+#include "../utils/colors.h"
 
 #define INDENT_0 ""
 #define INDENT_2 "  "

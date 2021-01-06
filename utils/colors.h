@@ -1,8 +1,6 @@
 #ifndef __COLORS_H__
 #define __COLORS_H__
 
-// @TODO -- move this file into utils/ dir
-
 #define COLOR_RED "\x1b[31m"
 #define COLOR_GREEN "\x1b[32m"
 #define COLOR_YELLOW "\x1b[33m"

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
-#include "../colors.h"
+#include "../utils/colors.h"
 #include "../ast/ast.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"

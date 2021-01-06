@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../colors.h"
+#include "../utils/colors.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"
 

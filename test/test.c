@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "../colors.h"
+#include "../utils/colors.h"
 #include "../token/token.h"
 #include "../utils/argv.h"
 

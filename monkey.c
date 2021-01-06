@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "colors.h"
+#include "utils/colors.h"
 #include "repl/repl.h"
 
 int main(void)
