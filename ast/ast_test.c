@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "ast.h"
 #include "../test/test.h"
+#include "../parser/parser.h"
 #include "../token/token.h"
 
 void test_string()
@@ -12,7 +13,7 @@ void test_string()
   Identifier letNameIdent = {&myVarIdentToken, "myVar"};
   Expression letValueExpr = {"anotherVar", 1, &anotherVarIdentToken};
   LetStatement letStatement = {&myVarLetToken, &letNameIdent, &letValueExpr};
-  Statement statement = {myVarLetToken.literal, {1, 0, 0}, &letStatement};
+  Statement statement = {myVarLetToken.literal, STATEMENT_LET, &letStatement};
   Statements statements = {&statement, NULL};
   Program program = {myVarLetToken.literal, &statements};
   assert_str_is(

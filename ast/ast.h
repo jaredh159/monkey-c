@@ -36,18 +36,10 @@ typedef struct ExpressionStatement
   Expression *expression;
 } ExpressionStatement;
 
-typedef struct StatementType
-{
-  unsigned int is_let : 1;
-  unsigned int is_return : 1;
-  unsigned int is_expression : 1;
-} StatementType;
-
 typedef struct Statement
 {
   char *token_literal;
-  // @TODO change this out for int type, like in `Expression` above ^
-  StatementType type;
+  int type;
   void *node;
 } Statement;
 

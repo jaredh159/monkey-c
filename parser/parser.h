@@ -20,6 +20,13 @@ enum
   EXPRESSION_IDENTIFIER
 };
 
+enum
+{
+  STATEMENT_LET,
+  STATEMENT_RETURN,
+  STATEMENT_EXPRESSION
+};
+
 Program *parse_program(char *input);
 void parser_push_error(char *error_msg);
 bool parser_has_error();

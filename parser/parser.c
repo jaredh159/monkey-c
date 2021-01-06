@@ -84,9 +84,7 @@ Statement *parse_expression_statement()
 
   expression_statement->expression = expression;
   statement->node = expression_statement;
-  statement->type.is_return = false;
-  statement->type.is_let = false;
-  statement->type.is_expression = true;
+  statement->type = STATEMENT_EXPRESSION;
 
   if (is_token_type(peek_token, TOKEN_SEMICOLON))
     parser_next_token();
@@ -110,9 +108,7 @@ Statement *parse_return_statement()
   return_statement->token = initial_token;
   return_statement->return_value = return_value;
   statement->node = return_statement;
-  statement->type.is_return = true;
-  statement->type.is_let = false;
-  statement->type.is_expression = false;
+  statement->type = STATEMENT_RETURN;
 
   // move past return token
   parser_next_token();
@@ -147,9 +143,7 @@ Statement *parse_let_statement()
   let_statement->name = name;
   let_statement->value = value;
   statement->node = let_statement;
-  statement->type.is_let = true;
-  statement->type.is_return = false;
-  statement->type.is_expression = false;
+  statement->type = STATEMENT_LET;
 
   if (!expect_peek(TOKEN_ASSIGN))
     return NULL;

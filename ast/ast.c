@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "../parser/parser.h"
 #include "../colors.h"
 
 #define INDENT_0 ""
@@ -51,13 +52,22 @@ void print_statement(Statement *statement)
   print_statement_indented(statement, INDENT_0);
 }
 
+char *statement_type_str(int type)
+{
+  if (type == STATEMENT_EXPRESSION)
+    return "expression";
+  else if (type == STATEMENT_LET)
+    return "let";
+  return "return";
+}
+
 void print_statement_indented(Statement *statement, char *indent)
 {
   printf("%sStatement {\n", indent);
   printf("%s  address: %p\n", indent, (void *)statement);
-  printf("%s  type: %s\n", indent, statement->type.is_expression ? "expression" : "let");
+  printf("%s  type: %s\n", indent, statement_type_str(statement->type));
   printf("%s  token_literal: \"%s\"\n", indent, statement->token_literal);
-  if (statement->type.is_let)
+  if (statement->type == STATEMENT_LET)
   {
     LetStatement *ls = (LetStatement *)(statement->node);
     printf("%s  let_statement->identifier: \"%s\"\n", indent, ls->name->value);
@@ -86,19 +96,19 @@ void statement_invariant(Statement *statement, bool type_predicate, char *type)
 
 ReturnStatement *get_return(Statement *statement)
 {
-  statement_invariant(statement, statement->type.is_return, "return");
+  statement_invariant(statement, statement->type == STATEMENT_RETURN, "return");
   return (ReturnStatement *)statement->node;
 }
 
 LetStatement *get_let(Statement *statement)
 {
-  statement_invariant(statement, statement->type.is_let, "let");
+  statement_invariant(statement, statement->type == STATEMENT_LET, "let");
   return (LetStatement *)statement->node;
 }
 
 ExpressionStatement *get_expression(Statement *statement)
 {
-  statement_invariant(statement, statement->type.is_expression, "expression");
+  statement_invariant(statement, statement->type == STATEMENT_EXPRESSION, "expression");
   return (ExpressionStatement *)statement->node;
 }
 
@@ -122,9 +132,9 @@ char *program_string(Program *program)
 
 char *statement_string(Statement *statement)
 {
-  if (statement->type.is_let)
+  if (statement->type == STATEMENT_LET)
     return let_statement_string(statement->node);
-  else if (statement->type.is_return)
+  else if (statement->type == STATEMENT_RETURN)
     return return_statement_string(statement->node);
   else
     return expression_statement_string(statement->node);

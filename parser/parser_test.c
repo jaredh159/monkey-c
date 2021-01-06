@@ -26,9 +26,7 @@ void test_parses_identifier_expression()
   assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
-  assert(stmt->type.is_expression, "statement is expression", t);
-  assert(!stmt->type.is_let, "statement is NOT let", t);
-  assert(!stmt->type.is_return, "statement is NOT return", t);
+  assert(stmt->type == STATEMENT_EXPRESSION, "statement is expression", t);
 
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
@@ -113,9 +111,7 @@ void assert_let_statement(Statement *stmt, char *identifier, char *test_name)
       "statement->token_literal is \"let\"",
       test_name);
 
-  assert(stmt->type.is_let, "statement TYPE is `let`", test_name);
-  assert(!stmt->type.is_return, "statement TYPE is NOT `return`", test_name);
-  assert(!stmt->type.is_expression, "statement TYPE is NOT `expression`", test_name);
+  assert(stmt->type == STATEMENT_LET, "statement TYPE is `let`", test_name);
 
   char msg[50];
   sprintf(msg, "identifier is \"%s\"", identifier);
@@ -131,9 +127,7 @@ void assert_return_statement(Statement *stmt, char *test_name)
       "statement->token_literal is \"return\"",
       test_name);
 
-  assert(stmt->type.is_return, "statement TYPE is `return`", test_name);
-  assert(!stmt->type.is_let, "statement TYPE is NOT `let`", test_name);
-  assert(!stmt->type.is_expression, "statement TYPE is NOT `expression`", test_name);
+  assert(stmt->type == STATEMENT_RETURN, "statement TYPE is `return`", test_name);
 }
 
 void check_parser_errors(char *test_name)
