@@ -171,6 +171,13 @@ char *identifier_string(Identifier *identifier)
   return identifier->value;
 }
 
+char *prefix_expression_string(PrefixExpression *prefix)
+{
+  char *pref_str = malloc(MAX_STMT_STR_LEN);
+  sprintf(pref_str, "(%s%s)", prefix->operator, expression_string(prefix->right));
+  return pref_str;
+}
+
 // TODO... is this necessary any more?
 static char *expression_string(Expression *exp)
 {

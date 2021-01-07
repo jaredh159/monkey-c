@@ -7,11 +7,18 @@
 #include "../utils/argv.h"
 
 static bool verbose = false;
+static char embedded[500];
 
 void pass_argv(int argc, char *argv[])
 {
   if (argv_has_flag('v', argc, argv) || argv_idx("--verbose", argc, argv) != -1)
     verbose = true;
+}
+
+char *str_embed(char *format, char *str)
+{
+  sprintf(embedded, format, str);
+  return embedded;
 }
 
 bool token_literal_is(Token *token, char *literal)

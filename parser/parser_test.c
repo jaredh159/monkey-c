@@ -14,6 +14,7 @@
 void check_parser_errors(char *test_name);
 void assert_let_statement(Statement *, char *identifier, char *test_name);
 void assert_return_statement(Statement *stmt, char *test_name);
+void assert_integer_literal(Expression *exp, int value, char *literal, char *test_name);
 
 void test_parses_identifier_expression()
 {
@@ -108,15 +109,48 @@ void test_parses_integer_literal_expression()
   assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
-  assert_int_is(exp->type, EXPRESSION_INTEGER_LITERAL, "expression is integer literal", t);
-  IntegerLiteral *int_literal = exp->node;
-  assert_int_is(5, int_literal->value, "int literal is int 5", t);
-  assert_str_is("5", int_literal->token->literal, "int_literal->token->literal is \"5\"", t);
+  assert_integer_literal(exp, 5, "5", t);
+}
+
+void test_parses_prefix_expressions()
+{
+  char *t = "parses_prefix_expressions";
+  struct PrefixTest
+  {
+    char *input;
+    char *operator;
+    int int_val;
+    char *str_val;
+  };
+
+  struct PrefixTest tests[] = {
+      {"!5;", "!", 5, "5"},
+      {"-15;", "-", 15, "15"}};
+
+  for (int i = 0; i < 2; i++)
+  {
+    struct PrefixTest test = tests[i];
+    Program *program = parse_program(test.input);
+    if (program == NULL)
+      fail("parse_program() returned NULL", t);
+
+    check_parser_errors(t);
+    assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+    Statement *stmt = program->statements->statement;
+    assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+    ExpressionStatement *es = get_expression(stmt);
+    Expression *exp = es->expression;
+    assert_int_is(exp->type, EXPRESSION_PREFIX, "expression type is PREFIX", t);
+    PrefixExpression *prefix = exp->node;
+    assert_str_is(test.operator, prefix->operator, str_embed("operator is %s", test.operator), t);
+    assert_integer_literal(prefix->right, test.int_val, test.str_val, t);
+  }
 }
 
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_parses_prefix_expressions();
   test_parses_identifier_expression();
   test_parses_return_statements();
   test_parses_one_let_statement();
@@ -162,4 +196,17 @@ void check_parser_errors(char *test_name)
   char msg[50];
   sprintf(msg, "parser had %i errors\n", parser_num_errors());
   fail(msg, test_name);
+}
+
+void assert_integer_literal(Expression *exp, int value, char *literal, char *test_name)
+{
+  char msg[50];
+  assert_int_is(exp->type, EXPRESSION_INTEGER_LITERAL, "expression is integer literal", test_name);
+  IntegerLiteral *int_literal = exp->node;
+
+  sprintf(msg, "int literal is int %d", value);
+  assert_int_is(value, int_literal->value, msg, test_name);
+
+  sprintf(msg, "int_literal->token->literal is \"%s\"", literal);
+  assert_str_is(literal, int_literal->token->literal, msg, test_name);
 }

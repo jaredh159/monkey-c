@@ -16,6 +16,13 @@ typedef struct Expression
   void *node;
 } Expression;
 
+typedef struct PrefixExpression
+{
+  Token *token;
+  char *operator;
+  Expression *right;
+} PrefixExpression;
+
 typedef struct Identifier
 {
   Token *token;

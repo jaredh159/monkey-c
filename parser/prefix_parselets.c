@@ -44,11 +44,34 @@ Expression *parse_integer_literal()
   return exp;
 }
 
+Expression *parse_prefix_expression()
+{
+  Expression *exp = malloc(sizeof(Expression));
+  PrefixExpression *prefix = malloc(sizeof(PrefixExpression));
+  if (exp == NULL || prefix == NULL)
+    return NULL;
+
+  Token *initial_token = parser_current_token();
+  prefix->token = initial_token;
+  prefix->operator= initial_token->literal;
+  exp->token_literal = initial_token->literal;
+  exp->type = EXPRESSION_PREFIX;
+  exp->node = prefix;
+
+  parser_next_token();
+  prefix->right = parse_expression(/* PRECEDENCE_PREFIX */);
+  return exp;
+}
+
 PrefixParselet get_prefix_parselet(char *token_type)
 {
   if (str_is(token_type, TOKEN_IDENTIFIER))
     return parse_identifier;
   if (str_is(token_type, TOKEN_INTEGER))
     return parse_integer_literal;
+  if (str_is(token_type, TOKEN_MINUS))
+    return parse_prefix_expression;
+  if (str_is(token_type, TOKEN_BANG))
+    return parse_prefix_expression;
   return NULL;
 }

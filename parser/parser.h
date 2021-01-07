@@ -18,7 +18,8 @@ enum
 enum
 {
   EXPRESSION_IDENTIFIER,
-  EXPRESSION_INTEGER_LITERAL
+  EXPRESSION_INTEGER_LITERAL,
+  EXPRESSION_PREFIX
 };
 
 enum
@@ -29,6 +30,8 @@ enum
 };
 
 Program *parse_program(char *input);
+Expression *parse_expression(/* int precedence */);
+void parser_next_token();
 void parser_push_error(char *error_msg);
 bool parser_has_error();
 int parser_num_errors();

@@ -9,7 +9,6 @@
 
 static Token *current_token = NULL;
 static Token *peek_token = NULL;
-static void parser_next_token();
 static Statement *parse_statement();
 static Statement *parse_let_statement();
 static Statement *parse_return_statement();
@@ -18,6 +17,7 @@ static bool is_token_type(Token *token, char *token_type);
 static bool expect_peek(char *token_type);
 static void append_statement(Program *program, Statement *statement);
 static void clear_error_stack();
+static void no_prefix_parse_fn_error(char *token_type);
 
 Program *parse_program(char *input)
 {
@@ -56,11 +56,14 @@ Statement *parse_statement()
   return parse_expression_statement();
 }
 
-Expression *parse_expression(int precedence)
+Expression *parse_expression(/* int precedence */)
 {
   PrefixParselet prefix = get_prefix_parselet(current_token->type);
   if (prefix == NULL)
+  {
+    no_prefix_parse_fn_error(current_token->type);
     return NULL;
+  }
   Expression *left_exp = prefix();
   return left_exp;
 }
@@ -78,7 +81,7 @@ Statement *parse_expression_statement()
     return NULL;
 
   expression_statement->token = current_token;
-  Expression *expression = parse_expression(PRECEDENCE_LOWEST);
+  Expression *expression = parse_expression(/* PRECEDENCE_LOWEST */);
   if (expression == NULL)
     return NULL;
 
@@ -173,7 +176,7 @@ static void append_statement(Program *program, Statement *statement)
   current->next = node;
 }
 
-static void parser_next_token()
+void parser_next_token()
 {
   current_token = peek_token;
   peek_token = lexer_next_token();
@@ -242,4 +245,11 @@ Token *parser_current_token()
 Token *parser_peek_token()
 {
   return peek_token;
+}
+
+static void no_prefix_parse_fn_error(char *token_type)
+{
+  char *err = malloc(200);
+  sprintf(err, "no prefix parse function for token type `%s` found\n", token_type);
+  parser_push_error(err);
 }

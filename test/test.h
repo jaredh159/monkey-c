@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "../token/token.h"
 
+char *str_embed(char *format, char *str);
 void pass_argv(int argc, char *argv[]);
 bool token_is(Token *token, char *type);
 bool token_literal_is(Token *token, char *literal);
