@@ -115,21 +115,21 @@ void test_parses_integer_literal_expression()
 void test_parses_prefix_expressions()
 {
   char *t = "parses_prefix_expressions";
-  struct PrefixTest
+  typedef struct
   {
     char *input;
     char *operator;
     int int_val;
     char *str_val;
-  };
+  } PrefixTest;
 
-  struct PrefixTest tests[] = {
+  PrefixTest tests[] = {
       {"!5;", "!", 5, "5"},
       {"-15;", "-", 15, "15"}};
 
   for (int i = 0; i < 2; i++)
   {
-    struct PrefixTest test = tests[i];
+    PrefixTest test = tests[i];
     Program *program = parse_program(test.input);
     if (program == NULL)
       fail("parse_program() returned NULL", t);
@@ -147,9 +147,54 @@ void test_parses_prefix_expressions()
   }
 }
 
+void test_parses_infix_expressions()
+{
+  char *t = "parses_infix_expressions";
+  typedef struct
+  {
+    char *input;
+    int left_value;
+    char *operator;
+    int right_value;
+  } InfixTest;
+
+  InfixTest tests[] = {
+      {"5 + 5;", 5, "+", 5},
+      {"5 - 5;", 5, "-", 5},
+      {"5 * 5;", 5, "*", 5},
+      {"5 / 5;", 5, "/", 5},
+      {"5 > 5;", 5, ">", 5},
+      {"5 < 5;", 5, "<", 5},
+      {"5 == 5;", 5, "==", 5},
+      {"5 != 5;", 5, "!=", 5},
+  };
+
+  int num_tests = sizeof(tests) / sizeof(InfixTest);
+  for (int i = 0; i < num_tests; i++)
+  {
+    InfixTest test = tests[i];
+    Program *program = parse_program(test.input);
+    if (program == NULL)
+      fail("parse_program() returned NULL", t);
+
+    check_parser_errors(t);
+    assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+    Statement *stmt = program->statements->statement;
+    assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+    ExpressionStatement *es = get_expression(stmt);
+    Expression *exp = es->expression;
+    assert_int_is(exp->type, EXPRESSION_INFIX, "expression type is INFIX", t);
+    InfixExpression *infix = exp->node;
+    assert_integer_literal(infix->left, test.left_value, "5", t);
+    assert_integer_literal(infix->right, test.right_value, "5", t);
+    assert_str_is(test.operator, infix->operator, str_embed("operator is %s", infix->operator), t);
+  }
+}
+
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_parses_infix_expressions();
   test_parses_prefix_expressions();
   test_parses_identifier_expression();
   test_parses_return_statements();

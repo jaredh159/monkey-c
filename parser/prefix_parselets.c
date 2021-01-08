@@ -59,7 +59,27 @@ Expression *parse_prefix_expression()
   exp->node = prefix;
 
   parser_next_token();
-  prefix->right = parse_expression(/* PRECEDENCE_PREFIX */);
+  prefix->right = parse_expression(PRECEDENCE_PREFIX);
+  return exp;
+}
+
+Expression *parse_infix_expression(Expression *left)
+{
+  Expression *exp = malloc(sizeof(Expression));
+  InfixExpression *infix = malloc(sizeof(InfixExpression));
+  if (exp == NULL || infix == NULL)
+    return NULL;
+
+  Token *initial_token = parser_current_token();
+  infix->token = initial_token;
+  infix->operator= initial_token->literal;
+  infix->left = left;
+  exp->token_literal = initial_token->literal;
+  exp->type = EXPRESSION_INFIX;
+  exp->node = infix;
+  int precedence = parser_current_precedence();
+  parser_next_token();
+  infix->right = parse_expression(precedence);
   return exp;
 }
 
@@ -73,5 +93,26 @@ PrefixParselet get_prefix_parselet(char *token_type)
     return parse_prefix_expression;
   if (str_is(token_type, TOKEN_BANG))
     return parse_prefix_expression;
+  return NULL;
+}
+
+InfixParselet get_infix_parselet(char *token_type)
+{
+  if (str_is(token_type, TOKEN_PLUS))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_MINUS))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_SLASH))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_ASTERISK))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_EQ))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_NOT_EQ))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_LT))
+    return parse_infix_expression;
+  if (str_is(token_type, TOKEN_GT))
+    return parse_infix_expression;
   return NULL;
 }

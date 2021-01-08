@@ -171,6 +171,18 @@ char *identifier_string(Identifier *identifier)
   return identifier->value;
 }
 
+char *infix_expression_string(InfixExpression *infix)
+{
+  char *inf_str = malloc(MAX_STMT_STR_LEN);
+  sprintf(
+      inf_str,
+      "(%s %s %s)",
+      expression_string(infix->left),
+      infix->operator,
+      expression_string(infix->right));
+  return inf_str;
+}
+
 char *prefix_expression_string(PrefixExpression *prefix)
 {
   char *pref_str = malloc(MAX_STMT_STR_LEN);
@@ -184,4 +196,25 @@ static char *expression_string(Expression *exp)
   char *exp_str = malloc(MAX_STMT_STR_LEN);
   sprintf(exp_str, "%s", exp->token_literal);
   return exp_str;
+}
+
+int token_precedence(char *token_type)
+{
+  if (str_is(token_type, TOKEN_EQ))
+    return PRECEDENCE_EQUALS;
+  if (str_is(token_type, TOKEN_NOT_EQ))
+    return PRECEDENCE_EQUALS;
+  if (str_is(token_type, TOKEN_LT))
+    return PRECEDENCE_LESSGREATER;
+  if (str_is(token_type, TOKEN_GT))
+    return PRECEDENCE_LESSGREATER;
+  if (str_is(token_type, TOKEN_PLUS))
+    return PRECEDENCE_SUM;
+  if (str_is(token_type, TOKEN_MINUS))
+    return PRECEDENCE_SUM;
+  if (str_is(token_type, TOKEN_SLASH))
+    return PRECEDENCE_PRODUCT;
+  if (str_is(token_type, TOKEN_ASTERISK))
+    return PRECEDENCE_PRODUCT;
+  return PRECEDENCE_LOWEST;
 }

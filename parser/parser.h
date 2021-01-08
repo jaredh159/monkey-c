@@ -19,7 +19,8 @@ enum
 {
   EXPRESSION_IDENTIFIER,
   EXPRESSION_INTEGER_LITERAL,
-  EXPRESSION_PREFIX
+  EXPRESSION_PREFIX,
+  EXPRESSION_INFIX
 };
 
 enum
@@ -30,16 +31,21 @@ enum
 };
 
 Program *parse_program(char *input);
-Expression *parse_expression(/* int precedence */);
+Expression *parse_expression(int precedence);
 void parser_next_token();
 void parser_push_error(char *error_msg);
+int parser_current_precedence();
+int parser_peek_precedence();
 bool parser_has_error();
 int parser_num_errors();
 void parser_print_errors();
 Token *parser_current_token();
 Token *parser_peek_token();
+bool parser_peek_token_is(char *token_type);
+bool parser_current_token_is(char *token_type);
 typedef Expression *(*PrefixParselet)(void);
 typedef Expression *(*InfixParselet)(Expression *);
 PrefixParselet get_prefix_parselet(char *token_type);
+InfixParselet get_infix_parselet(char *token_type);
 
 #endif // __PARSER_H__

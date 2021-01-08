@@ -56,7 +56,7 @@ Statement *parse_statement()
   return parse_expression_statement();
 }
 
-Expression *parse_expression(/* int precedence */)
+Expression *parse_expression(int precedence)
 {
   PrefixParselet prefix = get_prefix_parselet(current_token->type);
   if (prefix == NULL)
@@ -65,6 +65,16 @@ Expression *parse_expression(/* int precedence */)
     return NULL;
   }
   Expression *left_exp = prefix();
+
+  for (; !parser_peek_token_is(TOKEN_SEMICOLON) && precedence < parser_peek_precedence();)
+  {
+    InfixParselet infix = get_infix_parselet(parser_peek_token()->type);
+    if (infix == NULL)
+      return left_exp;
+
+    parser_next_token();
+    left_exp = infix(left_exp);
+  }
   return left_exp;
 }
 
@@ -81,7 +91,7 @@ Statement *parse_expression_statement()
     return NULL;
 
   expression_statement->token = current_token;
-  Expression *expression = parse_expression(/* PRECEDENCE_LOWEST */);
+  Expression *expression = parse_expression(PRECEDENCE_LOWEST);
   if (expression == NULL)
     return NULL;
 
@@ -252,4 +262,24 @@ static void no_prefix_parse_fn_error(char *token_type)
   char *err = malloc(200);
   sprintf(err, "no prefix parse function for token type `%s` found\n", token_type);
   parser_push_error(err);
+}
+
+int parser_peek_precedence()
+{
+  return token_precedence(parser_peek_token()->type);
+}
+
+int parser_current_precedence()
+{
+  return token_precedence(parser_current_token()->type);
+}
+
+bool parser_peek_token_is(char *token_type)
+{
+  return str_is(token_type, parser_peek_token()->type);
+}
+
+bool parser_current_token_is(char *token_type)
+{
+  return str_is(token_type, parser_current_token()->type);
 }
