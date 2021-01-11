@@ -13,11 +13,10 @@ static Statement *parse_statement();
 static Statement *parse_let_statement();
 static Statement *parse_return_statement();
 static Statement *parse_expression_statement();
-static bool is_token_type(Token *token, char *token_type);
-static bool expect_peek(char *token_type);
+static bool expect_peek(int token_type);
 static void append_statement(Program *program, Statement *statement);
 static void clear_error_stack();
-static void no_prefix_parse_fn_error(char *token_type);
+static void no_prefix_parse_fn_error(int token_type);
 
 Program *parse_program(char *input)
 {
@@ -35,7 +34,7 @@ Program *parse_program(char *input)
   program->statements = NULL;
 
   Statement *statement;
-  for (; !is_token_type(current_token, TOKEN_EOF);)
+  for (; current_token->type != TOKEN_EOF;)
   {
     statement = parse_statement();
     if (statement != NULL)
@@ -49,9 +48,9 @@ Program *parse_program(char *input)
 
 Statement *parse_statement()
 {
-  if (is_token_type(current_token, TOKEN_LET))
+  if (current_token->type == TOKEN_LET)
     return parse_let_statement();
-  if (is_token_type(current_token, TOKEN_RETURN))
+  if (current_token->type == TOKEN_RETURN)
     return parse_return_statement();
   return parse_expression_statement();
 }
@@ -66,7 +65,7 @@ Expression *parse_expression(int precedence)
   }
   Expression *left_exp = prefix();
 
-  for (; !parser_peek_token_is(TOKEN_SEMICOLON) && precedence < parser_peek_precedence();)
+  for (; peek_token->type != TOKEN_SEMICOLON && precedence < parser_peek_precedence();)
   {
     InfixParselet infix = get_infix_parselet(parser_peek_token()->type);
     if (infix == NULL)
@@ -99,7 +98,7 @@ Statement *parse_expression_statement()
   statement->node = expression_statement;
   statement->type = STATEMENT_EXPRESSION;
 
-  if (is_token_type(peek_token, TOKEN_SEMICOLON))
+  if (peek_token->type == TOKEN_SEMICOLON)
     parser_next_token();
 
   return statement;
@@ -127,7 +126,7 @@ Statement *parse_return_statement()
   parser_next_token();
 
   // skip parsing expression for now
-  while (!is_token_type(current_token, TOKEN_SEMICOLON))
+  while (current_token->type != TOKEN_SEMICOLON)
     parser_next_token();
 
   return statement;
@@ -162,7 +161,7 @@ Statement *parse_let_statement()
     return NULL;
 
   // TODO, we're skipping the expressions until we encounter a semicolon
-  while (!is_token_type(current_token, TOKEN_SEMICOLON))
+  while (current_token->type != TOKEN_SEMICOLON)
     parser_next_token();
 
   return statement;
@@ -192,23 +191,16 @@ void parser_next_token()
   peek_token = lexer_next_token();
 }
 
-static bool is_token_type(Token *token, char *type)
+static bool expect_peek(int token_type)
 {
-  if (token == NULL)
-    return false;
-  return strcmp(token->type, type) == 0;
-}
-
-static bool expect_peek(char *token_type)
-{
-  if (is_token_type(peek_token, token_type))
+  if (peek_token->type == token_type)
   {
     parser_next_token();
     return true;
   }
 
   char msg[100];
-  sprintf(msg, "expected next token to be %s, got %s instead\n", token_type, peek_token->type);
+  sprintf(msg, "expected next token to be %s, got %d instead\n", token_type_name(token_type), peek_token->type);
   parser_push_error(msg);
   return false;
 }
@@ -257,10 +249,10 @@ Token *parser_peek_token()
   return peek_token;
 }
 
-static void no_prefix_parse_fn_error(char *token_type)
+static void no_prefix_parse_fn_error(int token_type)
 {
   char *err = malloc(200);
-  sprintf(err, "no prefix parse function for token type `%s` found\n", token_type);
+  sprintf(err, "no prefix parse function for token type `%s` found\n", token_type_name(token_type));
   parser_push_error(err);
 }
 
@@ -274,12 +266,12 @@ int parser_current_precedence()
   return token_precedence(parser_current_token()->type);
 }
 
-bool parser_peek_token_is(char *token_type)
+bool parser_peek_token_is(int token_type)
 {
-  return str_is(token_type, parser_peek_token()->type);
+  return peek_token->type == token_type;
 }
 
-bool parser_current_token_is(char *token_type)
+bool parser_current_token_is(int token_type)
 {
-  return str_is(token_type, parser_current_token()->type);
+  return current_token->type == token_type;
 }

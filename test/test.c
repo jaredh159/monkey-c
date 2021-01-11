@@ -26,11 +26,6 @@ bool token_literal_is(Token *token, char *literal)
   return token_prop_is(token->literal, literal);
 }
 
-bool token_is(Token *token, char *type)
-{
-  return token_prop_is(token->type, type);
-}
-
 void fail(char *msg, char *test_name)
 {
   printf(COLOR_RED "%sX %s: %s\n" COLOR_RESET, verbose ? "" : "\n", test_name, msg);

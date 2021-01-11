@@ -21,7 +21,7 @@ static void skip_whitespace();
 static char *read_identifier();
 static char *read_number();
 static char *char_to_str(char);
-static char *lookup_ident(char *);
+static int lookup_ident(char *);
 
 extern void lexer_push(char *pushed_src)
 {
@@ -171,7 +171,7 @@ static char *read_identifier()
   return ident;
 }
 
-static char *lookup_ident(char *ident)
+static int lookup_ident(char *ident)
 {
   if (strcmp(ident, "let") == 0)
     return TOKEN_LET;

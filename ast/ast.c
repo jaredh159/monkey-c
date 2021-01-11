@@ -198,23 +198,26 @@ static char *expression_string(Expression *exp)
   return exp_str;
 }
 
-int token_precedence(char *token_type)
+int token_precedence(int token_type)
 {
-  if (str_is(token_type, TOKEN_EQ))
+  switch (token_type)
+  {
+  case TOKEN_EQ:
     return PRECEDENCE_EQUALS;
-  if (str_is(token_type, TOKEN_NOT_EQ))
+  case TOKEN_NOT_EQ:
     return PRECEDENCE_EQUALS;
-  if (str_is(token_type, TOKEN_LT))
+  case TOKEN_LT:
     return PRECEDENCE_LESSGREATER;
-  if (str_is(token_type, TOKEN_GT))
+  case TOKEN_GT:
     return PRECEDENCE_LESSGREATER;
-  if (str_is(token_type, TOKEN_PLUS))
+  case TOKEN_PLUS:
     return PRECEDENCE_SUM;
-  if (str_is(token_type, TOKEN_MINUS))
+  case TOKEN_MINUS:
     return PRECEDENCE_SUM;
-  if (str_is(token_type, TOKEN_SLASH))
+  case TOKEN_SLASH:
     return PRECEDENCE_PRODUCT;
-  if (str_is(token_type, TOKEN_ASTERISK))
+  case TOKEN_ASTERISK:
     return PRECEDENCE_PRODUCT;
+  }
   return PRECEDENCE_LOWEST;
 }

@@ -41,11 +41,11 @@ int parser_num_errors();
 void parser_print_errors();
 Token *parser_current_token();
 Token *parser_peek_token();
-bool parser_peek_token_is(char *token_type);
-bool parser_current_token_is(char *token_type);
+bool parser_peek_token_is(int token_type);
+bool parser_current_token_is(int token_type);
 typedef Expression *(*PrefixParselet)(void);
 typedef Expression *(*InfixParselet)(Expression *);
-PrefixParselet get_prefix_parselet(char *token_type);
-InfixParselet get_infix_parselet(char *token_type);
+PrefixParselet get_prefix_parselet(int token_type);
+InfixParselet get_infix_parselet(int token_type);
 
 #endif // __PARSER_H__

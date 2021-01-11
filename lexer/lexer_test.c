@@ -158,8 +158,8 @@ void assert_lexing(char *input, Token expected_tokens[], int num_expected, char 
   {
     actual = lexer_next_token();
     expected = expected_tokens[i];
-    sprintf(msg, "Token type should be %s", expected.type);
-    assert(token_is(actual, expected.type), msg, test_name);
+    sprintf(msg, "Token type should be %s", token_type_name(expected.type));
+    assert(actual->type == expected.type, msg, test_name);
     sprintf(msg, "Token literal should be %s", expected.literal);
     assert(token_literal_is(actual, expected.literal), msg, test_name);
   }

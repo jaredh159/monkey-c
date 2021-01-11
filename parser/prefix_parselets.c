@@ -83,36 +83,34 @@ Expression *parse_infix_expression(Expression *left)
   return exp;
 }
 
-PrefixParselet get_prefix_parselet(char *token_type)
+PrefixParselet get_prefix_parselet(int token_type)
 {
-  if (str_is(token_type, TOKEN_IDENTIFIER))
+  switch (token_type)
+  {
+  case TOKEN_IDENTIFIER:
     return parse_identifier;
-  if (str_is(token_type, TOKEN_INTEGER))
+  case TOKEN_INTEGER:
     return parse_integer_literal;
-  if (str_is(token_type, TOKEN_MINUS))
+  case TOKEN_MINUS:
+  case TOKEN_BANG:
     return parse_prefix_expression;
-  if (str_is(token_type, TOKEN_BANG))
-    return parse_prefix_expression;
+  }
   return NULL;
 }
 
-InfixParselet get_infix_parselet(char *token_type)
+InfixParselet get_infix_parselet(int token_type)
 {
-  if (str_is(token_type, TOKEN_PLUS))
+  switch (token_type)
+  {
+  case TOKEN_PLUS:
+  case TOKEN_MINUS:
+  case TOKEN_SLASH:
+  case TOKEN_ASTERISK:
+  case TOKEN_EQ:
+  case TOKEN_NOT_EQ:
+  case TOKEN_LT:
+  case TOKEN_GT:
     return parse_infix_expression;
-  if (str_is(token_type, TOKEN_MINUS))
-    return parse_infix_expression;
-  if (str_is(token_type, TOKEN_SLASH))
-    return parse_infix_expression;
-  if (str_is(token_type, TOKEN_ASTERISK))
-    return parse_infix_expression;
-  if (str_is(token_type, TOKEN_EQ))
-    return parse_infix_expression;
-  if (str_is(token_type, TOKEN_NOT_EQ))
-    return parse_infix_expression;
-  if (str_is(token_type, TOKEN_LT))
-    return parse_infix_expression;
-  if (str_is(token_type, TOKEN_GT))
-    return parse_infix_expression;
+  }
   return NULL;
 }

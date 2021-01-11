@@ -21,7 +21,7 @@ extern void repl_start(void)
     if (num_chars > 1)
     {
       lexer_set(buffer);
-      for (tok = lexer_next_token(); strcmp(tok->type, TOKEN_EOF) != 0; tok = lexer_next_token())
+      for (tok = lexer_next_token(); tok->type != TOKEN_EOF; tok = lexer_next_token())
         print_token(tok);
       printf("\n");
     }

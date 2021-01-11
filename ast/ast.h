@@ -87,7 +87,7 @@ void print_statement(Statement *statement);
 void print_expression(Expression *expression);
 void print_identifier(Identifier *identifier);
 int num_program_statements(Program *program);
-int token_precedence(char *token_type);
+int token_precedence(int token_type);
 ReturnStatement *get_return(Statement *statement);
 LetStatement *get_let(Statement *statement);
 ExpressionStatement *get_expression(Statement *statement);

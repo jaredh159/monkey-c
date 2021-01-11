@@ -5,56 +5,45 @@
 
 typedef struct Token
 {
-  char *type;
+  int type;
   char *literal;
 } Token;
 
-Token *new_token(char *type, char *literal);
-
+Token *new_token(int type, char *literal);
 void print_token(Token *tok);
 bool str_is(char *, char *);
 bool token_prop_is(char *, char *);
+char *token_type_name(int type);
 
-/* operators */
-#define TOKEN_ASSIGN "ASSIGN"
-#define TOKEN_PLUS "PLUS"
-#define TOKEN_MINUS "MINUS"
-#define TOKEN_BANG "BANG"
-#define TOKEN_ASTERISK "ASTERISK"
-#define TOKEN_SLASH "SLASH"
-
-/* comparison */
-#define TOKEN_LT "LT"
-#define TOKEN_GT "GT"
-#define TOKEN_EQ "EQ"
-#define TOKEN_NOT_EQ "NOT_EQ"
-
-/* keywords */
-#define TOKEN_FUNCTION "FUNCTION"
-#define TOKEN_LET "LET"
-#define TOKEN_TRUE "TRUE"
-#define TOKEN_FALSE "FALSE"
-#define TOKEN_IF "IF"
-#define TOKEN_ELSE "ELSE"
-#define TOKEN_RETURN "RETURN"
-
-/* delimiters */
-#define TOKEN_COMMA "COMMA"
-#define TOKEN_SEMICOLON "SEMICOLON"
-
-/* identifiers + literals */
-#define TOKEN_INTEGER "INTEGER"
-#define TOKEN_IDENTIFIER "IDENTIFIER"
-
-/* ¯\_(ツ)_/¯ */
-#define TOKEN_BANG "BANG"
-#define TOKEN_LEFT_PAREN "LEFT_PAREN"
-#define TOKEN_RIGHT_PAREN "RIGHT_PAREN"
-#define TOKEN_LEFT_BRACE "LEFT_BRACE"
-#define TOKEN_RIGHT_BRACE "RIGHT_BRACE"
-
-/* utility */
-#define TOKEN_ILLEGAL "ILLEGAL"
-#define TOKEN_EOF "EOF"
+enum
+{
+  TOKEN_ASSIGN,
+  TOKEN_PLUS,
+  TOKEN_MINUS,
+  TOKEN_BANG,
+  TOKEN_ASTERISK,
+  TOKEN_SLASH,
+  TOKEN_LT,
+  TOKEN_GT,
+  TOKEN_EQ,
+  TOKEN_NOT_EQ,
+  TOKEN_LET,
+  TOKEN_TRUE,
+  TOKEN_FALSE,
+  TOKEN_IF,
+  TOKEN_ELSE,
+  TOKEN_RETURN,
+  TOKEN_SEMICOLON,
+  TOKEN_IDENTIFIER,
+  TOKEN_INTEGER,
+  TOKEN_LEFT_PAREN,
+  TOKEN_RIGHT_PAREN,
+  TOKEN_LEFT_BRACE,
+  TOKEN_RIGHT_BRACE,
+  TOKEN_ILLEGAL,
+  TOKEN_COMMA,
+  TOKEN_FUNCTION,
+  TOKEN_EOF
+};
 
 #endif // __TOKEN_H__
