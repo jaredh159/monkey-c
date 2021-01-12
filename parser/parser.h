@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "../ast/ast.h"
 
-enum
+enum Precedence
 {
   PRECEDENCE_LOWEST,
   PRECEDENCE_EQUALS,
@@ -15,7 +15,7 @@ enum
   PRECEDENCE_CALL
 };
 
-enum
+enum ExpressionType
 {
   EXPRESSION_IDENTIFIER,
   EXPRESSION_INTEGER_LITERAL,
@@ -23,7 +23,7 @@ enum
   EXPRESSION_INFIX
 };
 
-enum
+enum StatementType
 {
   STATEMENT_LET,
   STATEMENT_RETURN,

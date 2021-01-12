@@ -53,7 +53,6 @@ typedef struct ReturnStatement
 typedef struct ExpressionStatement
 {
   Token *token;
-  Identifier *identifier;
   Expression *expression;
 } ExpressionStatement;
 

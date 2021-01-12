@@ -191,9 +191,46 @@ void test_parses_infix_expressions()
   }
 }
 
+void test_operator_precedence_parsing()
+{
+  char *t = "operator_precedence_parsing";
+  typedef struct
+  {
+    char *input;
+    char *expected;
+  } PrecedenceTest;
+
+  PrecedenceTest tests[] = {
+      {"-a * b", "((-a) * b)"},
+      {"!-a", "(!(-a))"},
+      {"a + b + c", "((a + b) + c)"},
+      {"a * b * c", "((a * b) * c)"},
+      {"a * b / c", "((a * b) / c)"},
+      {"a + b / c", "(a + (b / c))"},
+      {"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+      {"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
+      {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
+      {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+      {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"}};
+  int num_tests = sizeof(tests) / sizeof(PrecedenceTest);
+
+  for (int i = 0; i < num_tests; i++)
+  {
+    PrecedenceTest test = tests[i];
+    Program *program = parse_program(test.input);
+    if (program == NULL)
+      fail("parse_program() returned NULL", t);
+
+    check_parser_errors(t);
+    char *actual = program_string(program);
+    assert_str_is(test.expected, actual, "program string is correct", t);
+  }
+}
+
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_operator_precedence_parsing();
   test_parses_infix_expressions();
   test_parses_prefix_expressions();
   test_parses_identifier_expression();

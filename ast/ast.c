@@ -161,9 +161,9 @@ char *return_statement_string(ReturnStatement *rs)
   return ret_str;
 }
 
-char *expression_statement_string(ExpressionStatement *es)
+char *integer_literal_string(IntegerLiteral *int_literal)
 {
-  return identifier_string(es->identifier);
+  return int_literal->token->literal;
 }
 
 char *identifier_string(Identifier *identifier)
@@ -190,14 +190,6 @@ char *prefix_expression_string(PrefixExpression *prefix)
   return pref_str;
 }
 
-// TODO... is this necessary any more?
-static char *expression_string(Expression *exp)
-{
-  char *exp_str = malloc(MAX_STMT_STR_LEN);
-  sprintf(exp_str, "%s", exp->token_literal);
-  return exp_str;
-}
-
 int token_precedence(int token_type)
 {
   switch (token_type)
@@ -220,4 +212,25 @@ int token_precedence(int token_type)
     return PRECEDENCE_PRODUCT;
   }
   return PRECEDENCE_LOWEST;
+}
+
+static char *expression_string(Expression *exp)
+{
+  switch (exp->type)
+  {
+  case EXPRESSION_IDENTIFIER:
+    return identifier_string(exp->node);
+  case EXPRESSION_INTEGER_LITERAL:
+    return integer_literal_string(exp->node);
+  case EXPRESSION_PREFIX:
+    return prefix_expression_string(exp->node);
+  case EXPRESSION_INFIX:
+    return infix_expression_string(exp->node);
+  }
+  return NULL;
+}
+
+char *expression_statement_string(ExpressionStatement *es)
+{
+  return expression_string(es->expression);
 }

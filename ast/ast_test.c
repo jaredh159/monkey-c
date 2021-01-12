@@ -11,7 +11,7 @@ void test_string()
   Token myVarIdentToken = {TOKEN_IDENTIFIER, "myVar"};
   Token anotherVarIdentToken = {TOKEN_IDENTIFIER, "anotherVar"};
   Identifier letNameIdent = {&myVarIdentToken, "myVar"};
-  Expression letValueExpr = {"anotherVar", 1, &anotherVarIdentToken};
+  Expression letValueExpr = {"anotherVar", EXPRESSION_IDENTIFIER, &anotherVarIdentToken};
   LetStatement letStatement = {&myVarLetToken, &letNameIdent, &letValueExpr};
   Statement statement = {myVarLetToken.literal, STATEMENT_LET, &letStatement};
   Statements statements = {&statement, NULL};
@@ -19,7 +19,7 @@ void test_string()
   assert_str_is(
       program_string(&program),
       "let myVar = anotherVar;\n",
-      "hand-constructed AST as correct string representation",
+      "hand-constructed AST has correct string representation",
       "test_string");
 }
 
