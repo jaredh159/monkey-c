@@ -11,10 +11,27 @@
 #define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
 #pragma clang diagnostic push
 
+typedef struct
+{
+  int type;
+  char *ident_val;
+  int int_val;
+  char *int_literal;
+} LitExpTest;
+
+enum LiteralExpressionType
+{
+  LITERAL_TYPE_INT,
+  LITERAL_TYPE_IDENT
+};
+
+void assert_literal_expression(Expression *expr, LitExpTest *expected, char *test_name);
 void check_parser_errors(char *test_name);
 void assert_let_statement(Statement *, char *identifier, char *test_name);
 void assert_return_statement(Statement *stmt, char *test_name);
 void assert_integer_literal(Expression *exp, int value, char *literal, char *test_name);
+void assert_identifier(Expression *exp, char *value, char *test_name);
+void assert_infix_expression(Expression *expr, LitExpTest left, char *op, LitExpTest right, char *t);
 
 void test_parses_identifier_expression()
 {
@@ -183,11 +200,10 @@ void test_parses_infix_expressions()
     assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
     ExpressionStatement *es = get_expression(stmt);
     Expression *exp = es->expression;
-    assert_int_is(exp->type, EXPRESSION_INFIX, "expression type is INFIX", t);
-    InfixExpression *infix = exp->node;
-    assert_integer_literal(infix->left, test.left_value, "5", t);
-    assert_integer_literal(infix->right, test.right_value, "5", t);
-    assert_str_is(test.operator, infix->operator, str_embed("operator is %s", infix->operator), t);
+
+    LitExpTest left = {LITERAL_TYPE_INT, "", test.left_value, "5"};
+    LitExpTest right = {LITERAL_TYPE_INT, "", test.right_value, "5"};
+    assert_infix_expression(exp, left, test.operator, right, t);
   }
 }
 
@@ -291,4 +307,40 @@ void assert_integer_literal(Expression *exp, int value, char *literal, char *tes
 
   sprintf(msg, "int_literal->token->literal is \"%s\"", literal);
   assert_str_is(literal, int_literal->token->literal, msg, test_name);
+}
+
+void assert_identifier(Expression *exp, char *value, char *test_name)
+{
+  assert_int_is(EXPRESSION_IDENTIFIER, exp->type, "expression is identifier", test_name);
+  Identifier *ident = exp->node;
+  assert_str_is(value, ident->value, "identifier value is correct", test_name);
+  assert_str_is(value, ident->token->literal, "identifier token literal is correct", test_name);
+}
+
+void assert_literal_expression(Expression *expr, LitExpTest *expected, char *test_name)
+{
+  switch (expected->type)
+  {
+  case LITERAL_TYPE_INT:
+    assert_integer_literal(expr, expected->int_val, expected->int_literal, test_name);
+    return;
+  case LITERAL_TYPE_IDENT:
+    assert_identifier(expr, expected->ident_val, test_name);
+    return;
+  }
+  fail("literal expression type not handled", test_name);
+}
+
+void assert_infix_expression(
+    Expression *expr,
+    LitExpTest left,
+    char *operand,
+    LitExpTest right,
+    char *test_name)
+{
+  assert_int_is(EXPRESSION_INFIX, expr->type, "expression is infix", test_name);
+  InfixExpression *infix = expr->node;
+  assert_literal_expression(infix->left, &left, test_name);
+  assert_str_is(operand, infix->operator, "operand is correct", test_name);
+  assert_literal_expression(infix->right, &right, test_name);
 }
