@@ -44,6 +44,23 @@ Expression *parse_integer_literal()
   return exp;
 }
 
+Expression *parse_boolean_literal()
+{
+  Expression *exp = malloc(sizeof(Expression));
+  BooleanLiteral *bool_literal = malloc(sizeof(BooleanLiteral));
+  if (exp == NULL || bool_literal == NULL)
+    return NULL;
+
+  char *token_literal = parser_current_token()->literal;
+  int value = parser_current_token()->type == TOKEN_TRUE;
+  bool_literal->token = parser_current_token();
+  bool_literal->value = value;
+  exp->token_literal = token_literal;
+  exp->type = EXPRESSION_BOOLEAN_LITERAL;
+  exp->node = bool_literal;
+  return exp;
+}
+
 Expression *parse_prefix_expression()
 {
   Expression *exp = malloc(sizeof(Expression));
@@ -94,6 +111,9 @@ PrefixParselet get_prefix_parselet(int token_type)
   case TOKEN_MINUS:
   case TOKEN_BANG:
     return parse_prefix_expression;
+  case TOKEN_TRUE:
+  case TOKEN_FALSE:
+    return parse_boolean_literal;
   }
   return NULL;
 }

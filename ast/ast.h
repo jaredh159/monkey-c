@@ -1,7 +1,14 @@
 #ifndef __AST_H__
 #define __AST_H__
 
+#include <stdbool.h>
 #include "../token/token.h"
+
+typedef struct BooleanLiteral
+{
+  Token *token;
+  bool value;
+} BooleanLiteral;
 
 typedef struct IntegerLiteral
 {

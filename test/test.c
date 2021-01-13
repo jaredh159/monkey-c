@@ -48,14 +48,14 @@ void assert(bool predicate, char *msg, char *test_name)
   printf(COLOR_GREEN "√" COLOR_RESET COLOR_GREY " %s: %s\n" COLOR_RESET, test_name, msg);
 }
 
-void assert_str_is(char *str1, char *str2, char *msg, char *test_name)
+void assert_str_is(char *expected, char *actual, char *msg, char *test_name)
 {
-  if (strcmp(str1, str2) == 0)
+  if (strcmp(expected, actual) == 0)
     assert(true, msg, test_name);
   else
   {
     char failmsg[200];
-    sprintf(failmsg, "expected string to be `%s`, got `%s` instead", str1, str2);
+    sprintf(failmsg, "expected string to be `%s`, got `%s` instead", expected, actual);
     fail(failmsg, test_name);
   }
 }

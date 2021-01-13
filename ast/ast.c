@@ -214,10 +214,17 @@ int token_precedence(int token_type)
   return PRECEDENCE_LOWEST;
 }
 
+static char *boolean_literal_string(BooleanLiteral *boolean)
+{
+  return boolean->token->literal;
+}
+
 static char *expression_string(Expression *exp)
 {
   switch (exp->type)
   {
+  case EXPRESSION_BOOLEAN_LITERAL:
+    return boolean_literal_string(exp->node);
   case EXPRESSION_IDENTIFIER:
     return identifier_string(exp->node);
   case EXPRESSION_INTEGER_LITERAL:

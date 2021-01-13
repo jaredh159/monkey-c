@@ -22,8 +22,13 @@ typedef struct
 enum LiteralExpressionType
 {
   LITERAL_TYPE_INT,
-  LITERAL_TYPE_IDENT
+  LITERAL_TYPE_IDENT,
+  LITERAL_TYPE_BOOL,
 };
+
+static LitExpTest five = {LITERAL_TYPE_INT, "", 5, "5"};
+static LitExpTest _true = {LITERAL_TYPE_BOOL, "", (int)true, "true"};
+static LitExpTest _false = {LITERAL_TYPE_BOOL, "", (int)false, "false"};
 
 void assert_literal_expression(Expression *expr, LitExpTest *expected, char *test_name);
 void check_parser_errors(char *test_name);
@@ -32,6 +37,7 @@ void assert_return_statement(Statement *stmt, char *test_name);
 void assert_integer_literal(Expression *exp, int value, char *literal, char *test_name);
 void assert_identifier(Expression *exp, char *value, char *test_name);
 void assert_infix_expression(Expression *expr, LitExpTest left, char *op, LitExpTest right, char *t);
+void assert_boolean_literal(Expression *exp, bool value, char *test_name);
 
 void test_parses_identifier_expression()
 {
@@ -129,6 +135,23 @@ void test_parses_integer_literal_expression()
   assert_integer_literal(exp, 5, "5", t);
 }
 
+void test_parses_boolean_literal_expression()
+{
+  char *t = "parses_boolean_literal_expression";
+  Program *program = parse_program("true;");
+
+  if (program == NULL)
+    fail("parse_program() returned NULL", t);
+
+  check_parser_errors(t);
+  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+  Statement *stmt = program->statements->statement;
+  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  ExpressionStatement *es = get_expression(stmt);
+  Expression *exp = es->expression;
+  assert_boolean_literal(exp, true, t);
+}
+
 void test_parses_prefix_expressions()
 {
   char *t = "parses_prefix_expressions";
@@ -136,13 +159,14 @@ void test_parses_prefix_expressions()
   {
     char *input;
     char *operator;
-    int int_val;
-    char *str_val;
+    LitExpTest value;
   } PrefixTest;
 
   PrefixTest tests[] = {
-      {"!5;", "!", 5, "5"},
-      {"-15;", "-", 15, "15"}};
+      {"!true;", "!", _true},
+      {"!false;", "!", _false},
+      {"!5;", "!", five},
+      {"-15;", "-", {LITERAL_TYPE_INT, "", 15, "15"}}};
 
   for (int i = 0; i < 2; i++)
   {
@@ -160,7 +184,7 @@ void test_parses_prefix_expressions()
     assert_int_is(exp->type, EXPRESSION_PREFIX, "expression type is PREFIX", t);
     PrefixExpression *prefix = exp->node;
     assert_str_is(test.operator, prefix->operator, str_embed("operator is %s", test.operator), t);
-    assert_integer_literal(prefix->right, test.int_val, test.str_val, t);
+    assert_literal_expression(prefix->right, &test.value, t);
   }
 }
 
@@ -170,20 +194,23 @@ void test_parses_infix_expressions()
   typedef struct
   {
     char *input;
-    int left_value;
+    LitExpTest left;
     char *operator;
-    int right_value;
+    LitExpTest right;
   } InfixTest;
 
   InfixTest tests[] = {
-      {"5 + 5;", 5, "+", 5},
-      {"5 - 5;", 5, "-", 5},
-      {"5 * 5;", 5, "*", 5},
-      {"5 / 5;", 5, "/", 5},
-      {"5 > 5;", 5, ">", 5},
-      {"5 < 5;", 5, "<", 5},
-      {"5 == 5;", 5, "==", 5},
-      {"5 != 5;", 5, "!=", 5},
+      {"true == true", _true, "==", _true},
+      {"true != false", _true, "!=", _false},
+      {"false == false", _false, "==", _false},
+      {"5 + 5;", five, "+", five},
+      {"5 - 5;", five, "-", five},
+      {"5 * 5;", five, "*", five},
+      {"5 / 5;", five, "/", five},
+      {"5 > 5;", five, ">", five},
+      {"5 < 5;", five, "<", five},
+      {"5 == 5;", five, "==", five},
+      {"5 != 5;", five, "!=", five},
   };
 
   int num_tests = sizeof(tests) / sizeof(InfixTest);
@@ -201,9 +228,7 @@ void test_parses_infix_expressions()
     ExpressionStatement *es = get_expression(stmt);
     Expression *exp = es->expression;
 
-    LitExpTest left = {LITERAL_TYPE_INT, "", test.left_value, "5"};
-    LitExpTest right = {LITERAL_TYPE_INT, "", test.right_value, "5"};
-    assert_infix_expression(exp, left, test.operator, right, t);
+    assert_infix_expression(exp, test.left, test.operator, test.right, t);
   }
 }
 
@@ -217,6 +242,10 @@ void test_operator_precedence_parsing()
   } PrecedenceTest;
 
   PrecedenceTest tests[] = {
+      {"true", "true"},
+      {"false", "false"},
+      {"3 > 5 == false", "((3 > 5) == false)"},
+      {"3 > 5 == true", "((3 > 5) == true)"},
       {"-a * b", "((-a) * b)"},
       {"!-a", "(!(-a))"},
       {"a + b + c", "((a + b) + c)"},
@@ -246,6 +275,7 @@ void test_operator_precedence_parsing()
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_parses_boolean_literal_expression();
   test_operator_precedence_parsing();
   test_parses_infix_expressions();
   test_parses_prefix_expressions();
@@ -309,6 +339,14 @@ void assert_integer_literal(Expression *exp, int value, char *literal, char *tes
   assert_str_is(literal, int_literal->token->literal, msg, test_name);
 }
 
+void assert_boolean_literal(Expression *exp, bool value, char *test_name)
+{
+  assert_int_is(exp->type, EXPRESSION_BOOLEAN_LITERAL, "expression is boolean literal", test_name);
+  BooleanLiteral *bool_literal = exp->node;
+  assert_int_is((int)value, bool_literal->value, "boolean is correct", test_name);
+  assert_str_is(value ? "true" : "false", bool_literal->token->literal, "boolean token literal correct", test_name);
+}
+
 void assert_identifier(Expression *exp, char *value, char *test_name)
 {
   assert_int_is(EXPRESSION_IDENTIFIER, exp->type, "expression is identifier", test_name);
@@ -321,6 +359,9 @@ void assert_literal_expression(Expression *expr, LitExpTest *expected, char *tes
 {
   switch (expected->type)
   {
+  case LITERAL_TYPE_BOOL:
+    assert_boolean_literal(expr, (bool)expected->int_val, test_name);
+    return;
   case LITERAL_TYPE_INT:
     assert_integer_literal(expr, expected->int_val, expected->int_literal, test_name);
     return;

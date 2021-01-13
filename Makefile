@@ -4,7 +4,7 @@ monkey:
 	clang -o .bin/monkey monkey.c repl/repl.c token/token.c lexer/lexer.c $(FLAGS)
 
 test_parser:
-	clang -o .bin/test_parser parser/parser_test.c parser/parser.c parser/prefix_parselets.c test/test.c lexer/lexer.c token/token.c ast/ast.c utils/argv.c $(FLAGS)
+	clang -o .bin/test_parser parser/parser_test.c parser/parser.c parser/parselets.c test/test.c lexer/lexer.c token/token.c ast/ast.c utils/argv.c $(FLAGS)
 
 test_lexer:
 	clang -o .bin/test_lexer lexer/lexer.c lexer/lexer_test.c token/token.c test/test.c utils/argv.c $(FLAGS)
