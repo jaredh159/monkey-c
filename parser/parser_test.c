@@ -47,7 +47,7 @@ void test_parses_identifier_expression()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+  assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
   assert(stmt->type == STATEMENT_EXPRESSION, "statement is expression", t);
@@ -70,7 +70,7 @@ void test_parses_one_let_statement()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+  assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
 
   Statement *stmt = program->statements->statement;
   assert_let_statement(stmt, "x", t);
@@ -89,7 +89,7 @@ void test_parses_multiple_let_statements()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert_int_is(3, num_program_statements(program), "program has 3 statements", t);
+  assert_int_is(3, num_statements(program->statements), "program has 3 statements", t);
 
   stmt = program->statements->statement;
   assert_let_statement(stmt, "x", t);
@@ -111,7 +111,7 @@ void test_parses_return_statements()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert_int_is(3, num_program_statements(program), "program has 3 statements", t);
+  assert_int_is(3, num_statements(program->statements), "program has 3 statements", t);
 
   assert_return_statement(program->statements->statement, t);
   assert_return_statement(program->statements->next->statement, t);
@@ -127,7 +127,7 @@ void test_parses_integer_literal_expression()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+  assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
   Statement *stmt = program->statements->statement;
   assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
@@ -144,7 +144,7 @@ void test_parses_boolean_literal_expression()
     fail("parse_program() returned NULL", t);
 
   check_parser_errors(t);
-  assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+  assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
   Statement *stmt = program->statements->statement;
   assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
@@ -176,7 +176,7 @@ void test_parses_prefix_expressions()
       fail("parse_program() returned NULL", t);
 
     check_parser_errors(t);
-    assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+    assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
     Statement *stmt = program->statements->statement;
     assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
     ExpressionStatement *es = get_expression(stmt);
@@ -222,7 +222,7 @@ void test_parses_infix_expressions()
       fail("parse_program() returned NULL", t);
 
     check_parser_errors(t);
-    assert_int_is(1, num_program_statements(program), "program has 1 statement", t);
+    assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
     Statement *stmt = program->statements->statement;
     assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
     ExpressionStatement *es = get_expression(stmt);
@@ -277,9 +277,73 @@ void test_operator_precedence_parsing()
   }
 }
 
+void test_parses_if_expression()
+{
+  char *t = "parses_if_expression";
+  Program *program = parse_program("if (x < y) { x }");
+
+  if (program == NULL)
+    fail("parse_program() returned NULL", t);
+
+  check_parser_errors(t);
+  assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
+  Statement *stmt = program->statements->statement;
+  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  ExpressionStatement *es = get_expression(stmt);
+  Expression *exp = es->expression;
+  assert(exp->type == EXPRESSION_IF, "expression is IF", t);
+  IfExpression *if_exp = exp->node;
+  LitExpTest x = {LITERAL_TYPE_IDENT, "x", 0, ""};
+  LitExpTest y = {LITERAL_TYPE_IDENT, "y", 0, ""};
+  assert_infix_expression(if_exp->condition, x, "<", y, t);
+  assert_int_is(1, num_statements(if_exp->consequence->statements), "consequence has 1 statement", t);
+  Statement *consequence = if_exp->consequence->statements->statement;
+  assert(consequence->type == STATEMENT_EXPRESSION, "first consequence statement is expression", t);
+  ExpressionStatement *cq_exp = get_expression(consequence);
+  assert_identifier(cq_exp->expression, "x", t);
+  assert(if_exp->alternative == NULL, "alternative is NULL", t);
+}
+
+void test_parses_if_else_expression()
+{
+  char *t = "parses_if_else_expression";
+  Program *program = parse_program("if (x < y) { x } else { y }");
+
+  if (program == NULL)
+    fail("parse_program() returned NULL", t);
+
+  check_parser_errors(t);
+  assert_int_is(1, num_statements(program->statements), "program has 1 statement", t);
+  Statement *stmt = program->statements->statement;
+  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  ExpressionStatement *es = get_expression(stmt);
+  Expression *exp = es->expression;
+  assert(exp->type == EXPRESSION_IF, "expression is IF", t);
+  IfExpression *if_exp = exp->node;
+  LitExpTest x = {LITERAL_TYPE_IDENT, "x", 0, ""};
+  LitExpTest y = {LITERAL_TYPE_IDENT, "y", 0, ""};
+  assert_infix_expression(if_exp->condition, x, "<", y, t);
+
+  // test consequence
+  assert_int_is(1, num_statements(if_exp->consequence->statements), "consequence has 1 statement", t);
+  Statement *consequence = if_exp->consequence->statements->statement;
+  assert(consequence->type == STATEMENT_EXPRESSION, "first consequence statement is expression", t);
+  ExpressionStatement *cq_exp = get_expression(consequence);
+  assert_identifier(cq_exp->expression, "x", t);
+
+  // test alternative
+  assert_int_is(1, num_statements(if_exp->alternative->statements), "alternative has 1 statement", t);
+  Statement *alternative = if_exp->alternative->statements->statement;
+  assert(alternative->type == STATEMENT_EXPRESSION, "first alternative statement is expression", t);
+  ExpressionStatement *at_exp = get_expression(alternative);
+  assert_identifier(at_exp->expression, "y", t);
+}
+
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_parses_if_expression();
+  test_parses_if_else_expression();
   test_parses_boolean_literal_expression();
   test_operator_precedence_parsing();
   test_parses_infix_expressions();

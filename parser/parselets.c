@@ -111,10 +111,50 @@ Expression *parse_grouped_expression()
   return exp;
 }
 
+Expression *parse_if_expression()
+{
+  Token *initial_token = parser_current_token();
+  Expression *exp = malloc(sizeof(Expression));
+  IfExpression *if_exp = malloc(sizeof(IfExpression));
+  if (exp == NULL || if_exp == NULL)
+    return NULL;
+
+  if (!parser_expect_peek(TOKEN_LEFT_PAREN))
+    return NULL;
+
+  parser_next_token();
+  if_exp->condition = parse_expression(PRECEDENCE_LOWEST);
+
+  if (!parser_expect_peek(TOKEN_RIGHT_PAREN))
+    return NULL;
+
+  if (!parser_expect_peek(TOKEN_LEFT_BRACE))
+    return NULL;
+
+  if_exp->consequence = parse_block_statement();
+
+  if (parser_peek_token_is(TOKEN_ELSE))
+  {
+    parser_next_token();
+    if (!parser_expect_peek(TOKEN_LEFT_BRACE))
+      return NULL;
+
+    if_exp->alternative = parse_block_statement();
+  }
+
+  if_exp->token = initial_token;
+  exp->token_literal = initial_token->literal;
+  exp->type = EXPRESSION_IF;
+  exp->node = if_exp;
+  return exp;
+}
+
 PrefixParselet get_prefix_parselet(int token_type)
 {
   switch (token_type)
   {
+  case TOKEN_IF:
+    return parse_if_expression;
   case TOKEN_LEFT_PAREN:
     return parse_grouped_expression;
   case TOKEN_IDENTIFIER:

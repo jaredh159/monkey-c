@@ -76,6 +76,20 @@ typedef struct Statements
   struct Statements *next;
 } Statements;
 
+typedef struct BlockStatement
+{
+  Token *token;
+  Statements *statements;
+} BlockStatement;
+
+typedef struct IfExpression
+{
+  Token *token;
+  Expression *condition;
+  BlockStatement *consequence;
+  BlockStatement *alternative;
+} IfExpression;
+
 typedef struct Program
 {
   char *token_literal;
@@ -92,7 +106,7 @@ void print_program(Program *program);
 void print_statement(Statement *statement);
 void print_expression(Expression *expression);
 void print_identifier(Identifier *identifier);
-int num_program_statements(Program *program);
+int num_statements(Statements *statements);
 int token_precedence(int token_type);
 ReturnStatement *get_return(Statement *statement);
 LetStatement *get_let(Statement *statement);

@@ -15,13 +15,12 @@
 void print_statement_indented(Statement *statement, char *indent);
 void print_expression_indented(Expression *expression, char *indent);
 void print_identifier_indented(Identifier *identifier, char *indent);
-int num_program_statements(Program *program);
 static char *expression_string(Expression *exp);
 
-int num_program_statements(Program *program)
+int num_statements(Statements *statements)
 {
   int num_statements;
-  Statements *current = program->statements;
+  Statements *current = statements;
   for (num_statements = 0; current != NULL; num_statements++)
     current = current->next;
   return num_statements;
@@ -29,11 +28,11 @@ int num_program_statements(Program *program)
 
 void print_program(Program *program)
 {
-  int num_statements = num_program_statements(program);
+  int num_stmts = num_statements(program->statements);
   printf(COLOR_GREY "Program {\n");
   printf("  address: %p\n", (void *)program);
-  printf("  num_statements: %d\n", num_statements);
-  if (num_statements == 0)
+  printf("  num_statements: %d\n", num_stmts);
+  if (num_stmts == 0)
     printf("  statements: []\n");
   else
   {
@@ -116,10 +115,10 @@ ExpressionStatement *get_expression(Statement *statement)
 
 char *program_string(Program *program)
 {
-  int num_statements = num_program_statements(program);
-  char *prog_str = malloc(MAX_STMT_STR_LEN * num_statements);
+  int num_stmts = num_statements(program->statements);
+  char *prog_str = malloc(MAX_STMT_STR_LEN * num_stmts);
   prog_str[0] = '\0';
-  if (num_statements == 0)
+  if (num_stmts == 0)
     return prog_str;
 
   Statements *current = program->statements;
@@ -188,6 +187,34 @@ char *prefix_expression_string(PrefixExpression *prefix)
   char *pref_str = malloc(MAX_STMT_STR_LEN);
   sprintf(pref_str, "(%s%s)", prefix->operator, expression_string(prefix->right));
   return pref_str;
+}
+
+char *block_statement_string(BlockStatement *bs)
+{
+  int num_stmts = num_statements(bs->statements);
+  char *bs_str = malloc(MAX_STMT_STR_LEN * num_stmts);
+  bs_str[0] = '\0';
+  if (num_stmts == 0)
+    return bs_str;
+
+  Statements *current = bs->statements;
+  for (; current != NULL; current = current->next)
+    if (current->statement != NULL)
+      strcat(bs_str, statement_string(current->statement));
+
+  return bs_str;
+}
+
+char *if_expression_string(IfExpression *if_exp)
+{
+  char *if_str = malloc(MAX_STMT_STR_LEN);
+  sprintf(
+      if_str,
+      "if %s %s%s",
+      expression_string(if_exp->condition),
+      block_statement_string(if_exp->consequence),
+      if_exp->alternative == NULL ? "" : block_statement_string(if_exp->alternative));
+  return if_str;
 }
 
 int token_precedence(int token_type)

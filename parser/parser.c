@@ -45,6 +45,28 @@ Program *parse_program(char *input)
   return program;
 }
 
+BlockStatement *parse_block_statement()
+{
+  BlockStatement *block = malloc(sizeof(BlockStatement));
+  if (block == NULL)
+    return NULL;
+
+  Token *initial_token = parser_current_token(); // `{`
+  block->token = initial_token;
+  block->statements = NULL;
+  parser_next_token();
+
+  Statement *statement;
+  for (; current_token->type != TOKEN_EOF && current_token->type != TOKEN_RIGHT_BRACE;)
+  {
+    statement = parse_statement();
+    if (statement != NULL)
+      append_statement((Program *)block, statement);
+    parser_next_token();
+  }
+  return block;
+}
+
 Statement *parse_statement()
 {
   if (current_token->type == TOKEN_LET)
