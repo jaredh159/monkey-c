@@ -100,10 +100,23 @@ Expression *parse_infix_expression(Expression *left)
   return exp;
 }
 
+Expression *parse_grouped_expression()
+{
+  parser_next_token();
+  Expression *exp = parse_expression(PRECEDENCE_LOWEST);
+  if (!parser_expect_peek(TOKEN_RIGHT_PAREN))
+  {
+    return NULL;
+  }
+  return exp;
+}
+
 PrefixParselet get_prefix_parselet(int token_type)
 {
   switch (token_type)
   {
+  case TOKEN_LEFT_PAREN:
+    return parse_grouped_expression;
   case TOKEN_IDENTIFIER:
     return parse_identifier;
   case TOKEN_INTEGER:

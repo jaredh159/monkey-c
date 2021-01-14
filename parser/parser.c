@@ -13,7 +13,6 @@ static Statement *parse_statement();
 static Statement *parse_let_statement();
 static Statement *parse_return_statement();
 static Statement *parse_expression_statement();
-static bool expect_peek(int token_type);
 static void append_statement(Program *program, Statement *statement);
 static void clear_error_stack();
 static void no_prefix_parse_fn_error(int token_type);
@@ -140,7 +139,7 @@ Statement *parse_let_statement()
   if (statement == NULL)
     return NULL;
 
-  if (!expect_peek(TOKEN_IDENTIFIER))
+  if (!parser_expect_peek(TOKEN_IDENTIFIER))
     return NULL;
 
   LetStatement *let_statement = malloc(sizeof(LetStatement));
@@ -157,7 +156,7 @@ Statement *parse_let_statement()
   statement->node = let_statement;
   statement->type = STATEMENT_LET;
 
-  if (!expect_peek(TOKEN_ASSIGN))
+  if (!parser_expect_peek(TOKEN_ASSIGN))
     return NULL;
 
   // TODO, we're skipping the expressions until we encounter a semicolon
@@ -191,7 +190,7 @@ void parser_next_token()
   peek_token = lexer_next_token();
 }
 
-static bool expect_peek(int token_type)
+bool parser_expect_peek(int token_type)
 {
   if (peek_token->type == token_type)
   {

@@ -44,6 +44,7 @@ Token *parser_current_token();
 Token *parser_peek_token();
 bool parser_peek_token_is(int token_type);
 bool parser_current_token_is(int token_type);
+bool parser_expect_peek(int token_type);
 typedef Expression *(*PrefixParselet)(void);
 typedef Expression *(*InfixParselet)(Expression *);
 PrefixParselet get_prefix_parselet(int token_type);
