@@ -17,18 +17,9 @@ void print_expression_indented(Expression *expression, char *indent);
 void print_identifier_indented(Identifier *identifier, char *indent);
 static char *expression_string(Expression *exp);
 
-int count_list(List *list)
-{
-  int num_items;
-  List *current = list;
-  for (num_items = 0; current != NULL; num_items++)
-    current = current->next;
-  return num_items;
-}
-
 void print_program(Program *program)
 {
-  int num_stmts = count_list(program->statements);
+  int num_stmts = list_count(program->statements);
   printf(COLOR_GREY "Program {\n");
   printf("  address: %p\n", (void *)program);
   printf("  num_statements: %d\n", num_stmts);
@@ -115,7 +106,7 @@ ExpressionStatement *get_expression(Statement *statement)
 
 char *program_string(Program *program)
 {
-  int num_stmts = count_list(program->statements);
+  int num_stmts = list_count(program->statements);
   char *prog_str = malloc(MAX_STMT_STR_LEN * num_stmts);
   prog_str[0] = '\0';
   if (num_stmts == 0)
@@ -191,7 +182,7 @@ char *prefix_expression_string(PrefixExpression *prefix)
 
 char *block_statement_string(BlockStatement *bs)
 {
-  int num_stmts = count_list(bs->statements);
+  int num_stmts = list_count(bs->statements);
   char *bs_str = malloc(MAX_STMT_STR_LEN * num_stmts);
   bs_str[0] = '\0';
   if (num_stmts == 0)

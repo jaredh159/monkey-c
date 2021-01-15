@@ -3,6 +3,7 @@
 #include <string.h>
 #include "parser.h"
 #include "../utils/colors.h"
+#include "../utils/list.h"
 #include "../ast/ast.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"
@@ -13,7 +14,6 @@ static Statement *parse_statement();
 static Statement *parse_let_statement();
 static Statement *parse_return_statement();
 static Statement *parse_expression_statement();
-static List *append_statement(List *statements, Statement *statement);
 static void clear_error_stack();
 static void no_prefix_parse_fn_error(int token_type);
 
@@ -37,7 +37,7 @@ Program *parse_program(char *input)
   {
     statement = parse_statement();
     if (statement != NULL)
-      program->statements = append_statement(program->statements, statement);
+      program->statements = list_append(program->statements, statement);
     parser_next_token();
   }
   // TODO, setup program->token_literal (see top of p 44)
@@ -61,7 +61,7 @@ BlockStatement *parse_block_statement()
   {
     statement = parse_statement();
     if (statement != NULL)
-      block->statements = append_statement(block->statements, statement);
+      block->statements = list_append(block->statements, statement);
     parser_next_token();
   }
   return block;
@@ -186,23 +186,6 @@ Statement *parse_let_statement()
     parser_next_token();
 
   return statement;
-}
-
-static List *append_statement(List *statements, Statement *statement)
-{
-  List *node = malloc(sizeof(List));
-  node->item = statement;
-  node->next = NULL;
-
-  if (statements == NULL)
-    return node;
-
-  List *current = statements;
-  while (current->next != NULL)
-    current = current->next;
-  current->next = node;
-
-  return statements;
 }
 
 void parser_next_token()

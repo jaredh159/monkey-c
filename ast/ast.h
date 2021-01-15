@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "../token/token.h"
+#include "../utils/list.h"
 
 typedef struct BooleanLiteral
 {
@@ -70,12 +71,6 @@ typedef struct Statement
   void *node;
 } Statement;
 
-typedef struct List
-{
-  void *item;
-  struct List *next;
-} List;
-
 typedef struct BlockStatement
 {
   Token *token;
@@ -113,7 +108,6 @@ void print_program(Program *program);
 void print_statement(Statement *statement);
 void print_expression(Expression *expression);
 void print_identifier(Identifier *identifier);
-int count_list(List *list);
 int token_precedence(int token_type);
 ReturnStatement *get_return(Statement *statement);
 LetStatement *get_let(Statement *statement);
