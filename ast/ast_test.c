@@ -14,7 +14,7 @@ void test_string()
   Expression letValueExpr = {"anotherVar", EXPRESSION_IDENTIFIER, &anotherVarIdentToken};
   LetStatement letStatement = {&myVarLetToken, &letNameIdent, &letValueExpr};
   Statement statement = {myVarLetToken.literal, STATEMENT_LET, &letStatement};
-  Statements statements = {&statement, NULL};
+  List statements = {&statement, NULL};
   Program program = {myVarLetToken.literal, &statements};
   assert_str_is(
       program_string(&program),

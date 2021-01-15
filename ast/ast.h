@@ -70,16 +70,16 @@ typedef struct Statement
   void *node;
 } Statement;
 
-typedef struct Statements
+typedef struct List
 {
-  Statement *statement;
-  struct Statements *next;
-} Statements;
+  void *item;
+  struct List *next;
+} List;
 
 typedef struct BlockStatement
 {
   Token *token;
-  Statements *statements;
+  List *statements;
 } BlockStatement;
 
 typedef struct IfExpression
@@ -90,10 +90,17 @@ typedef struct IfExpression
   BlockStatement *alternative;
 } IfExpression;
 
+typedef struct FunctionLiteral
+{
+  Token *token;
+  List *parameters;
+  BlockStatement *body;
+} FunctionLiteral;
+
 typedef struct Program
 {
   char *token_literal;
-  Statements *statements;
+  List *statements;
 } Program;
 
 char *program_string(Program *program);
@@ -106,7 +113,7 @@ void print_program(Program *program);
 void print_statement(Statement *statement);
 void print_expression(Expression *expression);
 void print_identifier(Identifier *identifier);
-int num_statements(Statements *statements);
+int count_list(List *list);
 int token_precedence(int token_type);
 ReturnStatement *get_return(Statement *statement);
 LetStatement *get_let(Statement *statement);
