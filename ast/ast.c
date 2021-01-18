@@ -104,6 +104,8 @@ ExpressionStatement *get_expression(Statement *statement)
 
 #define MAX_STMT_STR_LEN 100
 
+typedef char *(*StrFn)(void *);
+
 char *program_string(Program *program)
 {
   int num_stmts = list_count(program->statements);
@@ -112,11 +114,7 @@ char *program_string(Program *program)
   if (num_stmts == 0)
     return prog_str;
 
-  List *current = program->statements;
-  for (current = program->statements; current != NULL; current = current->next)
-    if (current->item != NULL)
-      strcat(prog_str, statement_string(current->item));
-
+  list_strcat_each(program->statements, prog_str, (StrFn)statement_string);
   return prog_str;
 }
 
@@ -188,10 +186,7 @@ char *block_statement_string(BlockStatement *bs)
   if (num_stmts == 0)
     return bs_str;
 
-  List *current = bs->statements;
-  for (; current != NULL; current = current->next)
-    if (current->item != NULL)
-      strcat(bs_str, statement_string(current->item));
+  list_strcat_each(bs->statements, bs_str, (StrFn)statement_string);
 
   return bs_str;
 }
