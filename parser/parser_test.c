@@ -29,6 +29,8 @@ enum LiteralExpressionType
 static LitExpTest five = {LITERAL_TYPE_INT, "", 5, "5"};
 static LitExpTest _true = {LITERAL_TYPE_BOOL, "", (int)true, "true"};
 static LitExpTest _false = {LITERAL_TYPE_BOOL, "", (int)false, "false"};
+static LitExpTest x = {LITERAL_TYPE_IDENT, "x", 0, ""};
+static LitExpTest y = {LITERAL_TYPE_IDENT, "y", 0, ""};
 
 void assert_literal_expression(Expression *expr, LitExpTest *expected, char *test_name);
 void check_parser_errors(char *test_name);
@@ -293,8 +295,6 @@ void test_parses_if_expression()
   Expression *exp = es->expression;
   assert(exp->type == EXPRESSION_IF, "expression is IF", t);
   IfExpression *if_exp = exp->node;
-  LitExpTest x = {LITERAL_TYPE_IDENT, "x", 0, ""};
-  LitExpTest y = {LITERAL_TYPE_IDENT, "y", 0, ""};
   assert_infix_expression(if_exp->condition, x, "<", y, t);
   assert_int_is(1, list_count(if_exp->consequence->statements), "consequence has 1 statement", t);
   Statement *consequence = if_exp->consequence->statements->item;
@@ -339,9 +339,40 @@ void test_parses_if_else_expression()
   assert_identifier(at_exp->expression, "y", t);
 }
 
+void test_parses_function_literal()
+{
+  char *t = "parses_function_literal";
+  Program *program = parse_program("fn(x, y) { x + y; }");
+
+  if (program == NULL)
+    fail("parse_program() returned NULL", t);
+
+  check_parser_errors(t);
+  assert_int_is(1, list_count(program->statements), "program has 1 statement", t);
+  Statement *stmt = program->statements->item;
+  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  ExpressionStatement *es = get_expression(stmt);
+  Expression *exp = es->expression;
+  assert(exp->type == EXPRESSION_FUNCTION_LITERAL, "expression is function literal", t);
+  FunctionLiteral *fn = exp->node;
+
+  assert_int_is(2, list_count(fn->parameters), "there are TWO params", t);
+  Identifier *param1 = fn->parameters->item;
+  assert_str_is("x", param1->token->literal, "first param is x", t);
+  assert_str_is("x", param1->value, "param1 identifier is x", t);
+  Identifier *param2 = fn->parameters->next->item;
+  assert_str_is("y", param2->token->literal, "second param is y", t);
+  assert_str_is("y", param2->value, "param2 identifier is x", t);
+
+  assert_int_is(1, list_count(fn->body->statements), "one statement in body", t);
+  ExpressionStatement *body_stmt = get_expression(fn->body->statements->item);
+  assert_infix_expression(body_stmt->expression, x, "+", y, t);
+}
+
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_parses_function_literal();
   test_parses_if_expression();
   test_parses_if_else_expression();
   test_parses_boolean_literal_expression();

@@ -203,15 +203,35 @@ char *if_expression_string(IfExpression *if_exp)
   return if_str;
 }
 
+char *function_params_string(List *params)
+{
+  char *params_str = malloc(MAX_STMT_STR_LEN);
+  params_str[0] = '\0';
+  int num_params = list_count(params);
+
+  List *current = params;
+  for (int i = 0; i < num_params; i++)
+  {
+    strcat(params_str, identifier_string(current->item));
+    if (i < (num_params - 1))
+      strcat(params_str, ", ");
+    current = current->next;
+  }
+
+  return params_str;
+}
+
 char *function_literal_expression_string(FunctionLiteral *fn)
 {
   char *fn_str = malloc(MAX_STMT_STR_LEN);
-  fn_str[0] = '\0';
 
-  // Identifiers *param = fn->parameters;
-  // for (; param != NULL; param = param->next)
-  //   if (param->identifier != NULL)
-  //     strcat(fn_str, statement_string(param->identifier));
+  sprintf(
+      fn_str,
+      "%s(%s)%s",
+      fn->token->literal,
+      function_params_string(fn->parameters),
+      block_statement_string(fn->body));
+
   return fn_str;
 }
 

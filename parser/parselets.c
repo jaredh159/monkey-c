@@ -149,10 +149,37 @@ Expression *parse_if_expression()
   return exp;
 }
 
+Expression *parse_function_literal()
+{
+  Token *initial_token = parser_current_token();
+  Expression *exp = malloc(sizeof(Expression));
+  FunctionLiteral *fn = malloc(sizeof(FunctionLiteral));
+  if (exp == NULL || fn == NULL)
+    return NULL;
+
+  if (!parser_expect_peek(TOKEN_LEFT_PAREN))
+    return NULL;
+
+  fn->parameters = parse_function_parameters();
+
+  if (!parser_expect_peek(TOKEN_LEFT_BRACE))
+    return NULL;
+
+  fn->body = parse_block_statement();
+
+  fn->token = initial_token;
+  exp->token_literal = initial_token->literal;
+  exp->type = EXPRESSION_FUNCTION_LITERAL;
+  exp->node = fn;
+  return exp;
+}
+
 PrefixParselet get_prefix_parselet(int token_type)
 {
   switch (token_type)
   {
+  case TOKEN_FUNCTION:
+    return parse_function_literal;
   case TOKEN_IF:
     return parse_if_expression;
   case TOKEN_LEFT_PAREN:

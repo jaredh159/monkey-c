@@ -67,6 +67,38 @@ BlockStatement *parse_block_statement()
   return block;
 }
 
+List *parse_function_parameters()
+{
+  List *identifiers = malloc(sizeof(List));
+  identifiers = NULL;
+  if (parser_peek_token_is(TOKEN_RIGHT_PAREN))
+  {
+    parser_next_token();
+    return identifiers;
+  }
+
+  parser_next_token();
+  Identifier *ident = malloc(sizeof(Identifier));
+  ident->token = parser_current_token();
+  ident->value = parser_current_token()->literal;
+  identifiers = list_append(identifiers, ident);
+
+  while (parser_peek_token_is(TOKEN_COMMA))
+  {
+    parser_next_token();
+    parser_next_token();
+    ident = malloc(sizeof(Identifier));
+    ident->token = parser_current_token();
+    ident->value = parser_current_token()->literal;
+    identifiers = list_append(identifiers, ident);
+  }
+
+  if (!parser_expect_peek(TOKEN_RIGHT_PAREN))
+    return NULL;
+
+  return identifiers;
+}
+
 Statement *parse_statement()
 {
   if (current_token->type == TOKEN_LET)
