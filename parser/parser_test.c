@@ -369,9 +369,52 @@ void test_parses_function_literal()
   assert_infix_expression(body_stmt->expression, x, "+", y, t);
 }
 
+void test_function_parameter_parsing()
+{
+  char *t = "function_parameter_parsing";
+  typedef struct
+  {
+    char *input;
+    int num_params;
+    char *params[3];
+  } ParamTest;
+
+  ParamTest tests[] = {
+      {"fn() {}", 0, {"", "", ""}},
+      {"fn(x) {}", 1, {"x", "", ""}},
+      {"fn(x, y, z) {}", 3, {"x", "y", "z"}}};
+  int num_tests = sizeof tests / sizeof(ParamTest);
+
+  for (int i = 0; i < num_tests; i++)
+  {
+    ParamTest test = tests[i];
+    Program *program = parse_program(test.input);
+
+    if (program == NULL)
+      fail("parse_program() returned NULL", t);
+
+    check_parser_errors(t);
+    Statement *stmt = program->statements->item;
+    ExpressionStatement *es = get_expression(stmt);
+    FunctionLiteral *fn = es->expression->node;
+
+    assert_int_is(test.num_params, list_count(fn->parameters), "num params correct", t);
+    if (test.num_params == 0)
+      continue;
+
+    List *current = fn->parameters;
+    for (int j = 0; j < test.num_params; j++, current = current->next)
+    {
+      Identifier *param = current->item;
+      assert_str_is(test.params[j], param->value, "param is correct", t);
+    }
+  }
+}
+
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_function_parameter_parsing();
   test_parses_function_literal();
   test_parses_if_expression();
   test_parses_if_else_expression();
