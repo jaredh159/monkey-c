@@ -340,6 +340,35 @@ void test_function_parameter_parsing()
   }
 }
 
+void test_let_statements()
+{
+  char *t = "let_statements";
+  typedef struct
+  {
+    char *input;
+    char *expected_identifier;
+    LitExpTest expected_value;
+  } LetTest;
+
+  LetTest tests[] = {
+      {"let x = 5;", "x", five},
+      {"let y = true;", "y", _true},
+      {"let foobar = y;", "foobar", y}};
+  int num_tests = sizeof tests / sizeof(LetTest);
+
+  for (int i = 0; i < num_tests; i++)
+  {
+    LetTest test = tests[i];
+    Program *program = assert_program(test.input, 1, t);
+    Statement *stmt = program->statements->item;
+    assert_let_statement(stmt, test.expected_identifier, t);
+    LetStatement *ls = get_let(stmt);
+    // ls->value
+    assert_literal_expression(ls->value, &test.expected_value, t);
+    // FunctionLiteral *fn = es->expression->node;
+  }
+}
+
 void test_call_expression_parsing()
 {
   char *t = "call_expression_parsing";
@@ -361,6 +390,7 @@ void test_call_expression_parsing()
 int main(int argc, char **argv)
 {
   pass_argv(argc, argv);
+  test_let_statements();
   test_call_expression_parsing();
   test_function_parameter_parsing();
   test_parses_function_literal();

@@ -185,26 +185,22 @@ Statement *parse_expression_statement()
 Statement *parse_return_statement()
 {
   Statement *statement = malloc(sizeof(Statement));
+  ReturnStatement *return_statement = malloc(sizeof(ReturnStatement));
   Token *initial_token = current_token;
   statement->token_literal = initial_token->literal;
-  if (statement == NULL)
-    return NULL;
-
-  ReturnStatement *return_statement = malloc(sizeof(ReturnStatement));
-  Expression *return_value = malloc(sizeof(Expression));
-  if (return_statement == NULL || return_value == NULL)
+  if (statement == NULL || return_statement == NULL)
     return NULL;
 
   return_statement->token = initial_token;
-  return_statement->return_value = return_value;
   statement->node = return_statement;
   statement->type = STATEMENT_RETURN;
 
   // move past return token
   parser_next_token();
 
-  // skip parsing expression for now
-  while (current_token->type != TOKEN_SEMICOLON)
+  return_statement->return_value = parse_expression(PRECEDENCE_LOWEST);
+
+  if (parser_peek_token_is(TOKEN_SEMICOLON))
     parser_next_token();
 
   return statement;
@@ -223,23 +219,23 @@ Statement *parse_let_statement()
 
   LetStatement *let_statement = malloc(sizeof(LetStatement));
   Identifier *name = malloc(sizeof(Identifier));
-  Expression *value = malloc(sizeof(Expression));
-  if (let_statement == NULL || name == NULL || value == NULL)
+  if (let_statement == NULL || name == NULL)
     return NULL;
 
   name->token = current_token;
   name->value = current_token->literal;
   let_statement->token = initial_token;
   let_statement->name = name;
-  let_statement->value = value;
   statement->node = let_statement;
   statement->type = STATEMENT_LET;
 
   if (!parser_expect_peek(TOKEN_ASSIGN))
     return NULL;
 
-  // TODO, we're skipping the expressions until we encounter a semicolon
-  while (current_token->type != TOKEN_SEMICOLON)
+  parser_next_token();
+  let_statement->value = parse_expression(PRECEDENCE_LOWEST);
+
+  if (parser_peek_token_is(TOKEN_SEMICOLON))
     parser_next_token();
 
   return statement;
