@@ -1,7 +1,7 @@
 FLAGS = -Wall -O -W -pedantic -g
 
 monkey:
-	clang -o .bin/monkey monkey.c repl/repl.c token/token.c lexer/lexer.c $(FLAGS)
+	clang -o .bin/monkey monkey.c repl/repl.c token/token.c lexer/lexer.c parser/parser.c parser/parselets.c utils/argv.c ast/ast.c utils/list.c $(FLAGS)
 
 test_parser:
 	clang -o .bin/test_parser parser/parser_test.c parser/parser.c parser/parselets.c test/test.c lexer/lexer.c token/token.c ast/ast.c utils/argv.c utils/list.c $(FLAGS)
