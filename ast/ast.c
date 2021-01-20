@@ -104,8 +104,6 @@ ExpressionStatement *get_expression(Statement *statement)
 
 #define MAX_STMT_STR_LEN 100
 
-typedef char *(*StrFn)(void *);
-
 char *program_string(Program *program)
 {
   int num_stmts = list_count(program->statements);
@@ -114,7 +112,7 @@ char *program_string(Program *program)
   if (num_stmts == 0)
     return prog_str;
 
-  list_strcat_each(program->statements, prog_str, (StrFn)statement_string);
+  list_strcat_each(program->statements, prog_str, (StrHandler)statement_string);
   return prog_str;
 }
 
@@ -186,7 +184,7 @@ char *block_statement_string(BlockStatement *bs)
   if (num_stmts == 0)
     return bs_str;
 
-  list_strcat_each(bs->statements, bs_str, (StrFn)statement_string);
+  list_strcat_each(bs->statements, bs_str, (StrHandler)statement_string);
 
   return bs_str;
 }
@@ -207,17 +205,7 @@ char *function_params_string(List *params)
 {
   char *params_str = malloc(MAX_STMT_STR_LEN);
   params_str[0] = '\0';
-  int num_params = list_count(params);
-
-  List *current = params;
-  for (int i = 0; i < num_params; i++)
-  {
-    strcat(params_str, identifier_string(current->item));
-    if (i < (num_params - 1))
-      strcat(params_str, ", ");
-    current = current->next;
-  }
-
+  list_str_join(params, ", ", params_str, (StrHandler)identifier_string);
   return params_str;
 }
 
@@ -233,6 +221,24 @@ char *function_literal_expression_string(FunctionLiteral *fn)
       block_statement_string(fn->body));
 
   return fn_str;
+}
+
+char *call_expression_string(CallExpression *ce)
+{
+  char *ce_str = malloc(MAX_STMT_STR_LEN);
+  ce_str[0] = '\0';
+
+  char *args_str = malloc(MAX_STMT_STR_LEN);
+  args_str[0] = '\0';
+  list_str_join(ce->arguments, ", ", args_str, (StrHandler)expression_string);
+
+  sprintf(
+      ce_str,
+      "%s(%s)",
+      expression_string(ce->fn),
+      args_str);
+
+  return ce_str;
 }
 
 int token_precedence(int token_type)
@@ -255,6 +261,8 @@ int token_precedence(int token_type)
     return PRECEDENCE_PRODUCT;
   case TOKEN_ASTERISK:
     return PRECEDENCE_PRODUCT;
+  case TOKEN_LEFT_PAREN:
+    return PRECEDENCE_CALL;
   }
   return PRECEDENCE_LOWEST;
 }
@@ -268,6 +276,10 @@ static char *expression_string(Expression *exp)
 {
   switch (exp->type)
   {
+  case EXPRESSION_CALL:
+    return call_expression_string(exp->node);
+  case EXPRESSION_FUNCTION_LITERAL:
+    return function_literal_expression_string(exp->node);
   case EXPRESSION_BOOLEAN_LITERAL:
     return boolean_literal_string(exp->node);
   case EXPRESSION_IDENTIFIER:

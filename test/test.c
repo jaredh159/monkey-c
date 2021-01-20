@@ -15,6 +15,12 @@ void pass_argv(int argc, char *argv[])
     verbose = true;
 }
 
+char *int_embed(char *format, int integer)
+{
+  sprintf(embedded, format, integer);
+  return embedded;
+}
+
 char *str_embed(char *format, char *str)
 {
   sprintf(embedded, format, str);

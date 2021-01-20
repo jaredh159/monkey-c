@@ -35,3 +35,17 @@ void list_strcat_each(List *list, char *target_str, char *(*handler)(void *))
     if (current->item != NULL)
       strcat(target_str, handler(current->item));
 }
+
+void list_str_join(List *list, char *delim, char *target_str, char *(*handler)(void *))
+{
+  int num_items = list_count(list);
+
+  List *current = list;
+  for (int i = 0; i < num_items; i++)
+  {
+    strcat(target_str, handler(current->item));
+    if (i < (num_items - 1))
+      strcat(target_str, delim);
+    current = current->next;
+  }
+}

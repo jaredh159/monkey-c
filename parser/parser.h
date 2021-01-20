@@ -24,6 +24,7 @@ enum ExpressionType
   EXPRESSION_PREFIX,
   EXPRESSION_INFIX,
   EXPRESSION_IF,
+  EXPRESSION_CALL
 };
 
 enum StatementType
@@ -37,6 +38,7 @@ Program *parse_program(char *input);
 Expression *parse_expression(int precedence);
 BlockStatement *parse_block_statement();
 List *parse_function_parameters();
+List *parse_call_arguments();
 void parser_next_token();
 void parser_push_error(char *error_msg);
 int parser_current_precedence();

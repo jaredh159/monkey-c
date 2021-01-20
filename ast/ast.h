@@ -92,6 +92,13 @@ typedef struct FunctionLiteral
   BlockStatement *body;
 } FunctionLiteral;
 
+typedef struct CallExpression
+{
+  Token *token;   // the `(` token
+  Expression *fn; // Identifier or FunctionLiteral
+  List *arguments;
+} CallExpression;
+
 typedef struct Program
 {
   char *token_literal;
@@ -104,6 +111,7 @@ char *let_statement_string(LetStatement *let_statement);
 char *return_statement_string(ReturnStatement *return_statement);
 char *expression_statement_string(ExpressionStatement *expression_statement);
 char *function_literal_expression_string(FunctionLiteral *fn);
+char *call_expression_string(CallExpression *ce);
 char *identifier_string(Identifier *identifier);
 char *function_params_string(List *params);
 void print_program(Program *program);

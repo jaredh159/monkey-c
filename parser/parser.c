@@ -67,10 +67,35 @@ BlockStatement *parse_block_statement()
   return block;
 }
 
+List *parse_call_arguments()
+{
+  List *args = NULL;
+
+  if (parser_peek_token_is(TOKEN_RIGHT_PAREN))
+  {
+    parser_next_token();
+    return args;
+  }
+
+  parser_next_token();
+  args = list_append(args, parse_expression(PRECEDENCE_LOWEST));
+
+  while (parser_peek_token_is(TOKEN_COMMA))
+  {
+    parser_next_token();
+    parser_next_token();
+    args = list_append(args, parse_expression(PRECEDENCE_LOWEST));
+  }
+
+  if (!parser_expect_peek(TOKEN_RIGHT_PAREN))
+    return NULL;
+
+  return args;
+}
+
 List *parse_function_parameters()
 {
-  List *identifiers = malloc(sizeof(List));
-  identifiers = NULL;
+  List *identifiers = NULL;
   if (parser_peek_token_is(TOKEN_RIGHT_PAREN))
   {
     parser_next_token();

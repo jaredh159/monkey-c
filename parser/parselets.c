@@ -80,6 +80,20 @@ Expression *parse_prefix_expression()
   return exp;
 }
 
+Expression *parse_call_expression(Expression *fn)
+{
+  Token *initial_token = parser_current_token();
+  Expression *exp = malloc(sizeof(Expression));
+  CallExpression *ce = malloc(sizeof(CallExpression));
+  exp->token_literal = initial_token->literal;
+  exp->type = EXPRESSION_CALL;
+  exp->node = ce;
+  ce->fn = fn;
+  ce->token = initial_token;
+  ce->arguments = parse_call_arguments();
+  return exp;
+}
+
 Expression *parse_infix_expression(Expression *left)
 {
   Expression *exp = malloc(sizeof(Expression));
@@ -211,6 +225,8 @@ InfixParselet get_infix_parselet(int token_type)
   case TOKEN_LT:
   case TOKEN_GT:
     return parse_infix_expression;
+  case TOKEN_LEFT_PAREN:
+    return parse_call_expression;
   }
   return NULL;
 }
