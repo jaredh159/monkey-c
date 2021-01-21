@@ -7,4 +7,4 @@ void lexer_push(char *pushed_src);
 void lexer_set(char *str);
 Token *lexer_next_token();
 
-#endif // __LEXER_H__
+#endif  // __LEXER_H__

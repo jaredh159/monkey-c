@@ -10,4 +10,4 @@
 #define COLOR_GREY "\x1b[2m"
 #define COLOR_RESET "\x1b[0m"
 
-#endif // __COLORS_H__
+#endif  // __COLORS_H__

@@ -5,102 +5,87 @@
 #include "../token/token.h"
 #include "../utils/list.h"
 
-typedef struct BooleanLiteral
-{
+typedef struct BooleanLiteral {
   Token *token;
   bool value;
 } BooleanLiteral;
 
-typedef struct IntegerLiteral
-{
+typedef struct IntegerLiteral {
   Token *token;
   int value;
 } IntegerLiteral;
 
-typedef struct Expression
-{
+typedef struct Expression {
   char *token_literal;
   int type;
   void *node;
 } Expression;
 
-typedef struct InfixExpression
-{
+typedef struct InfixExpression {
   Token *token;
   char *operator;
   Expression *right;
   Expression *left;
 } InfixExpression;
 
-typedef struct PrefixExpression
-{
+typedef struct PrefixExpression {
   Token *token;
   char *operator;
   Expression *right;
 } PrefixExpression;
 
-typedef struct Identifier
-{
+typedef struct Identifier {
   Token *token;
   char *value;
 } Identifier;
 
-typedef struct LetStatement
-{
+typedef struct LetStatement {
   Token *token;
   Identifier *name;
   Expression *value;
 } LetStatement;
 
-typedef struct ReturnStatement
-{
+typedef struct ReturnStatement {
   Token *token;
   Expression *return_value;
 } ReturnStatement;
 
-typedef struct ExpressionStatement
-{
+typedef struct ExpressionStatement {
   Token *token;
   Expression *expression;
 } ExpressionStatement;
 
-typedef struct Statement
-{
+typedef struct Statement {
   char *token_literal;
   int type;
   void *node;
 } Statement;
 
-typedef struct BlockStatement
-{
+typedef struct BlockStatement {
   Token *token;
   List *statements;
 } BlockStatement;
 
-typedef struct IfExpression
-{
+typedef struct IfExpression {
   Token *token;
   Expression *condition;
   BlockStatement *consequence;
   BlockStatement *alternative;
 } IfExpression;
 
-typedef struct FunctionLiteral
-{
+typedef struct FunctionLiteral {
   Token *token;
   List *parameters;
   BlockStatement *body;
 } FunctionLiteral;
 
-typedef struct CallExpression
-{
-  Token *token;   // the `(` token
-  Expression *fn; // Identifier or FunctionLiteral
+typedef struct CallExpression {
+  Token *token;    // the `(` token
+  Expression *fn;  // Identifier or FunctionLiteral
   List *arguments;
 } CallExpression;
 
-typedef struct Program
-{
+typedef struct Program {
   char *token_literal;
   List *statements;
 } Program;
@@ -123,4 +108,4 @@ ReturnStatement *get_return(Statement *statement);
 LetStatement *get_let(Statement *statement);
 ExpressionStatement *get_expression(Statement *statement);
 
-#endif // __AST_H__
+#endif  // __AST_H__

@@ -4,8 +4,7 @@
 #include <stdbool.h>
 #include "../ast/ast.h"
 
-enum Precedence
-{
+enum Precedence {
   PRECEDENCE_LOWEST,
   PRECEDENCE_EQUALS,
   PRECEDENCE_LESSGREATER,
@@ -15,8 +14,7 @@ enum Precedence
   PRECEDENCE_CALL
 };
 
-enum ExpressionType
-{
+enum ExpressionType {
   EXPRESSION_IDENTIFIER,
   EXPRESSION_INTEGER_LITERAL,
   EXPRESSION_BOOLEAN_LITERAL,
@@ -27,12 +25,7 @@ enum ExpressionType
   EXPRESSION_CALL
 };
 
-enum StatementType
-{
-  STATEMENT_LET,
-  STATEMENT_RETURN,
-  STATEMENT_EXPRESSION
-};
+enum StatementType { STATEMENT_LET, STATEMENT_RETURN, STATEMENT_EXPRESSION };
 
 Program *parse_program(char *input);
 Expression *parse_expression(int precedence);
@@ -56,4 +49,4 @@ typedef Expression *(*InfixParselet)(Expression *);
 PrefixParselet get_prefix_parselet(int token_type);
 InfixParselet get_infix_parselet(int token_type);
 
-#endif // __PARSER_H__
+#endif  // __PARSER_H__

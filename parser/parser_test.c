@@ -1,9 +1,9 @@
+#include "parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser.h"
-#include "../test/test.h"
 #include "../ast/ast.h"
+#include "../test/test.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wvariadic-macros"
@@ -11,16 +11,14 @@
 #define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
 #pragma clang diagnostic push
 
-typedef struct
-{
+typedef struct {
   int type;
   char *ident_val;
   int int_val;
   char *int_literal;
 } LitExpTest;
 
-enum LiteralExpressionType
-{
+enum LiteralExpressionType {
   LITERAL_TYPE_INT,
   LITERAL_TYPE_IDENT,
   LITERAL_TYPE_BOOL,
@@ -32,48 +30,52 @@ static LitExpTest _false = {LITERAL_TYPE_BOOL, "", (int)false, "false"};
 static LitExpTest x = {LITERAL_TYPE_IDENT, "x", 0, ""};
 static LitExpTest y = {LITERAL_TYPE_IDENT, "y", 0, ""};
 
-void assert_literal_expression(Expression *expr, LitExpTest *expected, char *test_name);
+void assert_literal_expression(
+  Expression *expr, LitExpTest *expected, char *test_name);
 void check_parser_errors(char *test_name);
-Program *assert_program(char *input, int expected_num_statements, char *test_name);
+Program *assert_program(
+  char *input, int expected_num_statements, char *test_name);
 void assert_let_statement(Statement *, char *identifier, char *test_name);
 void assert_return_statement(Statement *stmt, char *test_name);
-void assert_integer_literal(Expression *exp, int value, char *literal, char *test_name);
+void assert_integer_literal(
+  Expression *exp, int value, char *literal, char *test_name);
 void assert_identifier(Expression *exp, char *value, char *test_name);
-void assert_infix_expression(Expression *expr, LitExpTest left, char *op, LitExpTest right, char *t);
+void assert_infix_expression(
+  Expression *expr, LitExpTest left, char *op, LitExpTest right, char *t);
 void assert_boolean_literal(Expression *exp, bool value, char *test_name);
 
-void test_parses_identifier_expression()
-{
+void test_parses_identifier_expression() {
   char *t = "parses_identifier_expression";
   Program *program = assert_program("foobar;", 1, t);
   Statement *stmt = program->statements->item;
   assert(stmt->type == STATEMENT_EXPRESSION, "statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
-  assert_int_is(exp->type, EXPRESSION_IDENTIFIER, "expression is identifier", t);
-  assert_str_is(exp->token_literal, "foobar", "expression token_literal is foobar", t);
+  assert_int_is(
+    exp->type, EXPRESSION_IDENTIFIER, "expression is identifier", t);
+  assert_str_is(
+    exp->token_literal, "foobar", "expression token_literal is foobar", t);
   Identifier *ident = exp->node;
   assert_str_is(ident->value, "foobar", "identifier value is foobar", t);
-  assert_str_is(ident->token->literal, "foobar", "identifier->token->literal is foobar", t);
+  assert_str_is(
+    ident->token->literal, "foobar", "identifier->token->literal is foobar", t);
 }
 
-void test_parses_one_let_statement()
-{
+void test_parses_one_let_statement() {
   char *t = "parses_one_let_statement";
   Program *program = assert_program("let x = 5;", 1, t);
   Statement *stmt = program->statements->item;
   assert_let_statement(stmt, "x", t);
 }
 
-void test_parses_multiple_let_statements()
-{
+void test_parses_multiple_let_statements() {
   char *t = "parses_multiple_let_statements";
   Statement *stmt;
   Program *program = assert_program(
-      "let x = 5;\n"
-      "let y = 10;\n"
-      "let foobar = 838383;",
-      3, t);
+    "let x = 5;\n"
+    "let y = 10;\n"
+    "let foobar = 838383;",
+    3, t);
 
   stmt = program->statements->item;
   assert_let_statement(stmt, "x", t);
@@ -83,77 +85,70 @@ void test_parses_multiple_let_statements()
   assert_let_statement(stmt, "foobar", t);
 }
 
-void test_parses_return_statements()
-{
+void test_parses_return_statements() {
   char *t = "parses_return_statements";
   Program *program = assert_program(
-      "return 5;\n"
-      "return 10;\n"
-      "return 993322;\n",
-      3, t);
+    "return 5;\n"
+    "return 10;\n"
+    "return 993322;\n",
+    3, t);
   assert_return_statement(program->statements->item, t);
   assert_return_statement(program->statements->next->item, t);
   assert_return_statement(program->statements->next->next->item, t);
 }
 
-void test_parses_integer_literal_expression()
-{
+void test_parses_integer_literal_expression() {
   char *t = "parses_integer_literal_expression";
   Program *program = assert_program("5;", 1, t);
   Statement *stmt = program->statements->item;
-  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  assert(
+    stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
   assert_integer_literal(exp, 5, "5", t);
 }
 
-void test_parses_boolean_literal_expression()
-{
+void test_parses_boolean_literal_expression() {
   char *t = "parses_boolean_literal_expression";
   Program *program = assert_program("true;", 1, t);
   Statement *stmt = program->statements->item;
-  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  assert(
+    stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
   assert_boolean_literal(exp, true, t);
 }
 
-void test_parses_prefix_expressions()
-{
+void test_parses_prefix_expressions() {
   char *t = "parses_prefix_expressions";
-  typedef struct
-  {
+  typedef struct {
     char *input;
     char *operator;
     LitExpTest value;
   } PrefixTest;
 
-  PrefixTest tests[] = {
-      {"!true;", "!", _true},
-      {"!false;", "!", _false},
-      {"!5;", "!", five},
-      {"-15;", "-", {LITERAL_TYPE_INT, "", 15, "15"}}};
+  PrefixTest tests[] = {{"!true;", "!", _true}, {"!false;", "!", _false},
+    {"!5;", "!", five}, {"-15;", "-", {LITERAL_TYPE_INT, "", 15, "15"}}};
 
-  for (int i = 0; i < 2; i++)
-  {
+  for (int i = 0; i < 2; i++) {
     PrefixTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
-    assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+    assert(
+      stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
     ExpressionStatement *es = get_expression(stmt);
     Expression *exp = es->expression;
     assert_int_is(exp->type, EXPRESSION_PREFIX, "expression type is PREFIX", t);
     PrefixExpression *prefix = exp->node;
-    assert_str_is(test.operator, prefix->operator, str_embed("operator is %s", test.operator), t);
+    assert_str_is(test.operator, prefix->operator,
+      str_embed("operator is %s", test.operator), t);
     assert_literal_expression(prefix->right, &test.value, t);
   }
 }
 
-void test_parses_infix_expressions()
-{
+void test_parses_infix_expressions() {
   char *t = "parses_infix_expressions";
-  typedef struct
-  {
+  typedef struct {
     char *input;
     LitExpTest left;
     char *operator;
@@ -161,69 +156,60 @@ void test_parses_infix_expressions()
   } InfixTest;
 
   InfixTest tests[] = {
-      {"true == true", _true, "==", _true},
-      {"true != false", _true, "!=", _false},
-      {"false == false", _false, "==", _false},
-      {"5 + 5;", five, "+", five},
-      {"5 - 5;", five, "-", five},
-      {"5 * 5;", five, "*", five},
-      {"5 / 5;", five, "/", five},
-      {"5 > 5;", five, ">", five},
-      {"5 < 5;", five, "<", five},
-      {"5 == 5;", five, "==", five},
-      {"5 != 5;", five, "!=", five},
+    {"true == true", _true, "==", _true},
+    {"true != false", _true, "!=", _false},
+    {"false == false", _false, "==", _false},
+    {"5 + 5;", five, "+", five},
+    {"5 - 5;", five, "-", five},
+    {"5 * 5;", five, "*", five},
+    {"5 / 5;", five, "/", five},
+    {"5 > 5;", five, ">", five},
+    {"5 < 5;", five, "<", five},
+    {"5 == 5;", five, "==", five},
+    {"5 != 5;", five, "!=", five},
   };
 
   int num_tests = sizeof(tests) / sizeof(InfixTest);
-  for (int i = 0; i < num_tests; i++)
-  {
+  for (int i = 0; i < num_tests; i++) {
     InfixTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
-    assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+    assert(
+      stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
     ExpressionStatement *es = get_expression(stmt);
     Expression *exp = es->expression;
     assert_infix_expression(exp, test.left, test.operator, test.right, t);
   }
 }
 
-void test_operator_precedence_parsing()
-{
+void test_operator_precedence_parsing() {
   char *t = "operator_precedence_parsing";
-  typedef struct
-  {
+  typedef struct {
     char *input;
     char *expected;
   } PrecedenceTest;
 
-  PrecedenceTest tests[] = {
-      {"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
-      {"1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"},
-      {"(5 + 5) * 2", "((5 + 5) * 2)"},
-      {"2 / (5 + 5)", "(2 / (5 + 5))"},
-      {"-(5 + 5)", "(-(5 + 5))"},
-      {"!(true == true)", "(!(true == true))"},
-      {"true", "true"},
-      {"false", "false"},
-      {"3 > 5 == false", "((3 > 5) == false)"},
-      {"3 > 5 == true", "((3 > 5) == true)"},
-      {"-a * b", "((-a) * b)"},
-      {"!-a", "(!(-a))"},
-      {"a + b + c", "((a + b) + c)"},
-      {"a * b * c", "((a * b) * c)"},
-      {"a * b / c", "((a * b) / c)"},
-      {"a + b / c", "(a + (b / c))"},
-      {"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
-      {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
-      {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
-      {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
-      {"a + add(b * c) + d", "((a + add((b * c))) + d)"},
-      {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
-      {"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"}};
+  PrecedenceTest tests[] = {{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
+    {"1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"},
+    {"(5 + 5) * 2", "((5 + 5) * 2)"}, {"2 / (5 + 5)", "(2 / (5 + 5))"},
+    {"-(5 + 5)", "(-(5 + 5))"}, {"!(true == true)", "(!(true == true))"},
+    {"true", "true"}, {"false", "false"},
+    {"3 > 5 == false", "((3 > 5) == false)"},
+    {"3 > 5 == true", "((3 > 5) == true)"}, {"-a * b", "((-a) * b)"},
+    {"!-a", "(!(-a))"}, {"a + b + c", "((a + b) + c)"},
+    {"a * b * c", "((a * b) * c)"}, {"a * b / c", "((a * b) / c)"},
+    {"a + b / c", "(a + (b / c))"},
+    {"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+    {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
+    {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+    {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+    {"a + add(b * c) + d", "((a + add((b * c))) + d)"},
+    {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+      "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
+    {"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"}};
   int num_tests = sizeof(tests) / sizeof(PrecedenceTest);
 
-  for (int i = 0; i < num_tests; i++)
-  {
+  for (int i = 0; i < num_tests; i++) {
     PrecedenceTest test = tests[i];
     Program *program = assert_program(test.input, i == 0 ? 2 : 1, t);
     char *actual = program_string(program);
@@ -231,31 +217,33 @@ void test_operator_precedence_parsing()
   }
 }
 
-void test_parses_if_expression()
-{
+void test_parses_if_expression() {
   char *t = "parses_if_expression";
   Program *program = assert_program("if (x < y) { x }", 1, t);
   Statement *stmt = program->statements->item;
-  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  assert(
+    stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
   assert(exp->type == EXPRESSION_IF, "expression is IF", t);
   IfExpression *if_exp = exp->node;
   assert_infix_expression(if_exp->condition, x, "<", y, t);
-  assert_int_is(1, list_count(if_exp->consequence->statements), "consequence has 1 statement", t);
+  assert_int_is(1, list_count(if_exp->consequence->statements),
+    "consequence has 1 statement", t);
   Statement *consequence = if_exp->consequence->statements->item;
-  assert(consequence->type == STATEMENT_EXPRESSION, "first consequence statement is expression", t);
+  assert(consequence->type == STATEMENT_EXPRESSION,
+    "first consequence statement is expression", t);
   ExpressionStatement *cq_exp = get_expression(consequence);
   assert_identifier(cq_exp->expression, "x", t);
   assert(if_exp->alternative == NULL, "alternative is NULL", t);
 }
 
-void test_parses_if_else_expression()
-{
+void test_parses_if_else_expression() {
   char *t = "parses_if_else_expression";
   Program *program = assert_program("if (x < y) { x } else { y }", 1, t);
   Statement *stmt = program->statements->item;
-  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  assert(
+    stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
   assert(exp->type == EXPRESSION_IF, "expression is IF", t);
@@ -265,29 +253,34 @@ void test_parses_if_else_expression()
   assert_infix_expression(if_exp->condition, x, "<", y, t);
 
   // test consequence
-  assert_int_is(1, list_count(if_exp->consequence->statements), "consequence has 1 statement", t);
+  assert_int_is(1, list_count(if_exp->consequence->statements),
+    "consequence has 1 statement", t);
   Statement *consequence = if_exp->consequence->statements->item;
-  assert(consequence->type == STATEMENT_EXPRESSION, "first consequence statement is expression", t);
+  assert(consequence->type == STATEMENT_EXPRESSION,
+    "first consequence statement is expression", t);
   ExpressionStatement *cq_exp = get_expression(consequence);
   assert_identifier(cq_exp->expression, "x", t);
 
   // test alternative
-  assert_int_is(1, list_count(if_exp->alternative->statements), "alternative has 1 statement", t);
+  assert_int_is(1, list_count(if_exp->alternative->statements),
+    "alternative has 1 statement", t);
   Statement *alternative = if_exp->alternative->statements->item;
-  assert(alternative->type == STATEMENT_EXPRESSION, "first alternative statement is expression", t);
+  assert(alternative->type == STATEMENT_EXPRESSION,
+    "first alternative statement is expression", t);
   ExpressionStatement *at_exp = get_expression(alternative);
   assert_identifier(at_exp->expression, "y", t);
 }
 
-void test_parses_function_literal()
-{
+void test_parses_function_literal() {
   char *t = "parses_function_literal";
   Program *program = assert_program("fn(x, y) { x + y; }", 1, t);
   Statement *stmt = program->statements->item;
-  assert(stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
+  assert(
+    stmt->type == STATEMENT_EXPRESSION, "first statement is expression", t);
   ExpressionStatement *es = get_expression(stmt);
   Expression *exp = es->expression;
-  assert(exp->type == EXPRESSION_FUNCTION_LITERAL, "expression is function literal", t);
+  assert(exp->type == EXPRESSION_FUNCTION_LITERAL,
+    "expression is function literal", t);
   FunctionLiteral *fn = exp->node;
 
   assert_int_is(2, list_count(fn->parameters), "there are TWO params", t);
@@ -298,66 +291,57 @@ void test_parses_function_literal()
   assert_str_is("y", param2->token->literal, "second param is y", t);
   assert_str_is("y", param2->value, "param2 identifier is x", t);
 
-  assert_int_is(1, list_count(fn->body->statements), "one statement in body", t);
+  assert_int_is(
+    1, list_count(fn->body->statements), "one statement in body", t);
   ExpressionStatement *body_stmt = get_expression(fn->body->statements->item);
   assert_infix_expression(body_stmt->expression, x, "+", y, t);
 }
 
-void test_function_parameter_parsing()
-{
+void test_function_parameter_parsing() {
   char *t = "function_parameter_parsing";
-  typedef struct
-  {
+  typedef struct {
     char *input;
     int num_params;
     char *params[3];
   } ParamTest;
 
-  ParamTest tests[] = {
-      {"fn() {}", 0, {"", "", ""}},
-      {"fn(x) {}", 1, {"x", "", ""}},
-      {"fn(x, y, z) {}", 3, {"x", "y", "z"}}};
+  ParamTest tests[] = {{"fn() {}", 0, {"", "", ""}},
+    {"fn(x) {}", 1, {"x", "", ""}}, {"fn(x, y, z) {}", 3, {"x", "y", "z"}}};
   int num_tests = sizeof tests / sizeof(ParamTest);
 
-  for (int i = 0; i < num_tests; i++)
-  {
+  for (int i = 0; i < num_tests; i++) {
     ParamTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
     ExpressionStatement *es = get_expression(stmt);
     FunctionLiteral *fn = es->expression->node;
 
-    assert_int_is(test.num_params, list_count(fn->parameters), "num params correct", t);
+    assert_int_is(
+      test.num_params, list_count(fn->parameters), "num params correct", t);
     if (test.num_params == 0)
       continue;
 
     List *current = fn->parameters;
-    for (int j = 0; j < test.num_params; j++, current = current->next)
-    {
+    for (int j = 0; j < test.num_params; j++, current = current->next) {
       Identifier *param = current->item;
       assert_str_is(test.params[j], param->value, "param is correct", t);
     }
   }
 }
 
-void test_let_statements()
-{
+void test_let_statements() {
   char *t = "let_statements";
-  typedef struct
-  {
+  typedef struct {
     char *input;
     char *expected_identifier;
     LitExpTest expected_value;
   } LetTest;
 
-  LetTest tests[] = {
-      {"let x = 5;", "x", five},
-      {"let y = true;", "y", _true},
-      {"let foobar = y;", "foobar", y}};
+  LetTest tests[] = {{"let x = 5;", "x", five}, {"let y = true;", "y", _true},
+    {"let foobar = y;", "foobar", y}};
   int num_tests = sizeof tests / sizeof(LetTest);
 
-  for (int i = 0; i < num_tests; i++)
-  {
+  for (int i = 0; i < num_tests; i++) {
     LetTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
@@ -369,12 +353,12 @@ void test_let_statements()
   }
 }
 
-void test_call_expression_parsing()
-{
+void test_call_expression_parsing() {
   char *t = "call_expression_parsing";
   Program *program = assert_program("add(1, 2 * 3, 4 + 5)", 1, t);
   ExpressionStatement *es = get_expression(program->statements->item);
-  assert(es->expression->type == EXPRESSION_CALL, "expression is call expression", t);
+  assert(es->expression->type == EXPRESSION_CALL,
+    "expression is call expression", t);
   CallExpression *ce = es->expression->node;
   assert_identifier(ce->fn, "add", t);
   assert_int_is(3, list_count(ce->arguments), "correct num args", t);
@@ -387,8 +371,7 @@ void test_call_expression_parsing()
   assert_infix_expression(ce->arguments->next->next->item, four, "+", five, t);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   pass_argv(argc, argv);
   test_let_statements();
   test_call_expression_parsing();
@@ -409,13 +392,9 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void assert_let_statement(Statement *stmt, char *identifier, char *test_name)
-{
-  assert_str_is(
-      stmt->token_literal,
-      "let",
-      "statement->token_literal is \"let\"",
-      test_name);
+void assert_let_statement(Statement *stmt, char *identifier, char *test_name) {
+  assert_str_is(stmt->token_literal, "let",
+    "statement->token_literal is \"let\"", test_name);
 
   assert(stmt->type == STATEMENT_LET, "statement TYPE is `let`", test_name);
 
@@ -425,19 +404,15 @@ void assert_let_statement(Statement *stmt, char *identifier, char *test_name)
   assert_str_is(get_let(stmt)->name->value, identifier, msg, test_name);
 }
 
-void assert_return_statement(Statement *stmt, char *test_name)
-{
-  assert_str_is(
-      stmt->token_literal,
-      "return",
-      "statement->token_literal is \"return\"",
-      test_name);
+void assert_return_statement(Statement *stmt, char *test_name) {
+  assert_str_is(stmt->token_literal, "return",
+    "statement->token_literal is \"return\"", test_name);
 
-  assert(stmt->type == STATEMENT_RETURN, "statement TYPE is `return`", test_name);
+  assert(
+    stmt->type == STATEMENT_RETURN, "statement TYPE is `return`", test_name);
 }
 
-void check_parser_errors(char *test_name)
-{
+void check_parser_errors(char *test_name) {
   if (!parser_has_error())
     return;
 
@@ -447,10 +422,11 @@ void check_parser_errors(char *test_name)
   fail(msg, test_name);
 }
 
-void assert_integer_literal(Expression *exp, int value, char *literal, char *test_name)
-{
+void assert_integer_literal(
+  Expression *exp, int value, char *literal, char *test_name) {
   char msg[50];
-  assert_int_is(exp->type, EXPRESSION_INTEGER_LITERAL, "expression is integer literal", test_name);
+  assert_int_is(exp->type, EXPRESSION_INTEGER_LITERAL,
+    "expression is integer literal", test_name);
   IntegerLiteral *int_literal = exp->node;
 
   sprintf(msg, "int literal is int %d", value);
@@ -460,46 +436,44 @@ void assert_integer_literal(Expression *exp, int value, char *literal, char *tes
   assert_str_is(literal, int_literal->token->literal, msg, test_name);
 }
 
-void assert_boolean_literal(Expression *exp, bool value, char *test_name)
-{
-  assert_int_is(exp->type, EXPRESSION_BOOLEAN_LITERAL, "expression is boolean literal", test_name);
+void assert_boolean_literal(Expression *exp, bool value, char *test_name) {
+  assert_int_is(exp->type, EXPRESSION_BOOLEAN_LITERAL,
+    "expression is boolean literal", test_name);
   BooleanLiteral *bool_literal = exp->node;
-  assert_int_is((int)value, bool_literal->value, "boolean is correct", test_name);
-  assert_str_is(value ? "true" : "false", bool_literal->token->literal, "boolean token literal correct", test_name);
+  assert_int_is(
+    (int)value, bool_literal->value, "boolean is correct", test_name);
+  assert_str_is(value ? "true" : "false", bool_literal->token->literal,
+    "boolean token literal correct", test_name);
 }
 
-void assert_identifier(Expression *exp, char *value, char *test_name)
-{
-  assert_int_is(EXPRESSION_IDENTIFIER, exp->type, "expression is identifier", test_name);
+void assert_identifier(Expression *exp, char *value, char *test_name) {
+  assert_int_is(
+    EXPRESSION_IDENTIFIER, exp->type, "expression is identifier", test_name);
   Identifier *ident = exp->node;
   assert_str_is(value, ident->value, "identifier value is correct", test_name);
-  assert_str_is(value, ident->token->literal, "identifier token literal is correct", test_name);
+  assert_str_is(value, ident->token->literal,
+    "identifier token literal is correct", test_name);
 }
 
-void assert_literal_expression(Expression *expr, LitExpTest *expected, char *test_name)
-{
-  switch (expected->type)
-  {
-  case LITERAL_TYPE_BOOL:
-    assert_boolean_literal(expr, (bool)expected->int_val, test_name);
-    return;
-  case LITERAL_TYPE_INT:
-    assert_integer_literal(expr, expected->int_val, expected->int_literal, test_name);
-    return;
-  case LITERAL_TYPE_IDENT:
-    assert_identifier(expr, expected->ident_val, test_name);
-    return;
+void assert_literal_expression(
+  Expression *expr, LitExpTest *expected, char *test_name) {
+  switch (expected->type) {
+    case LITERAL_TYPE_BOOL:
+      assert_boolean_literal(expr, (bool)expected->int_val, test_name);
+      return;
+    case LITERAL_TYPE_INT:
+      assert_integer_literal(
+        expr, expected->int_val, expected->int_literal, test_name);
+      return;
+    case LITERAL_TYPE_IDENT:
+      assert_identifier(expr, expected->ident_val, test_name);
+      return;
   }
   fail("literal expression type not handled", test_name);
 }
 
-void assert_infix_expression(
-    Expression *expr,
-    LitExpTest left,
-    char *operand,
-    LitExpTest right,
-    char *test_name)
-{
+void assert_infix_expression(Expression *expr, LitExpTest left, char *operand,
+  LitExpTest right, char *test_name) {
   assert_int_is(EXPRESSION_INFIX, expr->type, "expression is infix", test_name);
   InfixExpression *infix = expr->node;
   assert_literal_expression(infix->left, &left, test_name);
@@ -507,19 +481,16 @@ void assert_infix_expression(
   assert_literal_expression(infix->right, &right, test_name);
 }
 
-Program *assert_program(char *input, int expected_num_statements, char *test_name)
-{
+Program *assert_program(
+  char *input, int expected_num_statements, char *test_name) {
   Program *program = parse_program(input);
 
   if (program == NULL)
     fail("parse_program() returned NULL", test_name);
 
   check_parser_errors(test_name);
-  assert_int_is(
-      expected_num_statements,
-      list_count(program->statements),
-      int_embed("program has %d statements", expected_num_statements),
-      test_name);
+  assert_int_is(expected_num_statements, list_count(program->statements),
+    int_embed("program has %d statements", expected_num_statements), test_name);
 
   return program;
 }

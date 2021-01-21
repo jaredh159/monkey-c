@@ -13,4 +13,4 @@ void assert_str_is(char *expected, char *actual, char *msg, char *test_name);
 void fail(char *msg, char *test_name);
 void assert_int_is(int expected, int actual, char *msg, char *test_name);
 
-#endif // __TEST_H__
+#endif  // __TEST_H__

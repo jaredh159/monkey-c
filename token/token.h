@@ -3,8 +3,7 @@
 
 #include <stdbool.h>
 
-typedef struct Token
-{
+typedef struct Token {
   int type;
   char *literal;
 } Token;
@@ -15,8 +14,7 @@ bool str_is(char *, char *);
 bool token_prop_is(char *, char *);
 char *token_type_name(int type);
 
-enum
-{
+enum {
   TOKEN_ASSIGN,
   TOKEN_PLUS,
   TOKEN_MINUS,
@@ -46,4 +44,4 @@ enum
   TOKEN_EOF
 };
 
-#endif // __TOKEN_H__
+#endif  // __TOKEN_H__

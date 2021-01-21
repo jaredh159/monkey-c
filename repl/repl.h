@@ -4,4 +4,4 @@
 void repl_start_tokens(void);
 void repl_start_parsed_string(void);
 
-#endif // __REPL_H__
+#endif  // __REPL_H__

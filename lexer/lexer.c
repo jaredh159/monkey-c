@@ -1,8 +1,7 @@
-#include <stdlib.h>
-#include <stdbool.h>
 #include <ctype.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
-
 #include "../token/token.h"
 
 #define MAX_SRC_LEN 4096
@@ -23,8 +22,7 @@ static char *read_number();
 static char *char_to_str(char);
 static int lookup_ident(char *);
 
-extern void lexer_push(char *pushed_src)
-{
+extern void lexer_push(char *pushed_src) {
   int i, j;
   int pushed_length = strlen(pushed_src);
   for (i = input_length, j = 0; i < input_length + pushed_length; i++, j++)
@@ -33,8 +31,7 @@ extern void lexer_push(char *pushed_src)
   input_length += strlen(pushed_src);
 }
 
-extern void lexer_set(char *str)
-{
+extern void lexer_set(char *str) {
   input_length = 0;
   position = 0;
   read_position = 0;
@@ -43,88 +40,79 @@ extern void lexer_set(char *str)
   read_char();
 }
 
-extern Token *lexer_next_token()
-{
+extern Token *lexer_next_token() {
   Token *tok;
   skip_whitespace();
-  switch (ch)
-  {
-  case '-':
-    tok = new_token(TOKEN_MINUS, "-");
-    break;
-  case '/':
-    tok = new_token(TOKEN_SLASH, "/");
-    break;
-  case '*':
-    tok = new_token(TOKEN_ASTERISK, "*");
-    break;
-  case '<':
-    tok = new_token(TOKEN_LT, "<");
-    break;
-  case '>':
-    tok = new_token(TOKEN_GT, ">");
-    break;
-  case '=':
-    if (peek_char() == '=')
-    {
-      tok = new_token(TOKEN_EQ, "==");
-      read_char();
-    }
-    else
-      tok = new_token(TOKEN_ASSIGN, "=");
-    break;
-  case '!':
-    if (peek_char() == '=')
-    {
-      tok = new_token(TOKEN_NOT_EQ, "!=");
-      read_char();
-    }
-    else
-      tok = new_token(TOKEN_BANG, "!");
-    break;
-  case '+':
-    tok = new_token(TOKEN_PLUS, "+");
-    break;
-  case '(':
-    tok = new_token(TOKEN_LEFT_PAREN, "(");
-    break;
-  case ')':
-    tok = new_token(TOKEN_RIGHT_PAREN, ")");
-    break;
-  case '{':
-    tok = new_token(TOKEN_LEFT_BRACE, "{");
-    break;
-  case '}':
-    tok = new_token(TOKEN_RIGHT_BRACE, "}");
-    break;
-  case ',':
-    tok = new_token(TOKEN_COMMA, ",");
-    break;
-  case ';':
-    tok = new_token(TOKEN_SEMICOLON, ";");
-    break;
-  case 0:
-    tok = new_token(TOKEN_EOF, "");
-    break;
-  default:
-    if (is_letter(ch))
-    {
-      char *ident = read_identifier();
-      return new_token(lookup_ident(ident), ident);
-    }
-    else if (is_number(ch))
-      return new_token(TOKEN_INTEGER, read_number());
-    else
-      tok = new_token(TOKEN_ILLEGAL, char_to_str(ch));
-    break;
+  switch (ch) {
+    case '-':
+      tok = new_token(TOKEN_MINUS, "-");
+      break;
+    case '/':
+      tok = new_token(TOKEN_SLASH, "/");
+      break;
+    case '*':
+      tok = new_token(TOKEN_ASTERISK, "*");
+      break;
+    case '<':
+      tok = new_token(TOKEN_LT, "<");
+      break;
+    case '>':
+      tok = new_token(TOKEN_GT, ">");
+      break;
+    case '=':
+      if (peek_char() == '=') {
+        tok = new_token(TOKEN_EQ, "==");
+        read_char();
+      } else
+        tok = new_token(TOKEN_ASSIGN, "=");
+      break;
+    case '!':
+      if (peek_char() == '=') {
+        tok = new_token(TOKEN_NOT_EQ, "!=");
+        read_char();
+      } else
+        tok = new_token(TOKEN_BANG, "!");
+      break;
+    case '+':
+      tok = new_token(TOKEN_PLUS, "+");
+      break;
+    case '(':
+      tok = new_token(TOKEN_LEFT_PAREN, "(");
+      break;
+    case ')':
+      tok = new_token(TOKEN_RIGHT_PAREN, ")");
+      break;
+    case '{':
+      tok = new_token(TOKEN_LEFT_BRACE, "{");
+      break;
+    case '}':
+      tok = new_token(TOKEN_RIGHT_BRACE, "}");
+      break;
+    case ',':
+      tok = new_token(TOKEN_COMMA, ",");
+      break;
+    case ';':
+      tok = new_token(TOKEN_SEMICOLON, ";");
+      break;
+    case 0:
+      tok = new_token(TOKEN_EOF, "");
+      break;
+    default:
+      if (is_letter(ch)) {
+        char *ident = read_identifier();
+        return new_token(lookup_ident(ident), ident);
+      } else if (is_number(ch))
+        return new_token(TOKEN_INTEGER, read_number());
+      else
+        tok = new_token(TOKEN_ILLEGAL, char_to_str(ch));
+      break;
   }
 
   read_char();
   return tok;
 }
 
-static void read_char()
-{
+static void read_char() {
   if (read_position >= input_length)
     ch = 0;
   else
@@ -133,36 +121,29 @@ static void read_char()
   read_position += 1;
 }
 
-static char peek_char()
-{
+static char peek_char() {
   if (read_position >= input_length)
     return 0;
   else
     return input[read_position];
 }
 
-static void skip_whitespace()
-{
-  while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r')
-    read_char();
+static void skip_whitespace() {
+  while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') read_char();
 }
 
-static bool is_number(char c)
-{
+static bool is_number(char c) {
   return isdigit(c);
 }
 
-static bool is_letter(char c)
-{
+static bool is_letter(char c) {
   return c == '_' || isalpha(c);
 }
 
-static char *read_identifier()
-{
+static char *read_identifier() {
   char *ident = (char *)malloc(MAX_IDENTIFIER_LEN);
   char *loc = ident;
-  while (is_letter(ch))
-  {
+  while (is_letter(ch)) {
     *loc = ch;
     loc += 1;
     read_char();
@@ -171,8 +152,7 @@ static char *read_identifier()
   return ident;
 }
 
-static int lookup_ident(char *ident)
-{
+static int lookup_ident(char *ident) {
   if (strcmp(ident, "let") == 0)
     return TOKEN_LET;
   if (strcmp(ident, "fn") == 0)
@@ -190,12 +170,10 @@ static int lookup_ident(char *ident)
   return TOKEN_IDENTIFIER;
 }
 
-static char *read_number()
-{
+static char *read_number() {
   char *num = (char *)malloc(MAX_IDENTIFIER_LEN);
   char *current = num;
-  while (is_number(ch))
-  {
+  while (is_number(ch)) {
     *current = ch;
     current += 1;
     read_char();
@@ -204,8 +182,7 @@ static char *read_number()
   return num;
 }
 
-static char *char_to_str(char c)
-{
+static char *char_to_str(char c) {
   char *str = (char *)malloc(2);
   str[0] = c;
   str[1] = '\0';
