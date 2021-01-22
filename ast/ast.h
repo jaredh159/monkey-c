@@ -90,6 +90,22 @@ typedef struct Program {
   List *statements;
 } Program;
 
+// enum {
+//   STATEMENT_NODE,
+//   EXPRESSION_NODE,
+// };
+
+// typedef int NodeType;
+
+// typedef struct Node {
+//   char *token_literal;
+//   NodeType type;
+//   union {
+//     Statement *statement;
+//     Expression *expression;
+//   } n;
+// } Node;
+
 char *program_string(Program *program);
 char *statement_string(Statement *statement);
 char *let_statement_string(LetStatement *let_statement);

@@ -14,6 +14,21 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "type": "shell",
+      "label": "make test_eval",
+      "command": "/usr/bin/make",
+      "args": [
+        "test_eval"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ],
   "version": "2.0.0"

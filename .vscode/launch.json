@@ -13,5 +13,14 @@
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "make test_parser"
     },
+    {
+      "name": "test_eval",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_eval",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_eval"
+    },
   ]
 }

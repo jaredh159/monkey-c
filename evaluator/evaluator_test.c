@@ -1,3 +1,4 @@
+#include "evaluator.h"
 #include <stdio.h>
 #include "../object/object.h"
 #include "../parser/parser.h"
@@ -5,10 +6,10 @@
 
 Object eval_test(char *input) {
   Program *program = parse_program(input);
-  return eval(program);
+  return eval(program, PROGRAM_NODE);
 }
 
-assert_integer_object(Object object, int expected, char *test_name) {
+void assert_integer_object(Object object, int expected, char *test_name) {
   assert_int_is(INTEGER_OBJ, object.type, "object is type=INTEGER", test_name);
   assert_int_is(
     expected, object.value.i, "integer has correct value", test_name);

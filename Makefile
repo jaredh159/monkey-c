@@ -12,11 +12,15 @@ test_lexer:
 test_ast:
 	clang -o .bin/test_ast ast/ast_test.c ast/ast.c token/token.c test/test.c utils/argv.c utils/list.c $(FLAGS)
 
+test_eval:
+	clang -o .bin/test_eval evaluator/evaluator_test.c evaluator/evaluator.c object/object.c parser/parser.c lexer/lexer.c parser/parselets.c ast/ast.c token/token.c test/test.c utils/argv.c utils/list.c $(FLAGS)
+
 test_all:
 	make test_lexer
 	make test_parser
 	make test_ast
-	./.bin/test_lexer && ./.bin/test_parser && ./.bin/test_ast
+	make test_eval
+	printf "\nLEXER:  " && ./.bin/test_lexer && printf "AST:    " && ./.bin/test_ast && printf "EVAL:   " && ./.bin/test_eval && printf "PARSER: " && ./.bin/test_parser && echo
 
 all:
 	make monkey
