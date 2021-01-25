@@ -7,10 +7,13 @@ char *object_inspect(Object object) {
   switch (object.type) {
     case INTEGER_OBJ:
       sprintf(inspect_str, "%d", object.value.i);
+      break;
     case BOOLEAN_OBJ:
       sprintf(inspect_str, "%s", object.value.b ? "true" : "false");
+      break;
     case NULL_OBJ:
       return "null";
+      break;
   }
   return inspect_str;
 }
