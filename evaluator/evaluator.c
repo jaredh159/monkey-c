@@ -1,9 +1,14 @@
 #include "evaluator.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "../ast/ast.h"
 #include "../parser/parser.h"
 #include "../utils/list.h"
+
+Object M_NULL = {NULL_OBJ};
+Object TRUE = {BOOLEAN_OBJ, {.b = true}};
+Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 
 Object eval_statements(List *statements);
 
@@ -18,9 +23,13 @@ Object eval(void *node, NodeType type) {
       object.type = INTEGER_OBJ;
       object.value.i = ((IntegerLiteral *)node)->value;
       return object;
+    case BOOLEAN_LITERAL_NODE:
+      return ((BooleanLiteral *)node)->value ? TRUE : FALSE;
     case EXPRESSION_NODE: {
       Expression *exp = node;
       switch (exp->type) {
+        case EXPRESSION_BOOLEAN_LITERAL:
+          return eval(exp->node, BOOLEAN_LITERAL_NODE);
         case EXPRESSION_INTEGER_LITERAL:
           return eval(exp->node, INTEGER_LITERAL_NODE);
       }
