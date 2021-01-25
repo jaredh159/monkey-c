@@ -28,8 +28,8 @@ void test_eval_integer_expression() {
     int expected;
   } IntTest;
 
-  IntTest tests[] = {{"5", 5}, {"10", 10}};
-  for (int i = 0; i < 2; i++) {
+  IntTest tests[] = {{"5", 5}, {"10", 10}, {"-5", -5}, {"-10", -10}};
+  for (int i = 0; i < 4; i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_integer_object(
       evaluated, tests[i].expected, "eval_integer_expression");

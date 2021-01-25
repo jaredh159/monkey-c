@@ -78,9 +78,20 @@ Object eval_bang_operator_expression(Object right) {
   }
 }
 
+Object eval_minus_prefix_operator_expression(Object right) {
+  if (right.type != INTEGER_OBJ) {
+    return M_NULL;
+  }
+  int value = right.value.i;
+  Object object = {INTEGER_OBJ, {.i = value * -1}};
+  return object;
+}
+
 Object eval_prefix_expression(char *operator, Object right) {
   if (strcmp(operator, "!") == 0)
     return eval_bang_operator_expression(right);
+  else if (strcmp(operator, "-") == 0)
+    return eval_minus_prefix_operator_expression(right);
   else
     return M_NULL;
 }
