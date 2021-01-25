@@ -50,8 +50,24 @@ void test_eval_boolean_expression() {
   }
 }
 
+void test_bang_operator() {
+  typedef struct {
+    char *input;
+    bool expected;
+  } IntTest;
+
+  IntTest tests[] = {{"!true", false}, {"!false", true}, {"!5", false},
+    {"!!true", true}, {"!!false", false}, {"!!5", true}};
+
+  for (int i = 0; i < 6; i++) {
+    Object evaluated = eval_test(tests[i].input);
+    assert_boolean_object(evaluated, tests[i].expected, "test_bang_operator");
+  }
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_bang_operator();
   test_eval_boolean_expression();
   test_eval_integer_expression();
   printf("\n");

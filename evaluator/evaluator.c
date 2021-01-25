@@ -2,14 +2,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../ast/ast.h"
 #include "../parser/parser.h"
 #include "../utils/list.h"
 
-Object M_NULL = {NULL_OBJ};
+Object M_NULL = {NULL_OBJ, {0}};
 Object TRUE = {BOOLEAN_OBJ, {.b = true}};
 Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 
+Object eval_prefix_expression(char *operator, Object right);
 Object eval_statements(List *statements);
 
 Object eval(void *node, NodeType type) {
@@ -28,6 +30,11 @@ Object eval(void *node, NodeType type) {
     case EXPRESSION_NODE: {
       Expression *exp = node;
       switch (exp->type) {
+        case EXPRESSION_PREFIX: {
+          PrefixExpression *pfx = ((PrefixExpression *)exp->node);
+          Object right = eval(pfx->right, EXPRESSION_NODE);
+          return eval_prefix_expression(pfx->operator, right);
+        }
         case EXPRESSION_BOOLEAN_LITERAL:
           return eval(exp->node, BOOLEAN_LITERAL_NODE);
         case EXPRESSION_INTEGER_LITERAL:
@@ -56,4 +63,24 @@ Object eval_statements(List *statements) {
       object = eval(stmt->node, type);
     }
   return object;
+}
+
+Object eval_bang_operator_expression(Object right) {
+  if (right.type == BOOLEAN_OBJ) {
+    if (right.value.b == true)
+      return FALSE;
+    else
+      return TRUE;
+  } else if (right.type == NULL_OBJ) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+Object eval_prefix_expression(char *operator, Object right) {
+  if (strcmp(operator, "!") == 0)
+    return eval_bang_operator_expression(right);
+  else
+    return M_NULL;
 }
