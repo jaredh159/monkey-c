@@ -23,6 +23,11 @@ Object eval(void *node, NodeType type) {
       return eval_statements(((Program *)node)->statements);
     case BLOCK_STATEMENTS_NODE:
       return eval_statements(((BlockStatement *)node)->statements);
+    case RETURN_STATEMENT_NODE: {
+      object = eval(((ReturnStatement *)node)->return_value, EXPRESSION_NODE);
+      object.type = RETURN_VALUE_OBJ;
+      return object;
+    }
     case EXPRESSION_STATEMENT_NODE:
       return eval(((ExpressionStatement *)node)->expression, EXPRESSION_NODE);
     case INTEGER_LITERAL_NODE:
@@ -66,7 +71,8 @@ Object eval_statements(List *statements) {
       Statement *stmt = (Statement *)current->item;
       switch (stmt->type) {
         case STATEMENT_RETURN:
-          type = 99;  // TODO
+          // won't work for nested statements...
+          return eval(stmt->node, RETURN_STATEMENT_NODE);
         case STATEMENT_LET:
           type = 88;  // TODO
         case STATEMENT_EXPRESSION:

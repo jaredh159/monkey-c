@@ -26,6 +26,8 @@ char *object_type(Object object) {
       return "BOOLEAN";
     case NULL_OBJ:
       return "NULL";
+    case RETURN_VALUE_OBJ:
+      return "RETURN_VALUE";
   }
   return "UNKNOWN";
 }
