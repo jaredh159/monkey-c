@@ -28,8 +28,14 @@ void test_eval_integer_expression() {
     int expected;
   } IntTest;
 
-  IntTest tests[] = {{"5", 5}, {"10", 10}, {"-5", -5}, {"-10", -10}};
-  for (int i = 0; i < 4; i++) {
+  IntTest tests[] = {{"5", 5}, {"10", 10}, {"-5", -5}, {"-10", -10},
+    {"5 + 5 + 5 + 5 - 10", 10}, {"2 * 2 * 2 * 2 * 2", 32},
+    {"-50 + 100 + -50", 0}, {"5 * 2 + 10", 20}, {"5 + 2 * 10", 25},
+    {"20 + 2 * -10", 0}, {"50 / 2 * 2 + 10", 60}, {"2 * (5 + 10)", 30},
+    {"3 * 3 * 3 + 10", 37}, {"3 * (3 * 3) + 10", 37},
+    {"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50}};
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_integer_object(
       evaluated, tests[i].expected, "eval_integer_expression");
@@ -42,8 +48,15 @@ void test_eval_boolean_expression() {
     int expected;
   } IntTest;
 
-  IntTest tests[] = {{"true", true}, {"false", false}};
-  for (int i = 0; i < 2; i++) {
+  IntTest tests[] = {{"true", true}, {"false", false}, {"1 < 2", true},
+    {"1 > 2", false}, {"1 < 1", false}, {"1 > 1", false}, {"1 == 1", true},
+    {"1 != 1", false}, {"1 == 2", false}, {"1 != 2", true},
+    {"true == true", true}, {"false == false", true}, {"true == false", false},
+    {"true != false", true}, {"false != true", true}, {"(1 < 2) == true", true},
+    {"(1 < 2) == false", false}, {"(1 > 2) == true", false},
+    {"(1 > 2) == false", true}};
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_boolean_object(
       evaluated, tests[i].expected, "eval_boolean_expression");
@@ -59,7 +72,8 @@ void test_bang_operator() {
   IntTest tests[] = {{"!true", false}, {"!false", true}, {"!5", false},
     {"!!true", true}, {"!!false", false}, {"!!5", true}};
 
-  for (int i = 0; i < 6; i++) {
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_boolean_object(evaluated, tests[i].expected, "test_bang_operator");
   }

@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "../ast/ast.h"
 #include "../parser/parser.h"
 #include "../utils/list.h"
@@ -11,6 +10,8 @@ Object M_NULL = {NULL_OBJ, {0}};
 Object TRUE = {BOOLEAN_OBJ, {.b = true}};
 Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 
+Object eval_integer_infix_expression(char *operator, Object left, Object right);
+Object eval_infix_expression(char *operator, Object left, Object right);
 Object eval_prefix_expression(char *operator, Object right);
 Object eval_statements(List *statements);
 
@@ -34,6 +35,12 @@ Object eval(void *node, NodeType type) {
           PrefixExpression *pfx = ((PrefixExpression *)exp->node);
           Object right = eval(pfx->right, EXPRESSION_NODE);
           return eval_prefix_expression(pfx->operator, right);
+        }
+        case EXPRESSION_INFIX: {
+          InfixExpression *infix = ((InfixExpression *)exp->node);
+          Object left = eval(infix->left, EXPRESSION_NODE);
+          Object right = eval(infix->right, EXPRESSION_NODE);
+          return eval_infix_expression(infix->operator, left, right);
         }
         case EXPRESSION_BOOLEAN_LITERAL:
           return eval(exp->node, BOOLEAN_LITERAL_NODE);
@@ -88,10 +95,54 @@ Object eval_minus_prefix_operator_expression(Object right) {
 }
 
 Object eval_prefix_expression(char *operator, Object right) {
-  if (strcmp(operator, "!") == 0)
-    return eval_bang_operator_expression(right);
-  else if (strcmp(operator, "-") == 0)
-    return eval_minus_prefix_operator_expression(right);
-  else
-    return M_NULL;
+  switch (*operator) {
+    case '!':
+      return eval_bang_operator_expression(right);
+    case '-':
+      return eval_minus_prefix_operator_expression(right);
+    default:
+      return M_NULL;
+  }
+}
+
+Object eval_infix_expression(char *operator, Object left, Object right) {
+  if (left.type == INTEGER_OBJ && right.type == INTEGER_OBJ) {
+    return eval_integer_infix_expression(operator, left, right);
+  }
+  switch (*operator) {
+    case '=':  // `==`
+      return left.value.b == right.value.b ? TRUE : FALSE;
+    case '!':  // `!=`
+      return left.value.b != right.value.b ? TRUE : FALSE;
+  }
+  return M_NULL;
+}
+
+Object eval_integer_infix_expression(
+  char *operator, Object left, Object right) {
+  Object object = {INTEGER_OBJ, {.i = 0}};
+  switch (*operator) {
+    case '+':
+      object.value.i = left.value.i + right.value.i;
+      return object;
+    case '-':
+      object.value.i = left.value.i - right.value.i;
+      return object;
+    case '*':
+      object.value.i = left.value.i * right.value.i;
+      return object;
+    case '/':
+      object.value.i = left.value.i / right.value.i;
+      return object;
+    case '<':
+      return left.value.i < right.value.i ? TRUE : FALSE;
+    case '>':
+      return left.value.i > right.value.i ? TRUE : FALSE;
+    case '=':  // `==`
+      return left.value.i == right.value.i ? TRUE : FALSE;
+    case '!':  // `!=
+      return left.value.i != right.value.i ? TRUE : FALSE;
+    default:
+      return M_NULL;
+  }
 }
