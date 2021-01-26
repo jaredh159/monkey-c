@@ -13,6 +13,7 @@ Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 Object eval_integer_infix_expression(char *operator, Object left, Object right);
 Object eval_infix_expression(char *operator, Object left, Object right);
 Object eval_prefix_expression(char *operator, Object right);
+Object eval_if_expression(IfExpression *if_exp);
 Object eval_statements(List *statements);
 
 Object eval(void *node, NodeType type) {
@@ -20,6 +21,8 @@ Object eval(void *node, NodeType type) {
   switch (type) {
     case PROGRAM_NODE:
       return eval_statements(((Program *)node)->statements);
+    case BLOCK_STATEMENTS_NODE:
+      return eval_statements(((BlockStatement *)node)->statements);
     case EXPRESSION_STATEMENT_NODE:
       return eval(((ExpressionStatement *)node)->expression, EXPRESSION_NODE);
     case INTEGER_LITERAL_NODE:
@@ -42,6 +45,8 @@ Object eval(void *node, NodeType type) {
           Object right = eval(infix->right, EXPRESSION_NODE);
           return eval_infix_expression(infix->operator, left, right);
         }
+        case EXPRESSION_IF:
+          return eval_if_expression(((IfExpression *)exp->node));
         case EXPRESSION_BOOLEAN_LITERAL:
           return eval(exp->node, BOOLEAN_LITERAL_NODE);
         case EXPRESSION_INTEGER_LITERAL:
@@ -145,4 +150,23 @@ Object eval_integer_infix_expression(
     default:
       return M_NULL;
   }
+}
+
+bool is_truthy(Object obj) {
+  if (obj.type == NULL_OBJ)
+    return false;
+  else if (obj.type == BOOLEAN_OBJ && obj.value.b == false)
+    return false;
+  else
+    return true;
+}
+
+Object eval_if_expression(IfExpression *if_exp) {
+  Object condition = eval(if_exp->condition, EXPRESSION_NODE);
+  if (is_truthy(condition))
+    return eval(if_exp->consequence, BLOCK_STATEMENTS_NODE);
+  else if (if_exp->alternative != NULL)
+    return eval(if_exp->alternative, BLOCK_STATEMENTS_NODE);
+  else
+    return M_NULL;
 }
