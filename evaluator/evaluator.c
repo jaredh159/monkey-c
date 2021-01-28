@@ -14,18 +14,25 @@ Object eval_integer_infix_expression(char *operator, Object left, Object right);
 Object eval_infix_expression(char *operator, Object left, Object right);
 Object eval_prefix_expression(char *operator, Object right);
 Object eval_if_expression(IfExpression *if_exp);
-Object eval_statements(List *statements);
+Object eval_program(List *statements);
+Object eval_block_statement(List *statements);
 
 Object eval(void *node, NodeType type) {
   Object object = {INTEGER_OBJ, {0}};
   switch (type) {
     case PROGRAM_NODE:
-      return eval_statements(((Program *)node)->statements);
+      return eval_program(((Program *)node)->statements);
     case BLOCK_STATEMENTS_NODE:
-      return eval_statements(((BlockStatement *)node)->statements);
+      return eval_block_statement(((BlockStatement *)node)->statements);
     case RETURN_STATEMENT_NODE: {
-      object = eval(((ReturnStatement *)node)->return_value, EXPRESSION_NODE);
+      Object temp =
+        eval(((ReturnStatement *)node)->return_value, EXPRESSION_NODE);
+      // can't return address of something on the stack, so need to malloc here
+      Object *return_value = malloc(sizeof(Object));
+      return_value->type = temp.type;
+      return_value->value = temp.value;
       object.type = RETURN_VALUE_OBJ;
+      object.value.return_value = return_value;
       return object;
     }
     case EXPRESSION_STATEMENT_NODE:
@@ -62,23 +69,46 @@ Object eval(void *node, NodeType type) {
   return object;
 }
 
-Object eval_statements(List *statements) {
+Object eval_statement(Statement *stmt) {
+  int type = -1;
+  switch (stmt->type) {
+    case STATEMENT_RETURN:
+      type = RETURN_STATEMENT_NODE;
+      break;
+    case STATEMENT_LET:
+      type = 88;  // TODO
+      break;
+    case STATEMENT_EXPRESSION:
+      type = EXPRESSION_STATEMENT_NODE;
+      break;
+  }
+  return eval(stmt->node, type);
+}
+
+Object eval_program(List *statements) {
   Object object;
   List *current = statements;
   for (; current != NULL; current = current->next)
     if (current->item != NULL) {
-      int type = -1;
       Statement *stmt = (Statement *)current->item;
-      switch (stmt->type) {
-        case STATEMENT_RETURN:
-          // won't work for nested statements...
-          return eval(stmt->node, RETURN_STATEMENT_NODE);
-        case STATEMENT_LET:
-          type = 88;  // TODO
-        case STATEMENT_EXPRESSION:
-          type = EXPRESSION_STATEMENT_NODE;
+      object = eval_statement(stmt);
+      if (object.type == RETURN_VALUE_OBJ) {
+        return *object.value.return_value;
       }
-      object = eval(stmt->node, type);
+    }
+  return object;
+}
+
+Object eval_block_statement(List *statements) {
+  Object object;
+  List *current = statements;
+  for (; current != NULL; current = current->next)
+    if (current->item != NULL) {
+      Statement *stmt = (Statement *)current->item;
+      object = eval_statement(stmt);
+      if (object.type == RETURN_VALUE_OBJ) {
+        return object;
+      }
     }
   return object;
 }

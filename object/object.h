@@ -17,10 +17,12 @@ typedef struct Object {
   union {
     int i;
     bool b;
+    struct Object *return_value;
   } value;
 } Object;
 
 char *object_inspect(Object object);
 char *object_type(Object object);
+void object_print(Object object);
 
 #endif  // __OBJECT_H__

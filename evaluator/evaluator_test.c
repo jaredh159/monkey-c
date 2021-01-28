@@ -99,14 +99,20 @@ void test_if_else_expressions(void) {
 
 void test_return_statements(void) {
   IntTest tests[] = {{"return 10;", 10}, {"return 10; 9;", 10},
-    {"return 2 * 5; 9;", 10}, {"9; return 2 * 5; 9;", 10}};
+    {"return 2 * 5; 9;", 10}, {"9; return 2 * 5; 9;", 10},
+    {"if (10 > 1) { if (10 > 1) { return 10; } return 1; }", 10}};
+
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object res = eval_test(tests[i].input);
-    assert_int_is(RETURN_VALUE_OBJ, res.type, "result is RETURN_VALUE",
-      "return_statements");
-    assert_int_is(tests[i].expected, res.value.i, "return value correct",
-      "return_statements");
+    if (res.type == RETURN_VALUE_OBJ) {
+      assert_int_is(RETURN_VALUE_OBJ, res.type, "result is RETURN_VALUE",
+        "return_statements");
+      assert_int_is(tests[i].expected, res.value.return_value->value.i,
+        "return value correct", "return_statements");
+    } else {
+      assert_integer_object(res, tests[i].expected, "return_statements");
+    }
   }
 }
 

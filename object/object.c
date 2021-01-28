@@ -11,9 +11,10 @@ char *object_inspect(Object object) {
     case BOOLEAN_OBJ:
       sprintf(inspect_str, "%s", object.value.b ? "true" : "false");
       break;
+    case RETURN_VALUE_OBJ:
+      return object_inspect(*object.value.return_value);
     case NULL_OBJ:
       return "null";
-      break;
   }
   return inspect_str;
 }
@@ -29,5 +30,11 @@ char *object_type(Object object) {
     case RETURN_VALUE_OBJ:
       return "RETURN_VALUE";
   }
+  printf("num: %d\n", object.type);
   return "UNKNOWN";
+}
+
+void object_print(Object object) {
+  printf("object.type=%s, object.value=%s\n", object_type(object),
+    object_inspect(object));
 }
