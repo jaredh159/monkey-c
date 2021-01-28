@@ -15,6 +15,9 @@ char *object_inspect(Object object) {
       return object_inspect(*object.value.return_value);
     case NULL_OBJ:
       return "null";
+    case ERROR_OBJ:
+      sprintf(inspect_str, "ERROR: %s", object.value.message);
+      break;
   }
   return inspect_str;
 }
@@ -29,6 +32,8 @@ char *object_type(Object object) {
       return "NULL";
     case RETURN_VALUE_OBJ:
       return "RETURN_VALUE";
+    case ERROR_OBJ:
+      return "ERROR";
   }
   printf("num: %d\n", object.type);
   return "UNKNOWN";

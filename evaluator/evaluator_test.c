@@ -13,6 +13,11 @@ typedef struct {
   int expected;
 } IntTest;
 
+typedef struct {
+  char *input;
+  char *expected;
+} StrTest;
+
 Object eval_test(char *input) {
   Program *program = parse_program(input);
   return eval(program, PROGRAM_NODE);
@@ -98,6 +103,7 @@ void test_if_else_expressions(void) {
 }
 
 void test_return_statements(void) {
+  char *t = "return_statements";
   IntTest tests[] = {{"return 10;", 10}, {"return 10; 9;", 10},
     {"return 2 * 5; 9;", 10}, {"9; return 2 * 5; 9;", 10},
     {"if (10 > 1) { if (10 > 1) { return 10; } return 1; }", 10}};
@@ -106,18 +112,58 @@ void test_return_statements(void) {
   for (int i = 0; i < num_tests; i++) {
     Object res = eval_test(tests[i].input);
     if (res.type == RETURN_VALUE_OBJ) {
-      assert_int_is(RETURN_VALUE_OBJ, res.type, "result is RETURN_VALUE",
-        "return_statements");
+      assert_int_is(RETURN_VALUE_OBJ, res.type, "result is RETURN_VALUE", t);
       assert_int_is(tests[i].expected, res.value.return_value->value.i,
-        "return value correct", "return_statements");
+        "return value correct", t);
     } else {
-      assert_integer_object(res, tests[i].expected, "return_statements");
+      assert_integer_object(res, tests[i].expected, t);
     }
+  }
+}
+
+void test_error_handling(void) {
+  char *t = "error_handling";
+  StrTest tests[] = {// align me right please
+    {
+      "5 + true;",
+      "type mismatch: INTEGER + BOOLEAN",
+    },
+    {
+      "5 + true; 5;",
+      "type mismatch: INTEGER + BOOLEAN",
+    },
+    {
+      "-true",
+      "unknown operator: -BOOLEAN",
+    },
+    {
+      "true + false;",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    },
+    {
+      "5; true + false; 5",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    },
+    {
+      "if (10 > 1) { true + false; }",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    },
+    {
+      "if (10 > 1) { if ( 10 > 1) { return true + false; } return 1; }",
+      "unknown operator: BOOLEAN + BOOLEAN",
+    }};
+
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
+    Object res = eval_test(tests[i].input);
+    assert_int_is(ERROR_OBJ, res.type, "result object.type=ERROR", t);
+    assert_str_is(tests[i].expected, res.value.message, "error msg correct", t);
   }
 }
 
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_error_handling();
   test_return_statements();
   test_if_else_expressions();
   test_bang_operator();

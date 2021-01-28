@@ -8,6 +8,7 @@ enum {
   BOOLEAN_OBJ,
   NULL_OBJ,
   RETURN_VALUE_OBJ,
+  ERROR_OBJ,
 };
 
 typedef int ObjectType;
@@ -18,6 +19,7 @@ typedef struct Object {
     int i;
     bool b;
     struct Object *return_value;
+    char *message;
   } value;
 } Object;
 
