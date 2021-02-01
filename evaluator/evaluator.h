@@ -1,6 +1,7 @@
 #ifndef __EVALUATOR_H__
 #define __EVALUATOR_H__
 
+#include "../object/environment.h"
 #include "../object/object.h"
 
 enum {
@@ -8,6 +9,7 @@ enum {
   EXPRESSION_NODE,
   EXPRESSION_STATEMENT_NODE,
   RETURN_STATEMENT_NODE,
+  LET_STATEMENT_NODE,
   INTEGER_LITERAL_NODE,
   BOOLEAN_LITERAL_NODE,
   BLOCK_STATEMENTS_NODE,
@@ -15,6 +17,6 @@ enum {
 
 typedef int NodeType;
 
-Object eval(void *node, NodeType type);
+Object eval(void *node, NodeType type, Env *env);
 
 #endif  // __EVALUATOR_H__

@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../evaluator/evaluator.h"
 #include "../lexer/lexer.h"
+#include "../object/environment.h"
 #include "../object/object.h"
 #include "../parser/parser.h"
 #include "../token/token.h"
@@ -14,6 +15,7 @@ void repl_start(void) {
   int num_chars;
   size_t bufsize = MAX_LINE_LEN + 1;
   char *buffer = (char *)malloc(bufsize * sizeof(char));
+  Env *env = env_new();
 
   do {
     printf(COLOR_CYAN ">> " COLOR_RESET);
@@ -24,7 +26,7 @@ void repl_start(void) {
         parser_print_errors();
         continue;
       }
-      Object evaluated = eval(program, PROGRAM_NODE);
+      Object evaluated = eval(program, PROGRAM_NODE, env);
       printf("%s\n", object_inspect(evaluated));
     }
   } while (num_chars != EOF);

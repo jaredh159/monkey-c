@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "../object/environment.h"
 #include "../object/object.h"
 #include "../parser/parser.h"
 #include "../test/test.h"
@@ -20,7 +21,7 @@ typedef struct {
 
 Object eval_test(char *input) {
   Program *program = parse_program(input);
-  return eval(program, PROGRAM_NODE);
+  return eval(program, PROGRAM_NODE, env_new());
 }
 
 void assert_null_object(Object object, char *test_name) {
@@ -123,7 +124,7 @@ void test_return_statements(void) {
 
 void test_error_handling(void) {
   char *t = "error_handling";
-  StrTest tests[] = {// align me right please
+  StrTest tests[] = {//
     {
       "5 + true;",
       "type mismatch: INTEGER + BOOLEAN",
@@ -151,6 +152,10 @@ void test_error_handling(void) {
     {
       "if (10 > 1) { if ( 10 > 1) { return true + false; } return 1; }",
       "unknown operator: BOOLEAN + BOOLEAN",
+    },
+    {
+      "foobar",
+      "identifier not found: foobar",
     }};
 
   int num_tests = sizeof tests / sizeof(tests[0]);
@@ -161,8 +166,25 @@ void test_error_handling(void) {
   }
 }
 
+void test_let_statements(void) {
+  char *t = "let_statements";
+  IntTest tests[] = {
+    {"let a = 5; a;", 5},
+    {"let a = 5 * 5; a;", 25},
+    {"let a = 5; let b = a; b;", 5},
+    {"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+  };
+
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
+    Object res = eval_test(tests[i].input);
+    assert_integer_object(res, tests[i].expected, t);
+  }
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_let_statements();
   test_error_handling();
   test_return_statements();
   test_if_else_expressions();

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../ast/ast.h"
+#include "../object/environment.h"
 #include "../parser/parser.h"
 #include "../utils/list.h"
 
@@ -13,22 +14,23 @@ Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 Object eval_integer_infix_expression(char *operator, Object left, Object right);
 Object eval_infix_expression(char *operator, Object left, Object right);
 Object eval_prefix_expression(char *operator, Object right);
-Object eval_if_expression(IfExpression *if_exp);
-Object eval_program(List *statements);
-Object eval_block_statement(List *statements);
+Object eval_identifier(Identifier *ident, Env *env);
+Object eval_if_expression(IfExpression *if_exp, Env *env);
+Object eval_program(List *statements, Env *env);
+Object eval_block_statement(List *statements, Env *env);
 Object error(char *fmt, char **types, int num_types);
 bool is_error(Object object);
 
-Object eval(void *node, NodeType type) {
+Object eval(void *node, NodeType type, Env *env) {
   Object object = {INTEGER_OBJ, {0}};
   switch (type) {
     case PROGRAM_NODE:
-      return eval_program(((Program *)node)->statements);
+      return eval_program(((Program *)node)->statements, env);
     case BLOCK_STATEMENTS_NODE:
-      return eval_block_statement(((BlockStatement *)node)->statements);
+      return eval_block_statement(((BlockStatement *)node)->statements, env);
     case RETURN_STATEMENT_NODE: {
       Object temp =
-        eval(((ReturnStatement *)node)->return_value, EXPRESSION_NODE);
+        eval(((ReturnStatement *)node)->return_value, EXPRESSION_NODE, env);
       if (is_error(temp))
         return temp;
       // can't return address of something on the stack, so need to malloc here
@@ -39,8 +41,17 @@ Object eval(void *node, NodeType type) {
       object.value.return_value = return_value;
       return object;
     }
+    case LET_STATEMENT_NODE: {
+      LetStatement *ls = (LetStatement *)node;
+      object = eval(ls->value, EXPRESSION_NODE, env);
+      if (is_error(object))
+        return object;
+      env_set(env, ls->name->value, object);
+      return object;
+    }
     case EXPRESSION_STATEMENT_NODE:
-      return eval(((ExpressionStatement *)node)->expression, EXPRESSION_NODE);
+      return eval(
+        ((ExpressionStatement *)node)->expression, EXPRESSION_NODE, env);
     case INTEGER_LITERAL_NODE:
       object.type = INTEGER_OBJ;
       object.value.i = ((IntegerLiteral *)node)->value;
@@ -52,56 +63,61 @@ Object eval(void *node, NodeType type) {
       switch (exp->type) {
         case EXPRESSION_PREFIX: {
           PrefixExpression *pfx = ((PrefixExpression *)exp->node);
-          Object right = eval(pfx->right, EXPRESSION_NODE);
+          Object right = eval(pfx->right, EXPRESSION_NODE, env);
           if (is_error(right))
             return right;
           return eval_prefix_expression(pfx->operator, right);
         }
         case EXPRESSION_INFIX: {
           InfixExpression *infix = ((InfixExpression *)exp->node);
-          Object left = eval(infix->left, EXPRESSION_NODE);
+          Object left = eval(infix->left, EXPRESSION_NODE, env);
           if (is_error(left))
             return left;
-          Object right = eval(infix->right, EXPRESSION_NODE);
+          Object right = eval(infix->right, EXPRESSION_NODE, env);
           if (is_error(right))
             return right;
           return eval_infix_expression(infix->operator, left, right);
         }
+        case EXPRESSION_IDENTIFIER:
+          return eval_identifier(((Identifier *)exp->node), env);
         case EXPRESSION_IF:
-          return eval_if_expression(((IfExpression *)exp->node));
+          return eval_if_expression(((IfExpression *)exp->node), env);
         case EXPRESSION_BOOLEAN_LITERAL:
-          return eval(exp->node, BOOLEAN_LITERAL_NODE);
+          return eval(exp->node, BOOLEAN_LITERAL_NODE, env);
         case EXPRESSION_INTEGER_LITERAL:
-          return eval(exp->node, INTEGER_LITERAL_NODE);
+          return eval(exp->node, INTEGER_LITERAL_NODE, env);
       }
     }
   }
   return object;
 }
 
-Object eval_statement(Statement *stmt) {
-  int type = -1;
+Object eval_statement(Statement *stmt, Env *env) {
+  int type;
   switch (stmt->type) {
     case STATEMENT_RETURN:
       type = RETURN_STATEMENT_NODE;
       break;
     case STATEMENT_LET:
-      type = 88;  // TODO
+      type = LET_STATEMENT_NODE;
       break;
     case STATEMENT_EXPRESSION:
       type = EXPRESSION_STATEMENT_NODE;
       break;
+    default:
+      printf("Unknown statement type: %d\n", stmt->type);
+      exit(1);
   }
-  return eval(stmt->node, type);
+  return eval(stmt->node, type, env);
 }
 
-Object eval_program(List *statements) {
+Object eval_program(List *statements, Env *env) {
   Object object;
   List *current = statements;
   for (; current != NULL; current = current->next)
     if (current->item != NULL) {
       Statement *stmt = (Statement *)current->item;
-      object = eval_statement(stmt);
+      object = eval_statement(stmt, env);
       if (object.type == RETURN_VALUE_OBJ) {
         return *object.value.return_value;
       } else if (object.type == ERROR_OBJ) {
@@ -111,13 +127,13 @@ Object eval_program(List *statements) {
   return object;
 }
 
-Object eval_block_statement(List *statements) {
+Object eval_block_statement(List *statements, Env *env) {
   Object object;
   List *current = statements;
   for (; current != NULL; current = current->next)
     if (current->item != NULL) {
       Statement *stmt = (Statement *)current->item;
-      object = eval_statement(stmt);
+      object = eval_statement(stmt, env);
       if (object.type == RETURN_VALUE_OBJ || object.type == ERROR_OBJ) {
         return object;
       }
@@ -218,14 +234,14 @@ bool is_truthy(Object obj) {
     return true;
 }
 
-Object eval_if_expression(IfExpression *if_exp) {
-  Object condition = eval(if_exp->condition, EXPRESSION_NODE);
+Object eval_if_expression(IfExpression *if_exp, Env *env) {
+  Object condition = eval(if_exp->condition, EXPRESSION_NODE, env);
   if (is_error(condition))
     return condition;
   if (is_truthy(condition))
-    return eval(if_exp->consequence, BLOCK_STATEMENTS_NODE);
+    return eval(if_exp->consequence, BLOCK_STATEMENTS_NODE, env);
   else if (if_exp->alternative != NULL)
-    return eval(if_exp->alternative, BLOCK_STATEMENTS_NODE);
+    return eval(if_exp->alternative, BLOCK_STATEMENTS_NODE, env);
   else
     return M_NULL;
 }
@@ -252,4 +268,11 @@ Object error(char *fmt, char **types, int num_types) {
 
 bool is_error(Object object) {
   return object.type == ERROR_OBJ;
+}
+
+Object eval_identifier(Identifier *ident, Env *env) {
+  if (!env_has(env, ident->value)) {
+    return error("identifier not found: %s", (char *[1]){ident->value}, 1);
+  }
+  return env_get(env, ident->value);
 }

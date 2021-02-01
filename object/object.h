@@ -9,6 +9,7 @@ enum {
   NULL_OBJ,
   RETURN_VALUE_OBJ,
   ERROR_OBJ,
+  ENV_LOOKUP_NOT_FOUND_OBJ,
 };
 
 typedef int ObjectType;
