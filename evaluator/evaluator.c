@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../ast/ast.h"
-#include "../object/environment.h"
+#include "../object/object.h"
 #include "../parser/parser.h"
 #include "../utils/list.h"
 
@@ -62,14 +62,14 @@ Object eval(void *node, NodeType type, Env *env) {
       Expression *exp = node;
       switch (exp->type) {
         case EXPRESSION_PREFIX: {
-          PrefixExpression *pfx = ((PrefixExpression *)exp->node);
+          PrefixExpression *pfx = exp->node;
           Object right = eval(pfx->right, EXPRESSION_NODE, env);
           if (is_error(right))
             return right;
           return eval_prefix_expression(pfx->operator, right);
         }
         case EXPRESSION_INFIX: {
-          InfixExpression *infix = ((InfixExpression *)exp->node);
+          InfixExpression *infix = exp->node;
           Object left = eval(infix->left, EXPRESSION_NODE, env);
           if (is_error(left))
             return left;
@@ -77,6 +77,15 @@ Object eval(void *node, NodeType type, Env *env) {
           if (is_error(right))
             return right;
           return eval_infix_expression(infix->operator, left, right);
+        }
+        case EXPRESSION_FUNCTION_LITERAL: {
+          FunctionLiteral *fn = exp->node;
+          object.type = FUNCTION_OBJ;
+          object.value.fn = malloc(sizeof(Function));
+          object.value.fn->parameters = fn->parameters;
+          object.value.fn->body = fn->body;
+          object.value.fn->env = env;
+          return object;
         }
         case EXPRESSION_IDENTIFIER:
           return eval_identifier(((Identifier *)exp->node), env);

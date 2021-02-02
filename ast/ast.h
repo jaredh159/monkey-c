@@ -99,6 +99,7 @@ char *function_literal_expression_string(FunctionLiteral *fn);
 char *call_expression_string(CallExpression *ce);
 char *identifier_string(Identifier *identifier);
 char *function_params_string(List *params);
+char *block_statement_string(BlockStatement *bs);
 void print_program(Program *program);
 void print_statement(Statement *statement);
 void print_expression(Expression *expression);

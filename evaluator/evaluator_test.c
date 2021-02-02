@@ -2,7 +2,6 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "../object/environment.h"
 #include "../object/object.h"
 #include "../parser/parser.h"
 #include "../test/test.h"
@@ -182,8 +181,20 @@ void test_let_statements(void) {
   }
 }
 
+void test_function_object(void) {
+  char *t = "function_object";
+  Object evaluated = eval_test("fn(x) { x + 2; }");
+  Function *fn = evaluated.value.fn;
+  assert_int_is(FUNCTION_OBJ, evaluated.type, "function is type=FUNCTION", t);
+  assert_int_is(1, list_count(fn->parameters), "has 1 param", t);
+  Identifier *ident = fn->parameters->item;
+  assert_str_is("x", identifier_string(ident), "param is x", t);
+  assert_str_is("(x + 2)", block_statement_string(fn->body), "body correct", t);
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_function_object();
   test_let_statements();
   test_error_handling();
   test_return_statements();

@@ -3,7 +3,6 @@
 #include <string.h>
 #include "../evaluator/evaluator.h"
 #include "../lexer/lexer.h"
-#include "../object/environment.h"
 #include "../object/object.h"
 #include "../parser/parser.h"
 #include "../token/token.h"

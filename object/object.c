@@ -1,7 +1,10 @@
 #include "object.h"
 #include <stdio.h>
+#include <string.h>
 
 char inspect_str[1024];
+
+char *function_inspect(Function *fn);
 
 char *object_inspect(Object object) {
   switch (object.type) {
@@ -13,6 +16,8 @@ char *object_inspect(Object object) {
       break;
     case RETURN_VALUE_OBJ:
       return object_inspect(*object.value.return_value);
+    case FUNCTION_OBJ:
+      return function_inspect(object.value.fn);
     case NULL_OBJ:
       return "null";
     case ERROR_OBJ:
@@ -32,6 +37,8 @@ char *object_type(Object object) {
       return "NULL";
     case RETURN_VALUE_OBJ:
       return "RETURN_VALUE";
+    case FUNCTION_OBJ:
+      return "FUNCTION";
     case ERROR_OBJ:
       return "ERROR";
   }
@@ -42,4 +49,21 @@ char *object_type(Object object) {
 void object_print(Object object) {
   printf("object.type=%s, object.value=%s\n", object_type(object),
     object_inspect(object));
+}
+
+char *function_inspect(Function *fn) {
+  inspect_str[0] = '\0';
+  strcpy(inspect_str, "fn(");
+  int num_params = list_count(fn->parameters);
+  List *current = fn->parameters;
+  for (int i = 0; i < num_params; i++) {
+    Identifier *ident = current->item;
+    strcat(inspect_str, ident->value);
+    if (i < num_params - 1)
+      strcat(inspect_str, ", ");
+  }
+  strcat(inspect_str, ") {\n");
+  strcat(inspect_str, block_statement_string(fn->body));
+  strcat(inspect_str, "\n}");
+  return inspect_str;
 }

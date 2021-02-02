@@ -1,7 +1,6 @@
 #ifndef __EVALUATOR_H__
 #define __EVALUATOR_H__
 
-#include "../object/environment.h"
 #include "../object/object.h"
 
 enum {
