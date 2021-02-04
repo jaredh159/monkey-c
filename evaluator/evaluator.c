@@ -18,6 +18,10 @@ Object eval_identifier(Identifier *ident, Env *env);
 Object eval_if_expression(IfExpression *if_exp, Env *env);
 Object eval_program(List *statements, Env *env);
 Object eval_block_statement(List *statements, Env *env);
+List *eval_expressions(List *expressions, Env *env);
+Object apply_function(Object fn, List *args);
+Object unwrap_return_value(Object obj);
+Env *extend_function_env(Function *fn, List *args);
 Object error(char *fmt, char **types, int num_types);
 bool is_error(Object object);
 
@@ -29,16 +33,12 @@ Object eval(void *node, NodeType type, Env *env) {
     case BLOCK_STATEMENTS_NODE:
       return eval_block_statement(((BlockStatement *)node)->statements, env);
     case RETURN_STATEMENT_NODE: {
-      Object temp =
+      Object wrapped =
         eval(((ReturnStatement *)node)->return_value, EXPRESSION_NODE, env);
-      if (is_error(temp))
-        return temp;
-      // can't return address of something on the stack, so need to malloc here
-      Object *return_value = malloc(sizeof(Object));
-      return_value->type = temp.type;
-      return_value->value = temp.value;
+      if (is_error(wrapped))
+        return wrapped;
       object.type = RETURN_VALUE_OBJ;
-      object.value.return_value = return_value;
+      object.value.return_value = object_copy(wrapped);
       return object;
     }
     case LET_STATEMENT_NODE: {
@@ -86,6 +86,19 @@ Object eval(void *node, NodeType type, Env *env) {
           object.value.fn->body = fn->body;
           object.value.fn->env = env;
           return object;
+        }
+        case EXPRESSION_CALL: {
+          CallExpression *call = exp->node;
+          Object fn = eval(call->fn, EXPRESSION_NODE, env);
+          if (is_error(fn))
+            return fn;
+          List *args = eval_expressions(call->arguments, env);
+          if (list_count(args) > 0) {
+            Object *first_arg = args->item;
+            if (list_count(args) == 1 && is_error(*first_arg))
+              return *first_arg;
+          }
+          return apply_function(fn, args);
         }
         case EXPRESSION_IDENTIFIER:
           return eval_identifier(((Identifier *)exp->node), env);
@@ -284,4 +297,61 @@ Object eval_identifier(Identifier *ident, Env *env) {
     return error("identifier not found: %s", (char *[1]){ident->value}, 1);
   }
   return env_get(env, ident->value);
+}
+
+List *eval_expressions(List *expressions, Env *env) {
+  List *objects = NULL;
+  List *current = expressions;
+  for (; current != NULL; current = current->next) {
+    if (current->item != NULL) {
+      Object evaluated = eval(current->item, EXPRESSION_NODE, env);
+      if (is_error(evaluated)) {
+        objects->item = object_copy(evaluated);
+        objects->next = NULL;
+        return objects;
+      }
+      objects = list_append(objects, object_copy(evaluated));
+    }
+  }
+  return objects;
+}
+
+Object apply_function(Object fn_obj, List *args) {
+  if (fn_obj.type != FUNCTION_OBJ) {
+    return error("not a function: %s", (char *[1]){object_type(fn_obj)}, 1);
+  }
+
+  Function *fn = fn_obj.value.fn;
+  Env *extended_env = extend_function_env(fn, args);
+  Object evaluated = eval(fn->body, BLOCK_STATEMENTS_NODE, extended_env);
+  return unwrap_return_value(evaluated);
+}
+
+Object unwrap_return_value(Object obj) {
+  if (obj.type == RETURN_VALUE_OBJ)
+    return *obj.value.return_value;
+  return obj;
+}
+
+Env *extend_function_env(Function *fn, List *args) {
+  Env *env = env_new_enclosed(fn->env);
+
+  if (list_count(args) != list_count(fn->parameters)) {
+    printf("Error: num params does not match num args\n");
+    exit(1);
+  }
+
+  List *current_arg = args;
+  List *current_param = fn->parameters;
+
+  for (; current_arg != NULL && current_param != NULL;
+       current_arg = current_arg->next, current_param = current_param->next) {
+    if (current_arg->item != NULL && current_param->item != NULL) {
+      Identifier *param = current_param->item;
+      Object *arg = current_arg->item;
+      env_set(env, param->value, *arg);
+    }
+  }
+
+  return env;
 }

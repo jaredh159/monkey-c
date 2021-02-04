@@ -1,5 +1,6 @@
 #include "object.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 char inspect_str[1024];
@@ -66,4 +67,31 @@ char *function_inspect(Function *fn) {
   strcat(inspect_str, block_statement_string(fn->body));
   strcat(inspect_str, "\n}");
   return inspect_str;
+}
+
+Object *object_copy(const Object proto) {
+  Object *copy = malloc(sizeof(Object));
+  if (copy == NULL)
+    return NULL;
+  copy->type = proto.type;
+  switch (proto.type) {
+    case INTEGER_OBJ:
+      copy->value.i = proto.value.i;
+      break;
+    case BOOLEAN_OBJ:
+      copy->value.b = proto.value.b;
+      break;
+    case RETURN_VALUE_OBJ:
+      copy->value.return_value = proto.value.return_value;
+      break;
+    case FUNCTION_OBJ:
+      copy->value.fn = proto.value.fn;
+      break;
+    case NULL_OBJ:
+      break;
+    case ERROR_OBJ:
+      copy->value.message = strdup(proto.value.message);
+      break;
+  }
+  return copy;
 }

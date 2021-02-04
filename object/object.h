@@ -47,8 +47,10 @@ typedef struct Binding {
 char *object_inspect(Object object);
 char *object_type(Object object);
 void object_print(Object object);
+Object *object_copy(const Object proto);
 
 Env *env_new(void);
+Env *env_new_enclosed(Env *outer);
 bool env_has(Env *env, char *name);
 Object env_get(Env *env, char *name);
 void env_set(Env *env, char *name, Object val);

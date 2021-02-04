@@ -192,8 +192,35 @@ void test_function_object(void) {
   assert_str_is("(x + 2)", block_statement_string(fn->body), "body correct", t);
 }
 
+void test_function_application(void) {
+  IntTest tests[] = {
+    {"let identity = fn(x) { x; }; identity(5);", 5},
+    {"let identity = fn(x) { return x; }; identity(5);", 5},
+    {"let double = fn(x) { x * 2; }; double(5);", 10},
+    {"let add = fn(x, y) { x + y; }; add(5, 5);", 10},
+    {"let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+    {"fn(x) { x; }(5)", 5},
+  };
+
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
+    Object res = eval_test(tests[i].input);
+    assert_integer_object(res, tests[i].expected, "function_application");
+  }
+}
+
+void test_closures(void) {
+  char *input =
+    "let newAdder = fn(x) { fn(y) { x + y }; };"
+    "let addTwo = newAdder(2);"
+    "addTwo(2);";
+  assert_integer_object(eval_test(input), 4, "closures");
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_closures();
+  test_function_application();
   test_function_object();
   test_let_statements();
   test_error_handling();

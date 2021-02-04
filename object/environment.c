@@ -11,6 +11,12 @@ Env *env_new(void) {
   return env;
 }
 
+Env *env_new_enclosed(Env *outer) {
+  Env *env = env_new();
+  env->outer = outer;
+  return env;
+}
+
 bool env_has(Env *env, char *name) {
   return env_get(env, name).type != ENV_LOOKUP_NOT_FOUND_OBJ;
 }
@@ -24,6 +30,10 @@ Object env_get(Env *env, char *name) {
     if (strcmp(binding->name, name) == 0)
       return binding->value;
   }
+
+  if (env->outer != NULL)
+    return env_get(env->outer, name);
+
   return (Object){ENV_LOOKUP_NOT_FOUND_OBJ, {.i = 0}};
 }
 

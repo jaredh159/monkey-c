@@ -26,7 +26,8 @@ void repl_start(void) {
         continue;
       }
       Object evaluated = eval(program, PROGRAM_NODE, env);
-      printf("%s\n", object_inspect(evaluated));
+      if (evaluated.type != FUNCTION_OBJ)
+        printf("%s\n", object_inspect(evaluated));
     }
   } while (num_chars != EOF);
   printf("\n");
