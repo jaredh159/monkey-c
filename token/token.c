@@ -81,6 +81,8 @@ char *token_type_name(int type) {
       return "FUNCTION";
     case TOKEN_EOF:
       return "EOF";
+    case TOKEN_STRING:
+      return "STRING";
   }
   return "UNKNOWN_TOKEN";
 }

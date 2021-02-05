@@ -161,7 +161,7 @@ void test_error_handling(void) {
   for (int i = 0; i < num_tests; i++) {
     Object res = eval_test(tests[i].input);
     assert_int_is(ERROR_OBJ, res.type, "result object.type=ERROR", t);
-    assert_str_is(tests[i].expected, res.value.message, "error msg correct", t);
+    assert_str_is(tests[i].expected, res.value.str, "error msg correct", t);
   }
 }
 
@@ -209,6 +209,13 @@ void test_function_application(void) {
   }
 }
 
+void test_string_literal(void) {
+  char *t = "string_literal";
+  Object evaluated = eval_test("\"Hello World!\"");
+  assert_int_is(STRING_OBJ, evaluated.type, "object is string", t);
+  assert_str_is("Hello World!", evaluated.value.str, "string value correct", t);
+}
+
 void test_closures(void) {
   char *input =
     "let newAdder = fn(x) { fn(y) { x + y }; };"
@@ -219,6 +226,7 @@ void test_closures(void) {
 
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_string_literal();
   test_closures();
   test_function_application();
   test_function_object();

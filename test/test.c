@@ -6,6 +6,11 @@
 #include "../utils/argv.h"
 #include "../utils/colors.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvariadic-macros"
+#define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
+#pragma clang diagnostic push
+
 static bool verbose = false;
 static char embedded[500];
 

@@ -5,12 +5,6 @@
 #include "../ast/ast.h"
 #include "../test/test.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wvariadic-macros"
-// TODO: move this elsewhere
-#define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
-#pragma clang diagnostic push
-
 typedef struct {
   int type;
   char *ident_val;
@@ -337,19 +331,20 @@ void test_let_statements() {
     LitExpTest expected_value;
   } LetTest;
 
-  LetTest tests[] = {{"let x = 5;", "x", five}, {"let y = true;", "y", _true},
-    {"let foobar = y;", "foobar", y}};
-  int num_tests = sizeof tests / sizeof(LetTest);
+  LetTest tests[] = {
+    {"let x = 5;", "x", five},
+    {"let y = true;", "y", _true},
+    {"let foobar = y;", "foobar", y},
+  };
 
+  int num_tests = sizeof tests / sizeof(LetTest);
   for (int i = 0; i < num_tests; i++) {
     LetTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
     assert_let_statement(stmt, test.expected_identifier, t);
     LetStatement *ls = get_let(stmt);
-    // ls->value
     assert_literal_expression(ls->value, &test.expected_value, t);
-    // FunctionLiteral *fn = es->expression->node;
   }
 }
 
@@ -371,8 +366,19 @@ void test_call_expression_parsing() {
   assert_infix_expression(ce->arguments->next->next->item, four, "+", five, t);
 }
 
+void test_string_literal_expression(void) {
+  char *t = "string_literal_expression";
+  Program *program = assert_program("\"hello world\";", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_STRING_LITERAL,
+    "expression is string literal expression", t);
+  StringLiteral *str = es->expression->node;
+  assert_str_is("hello world", str->value, "string literal correct", t);
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_string_literal_expression();
   test_let_statements();
   test_call_expression_parsing();
   test_function_parameter_parsing();

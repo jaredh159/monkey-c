@@ -129,6 +129,10 @@ char *return_statement_string(ReturnStatement *rs) {
   return ret_str;
 }
 
+char *string_literal_string(StringLiteral *string) {
+  return string->token->literal;
+}
+
 char *integer_literal_string(IntegerLiteral *int_literal) {
   return int_literal->token->literal;
 }

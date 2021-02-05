@@ -78,6 +78,12 @@ Object eval(void *node, NodeType type, Env *env) {
             return right;
           return eval_infix_expression(infix->operator, left, right);
         }
+        case EXPRESSION_STRING_LITERAL: {
+          StringLiteral *str = exp->node;
+          object.type = STRING_OBJ;
+          object.value.str = str->value;
+          return object;
+        }
         case EXPRESSION_FUNCTION_LITERAL: {
           FunctionLiteral *fn = exp->node;
           object.type = FUNCTION_OBJ;
@@ -284,7 +290,7 @@ Object error(char *fmt, char **types, int num_types) {
       printf("ERROR: unhandled error types amount\n");
       exit(1);
   }
-  Object error = {ERROR_OBJ, {.message = err_msg}};
+  Object error = {ERROR_OBJ, {.str = err_msg}};
   return error;
 }
 

@@ -5,10 +5,11 @@
 #include "../ast/ast.h"
 #include "../utils/list.h"
 
-enum {
+enum ObjectTypes {
   FUNCTION_OBJ,
   INTEGER_OBJ,
   BOOLEAN_OBJ,
+  STRING_OBJ,
   NULL_OBJ,
   RETURN_VALUE_OBJ,
   ERROR_OBJ,
@@ -34,7 +35,7 @@ typedef struct Object {
     int i;
     bool b;
     struct Object *return_value;
-    char *message;
+    char *str;
     Function *fn;
   } value;
 } Object;

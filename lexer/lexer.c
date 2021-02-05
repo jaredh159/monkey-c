@@ -5,6 +5,7 @@
 #include "../token/token.h"
 
 #define MAX_SRC_LEN 4096
+#define MAX_STR_LEN 1024
 #define MAX_IDENTIFIER_LEN 100
 
 static char input[MAX_SRC_LEN];
@@ -14,13 +15,14 @@ static int input_length = 0;
 static char ch;
 static bool is_letter(char);
 static bool is_number(char);
-static void read_char();
-static char peek_char();
-static void skip_whitespace();
-static char *read_identifier();
+static void read_char(void);
+static char peek_char(void);
+static void skip_whitespace(void);
+static char *read_identifier(void);
 static char *read_number();
 static char *char_to_str(char);
 static int lookup_ident(char *);
+static char *read_string(void);
 
 extern void lexer_push(char *pushed_src) {
   int i, j;
@@ -44,6 +46,9 @@ extern Token *lexer_next_token() {
   Token *tok;
   skip_whitespace();
   switch (ch) {
+    case '"':
+      tok = new_token(TOKEN_STRING, read_string());
+      break;
     case '-':
       tok = new_token(TOKEN_MINUS, "-");
       break;
@@ -171,7 +176,7 @@ static int lookup_ident(char *ident) {
 }
 
 static char *read_number() {
-  char *num = (char *)malloc(MAX_IDENTIFIER_LEN);
+  char *num = malloc(MAX_IDENTIFIER_LEN);
   char *current = num;
   while (is_number(ch)) {
     *current = ch;
@@ -182,8 +187,23 @@ static char *read_number() {
   return num;
 }
 
+static char *read_string(void) {
+  char *string = malloc(MAX_STR_LEN);
+  int pos = 0;
+  while (true) {
+    read_char();
+    if (ch == '"' || ch == 0) {
+      break;
+    }
+    string[pos] = ch;
+    pos += 1;
+  }
+  string[pos] = '\0';
+  return string;
+}
+
 static char *char_to_str(char c) {
-  char *str = (char *)malloc(2);
+  char *str = malloc(2);
   str[0] = c;
   str[1] = '\0';
   return str;

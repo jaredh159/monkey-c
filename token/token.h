@@ -14,7 +14,8 @@ bool str_is(char *, char *);
 bool token_prop_is(char *, char *);
 char *token_type_name(int type);
 
-enum {
+enum TokenType {
+  TOKEN_STRING,
   TOKEN_ASSIGN,
   TOKEN_PLUS,
   TOKEN_MINUS,

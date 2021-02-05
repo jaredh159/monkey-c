@@ -15,6 +15,8 @@ char *object_inspect(Object object) {
     case BOOLEAN_OBJ:
       sprintf(inspect_str, "%s", object.value.b ? "true" : "false");
       break;
+    case STRING_OBJ:
+      return object.value.str;
     case RETURN_VALUE_OBJ:
       return object_inspect(*object.value.return_value);
     case FUNCTION_OBJ:
@@ -22,7 +24,7 @@ char *object_inspect(Object object) {
     case NULL_OBJ:
       return "null";
     case ERROR_OBJ:
-      sprintf(inspect_str, "ERROR: %s", object.value.message);
+      sprintf(inspect_str, "ERROR: %s", object.value.str);
       break;
   }
   return inspect_str;
@@ -40,6 +42,8 @@ char *object_type(Object object) {
       return "RETURN_VALUE";
     case FUNCTION_OBJ:
       return "FUNCTION";
+    case STRING_OBJ:
+      return "STRING";
     case ERROR_OBJ:
       return "ERROR";
   }
@@ -90,7 +94,7 @@ Object *object_copy(const Object proto) {
     case NULL_OBJ:
       break;
     case ERROR_OBJ:
-      copy->value.message = strdup(proto.value.message);
+      copy->value.str = strdup(proto.value.str);
       break;
   }
   return copy;

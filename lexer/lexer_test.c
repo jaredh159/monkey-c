@@ -125,8 +125,18 @@ void test_two_char_tokens() {
   assert_lexing(input, expected, 2, "two_char_tokens");
 }
 
+void test_next_token(void) {
+  char *input = "\"foobar\" \"foo bar\"";
+  Token expected[] = {
+    {TOKEN_STRING, "foobar"},
+    {TOKEN_STRING, "foo bar"},
+  };
+  assert_lexing(input, expected, 2, "text_token");
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_next_token();
   test_single_token();
   test_multiple_tokens();
   test_skips_whitespace();
