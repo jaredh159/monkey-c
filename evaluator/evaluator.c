@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../ast/ast.h"
 #include "../object/object.h"
 #include "../parser/parser.h"
@@ -12,6 +13,7 @@ Object TRUE = {BOOLEAN_OBJ, {.b = true}};
 Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 
 Object eval_integer_infix_expression(char *operator, Object left, Object right);
+Object eval_string_infix_expression(char *operator, Object left, Object right);
 Object eval_infix_expression(char *operator, Object left, Object right);
 Object eval_prefix_expression(char *operator, Object right);
 Object eval_identifier(Identifier *ident, Env *env);
@@ -208,6 +210,10 @@ Object eval_infix_expression(char *operator, Object left, Object right) {
     return eval_integer_infix_expression(operator, left, right);
   }
 
+  if (left.type == STRING_OBJ && right.type == STRING_OBJ) {
+    return eval_string_infix_expression(operator, left, right);
+  }
+
   switch (*operator) {
     case '=':  // `==`
       return left.value.b == right.value.b ? TRUE : FALSE;
@@ -251,6 +257,17 @@ Object eval_integer_infix_expression(
   }
   return error("unknown operator: %s %s %s",
     (char *[3]){object_type(left), operator, object_type(right)}, 3);
+}
+
+Object eval_string_infix_expression(char *operator, Object left, Object right) {
+  if (*operator!= '+')
+    return error("unknown operator: %s %s %s",
+      (char *[3]){object_type(left), operator, object_type(right)}, 3);
+  char *left_val = left.value.str;
+  char *right_val = right.value.str;
+  char *combined = malloc(strlen(left_val) + strlen(right_val) + 1);
+  sprintf(combined, "%s%s", left_val, right_val);
+  return (Object){STRING_OBJ, {.str = combined}};
 }
 
 bool is_truthy(Object obj) {

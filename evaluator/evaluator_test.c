@@ -155,6 +155,10 @@ void test_error_handling(void) {
     {
       "foobar",
       "identifier not found: foobar",
+    },
+    {
+      "\"Hello\" - \"World\"",
+      "unknown operator: STRING - STRING",
     }};
 
   int num_tests = sizeof tests / sizeof(tests[0]);
@@ -216,6 +220,13 @@ void test_string_literal(void) {
   assert_str_is("Hello World!", evaluated.value.str, "string value correct", t);
 }
 
+void test_string_concatenation(void) {
+  char *t = "string_concatenation";
+  Object evaluated = eval_test("\"Hello\" + \" \" + \"World!\"");
+  assert_int_is(STRING_OBJ, evaluated.type, "object is string", t);
+  assert_str_is("Hello World!", evaluated.value.str, "string value correct", t);
+}
+
 void test_closures(void) {
   char *input =
     "let newAdder = fn(x) { fn(y) { x + y }; };"
@@ -226,6 +237,7 @@ void test_closures(void) {
 
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_string_concatenation();
   test_string_literal();
   test_closures();
   test_function_application();
