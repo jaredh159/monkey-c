@@ -316,10 +316,16 @@ bool is_error(Object object) {
 }
 
 Object eval_identifier(Identifier *ident, Env *env) {
-  if (!env_has(env, ident->value)) {
-    return error("identifier not found: %s", (char *[1]){ident->value}, 1);
+  if (env_has(env, ident->value)) {
+    return env_get(env, ident->value);
   }
-  return env_get(env, ident->value);
+
+  Object built_in = get_builtin(ident->value);
+  if (built_in.type == BUILT_IN_OBJ) {
+    return built_in;
+  }
+
+  return error("identifier not found: %s", (char *[1]){ident->value}, 1);
 }
 
 List *eval_expressions(List *expressions, Env *env) {
@@ -340,14 +346,18 @@ List *eval_expressions(List *expressions, Env *env) {
 }
 
 Object apply_function(Object fn_obj, List *args) {
-  if (fn_obj.type != FUNCTION_OBJ) {
-    return error("not a function: %s", (char *[1]){object_type(fn_obj)}, 1);
+  if (fn_obj.type == FUNCTION_OBJ) {
+    Function *fn = fn_obj.value.fn;
+    Env *extended_env = extend_function_env(fn, args);
+    Object evaluated = eval(fn->body, BLOCK_STATEMENTS_NODE, extended_env);
+    return unwrap_return_value(evaluated);
   }
 
-  Function *fn = fn_obj.value.fn;
-  Env *extended_env = extend_function_env(fn, args);
-  Object evaluated = eval(fn->body, BLOCK_STATEMENTS_NODE, extended_env);
-  return unwrap_return_value(evaluated);
+  if (fn_obj.type == BUILT_IN_OBJ) {
+    return (fn_obj.value.builtin_fn)(args);
+  }
+
+  return error("not a function: %s", (char *[1]){object_type(fn_obj)}, 1);
 }
 
 Object unwrap_return_value(Object obj) {

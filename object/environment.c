@@ -18,7 +18,7 @@ Env *env_new_enclosed(Env *outer) {
 }
 
 bool env_has(Env *env, char *name) {
-  return env_get(env, name).type != ENV_LOOKUP_NOT_FOUND_OBJ;
+  return env_get(env, name).type != NOT_FOUND_OBJ;
 }
 
 Object env_get(Env *env, char *name) {
@@ -34,7 +34,7 @@ Object env_get(Env *env, char *name) {
   if (env->outer != NULL)
     return env_get(env->outer, name);
 
-  return (Object){ENV_LOOKUP_NOT_FOUND_OBJ, {.i = 0}};
+  return (Object){NOT_FOUND_OBJ, {.i = 0}};
 }
 
 void env_set(Env *env, char *name, Object val) {

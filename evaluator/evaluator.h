@@ -17,5 +17,6 @@ enum {
 typedef int NodeType;
 
 Object eval(void *node, NodeType type, Env *env);
+Object get_builtin(char *name);
 
 #endif  // __EVALUATOR_H__

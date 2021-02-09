@@ -123,7 +123,7 @@ void test_return_statements(void) {
 
 void test_error_handling(void) {
   char *t = "error_handling";
-  StrTest tests[] = {//
+  StrTest tests[] = {
     {
       "5 + true;",
       "type mismatch: INTEGER + BOOLEAN",
@@ -159,7 +159,16 @@ void test_error_handling(void) {
     {
       "\"Hello\" - \"World\"",
       "unknown operator: STRING - STRING",
-    }};
+    },
+    {
+      "len(1)",
+      "argument to `len` not supported, got INTEGER",
+    },
+    {
+      "len(\"one\", \"two\")",
+      "wrong number of arguments. got=2, want=1",
+    },
+  };
 
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
@@ -235,8 +244,24 @@ void test_closures(void) {
   assert_integer_object(eval_test(input), 4, "closures");
 }
 
+void test_builtin_functions(void) {
+  char *t = "builtin_functions";
+  IntTest tests[] = {
+    {"len(\"\")", 0},
+    {"len(\"four\")", 4},
+    {"len(\"hello world\")", 11},
+  };
+
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
+    Object res = eval_test(tests[i].input);
+    assert_integer_object(res, tests[i].expected, t);
+  }
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_builtin_functions();
   test_string_concatenation();
   test_string_literal();
   test_closures();

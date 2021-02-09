@@ -23,6 +23,8 @@ char *object_inspect(Object object) {
       return function_inspect(object.value.fn);
     case NULL_OBJ:
       return "null";
+    case BUILT_IN_OBJ:
+      return "builtin function";
     case ERROR_OBJ:
       sprintf(inspect_str, "ERROR: %s", object.value.str);
       break;
@@ -44,6 +46,8 @@ char *object_type(Object object) {
       return "FUNCTION";
     case STRING_OBJ:
       return "STRING";
+    case BUILT_IN_OBJ:
+      return "BUILT_IN";
     case ERROR_OBJ:
       return "ERROR";
   }
@@ -94,8 +98,12 @@ Object *object_copy(const Object proto) {
     case NULL_OBJ:
       break;
     case ERROR_OBJ:
+    case STRING_OBJ: /* intentional fallthrough */
       copy->value.str = strdup(proto.value.str);
       break;
+    default:
+      printf("ERROR: unhandled object copy type\n");
+      exit(1);
   }
   return copy;
 }

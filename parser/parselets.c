@@ -43,7 +43,7 @@ Expression *parse_integer_literal() {
 
 Expression *parse_string_literal(void) {
   Expression *exp = malloc(sizeof(Expression));
-  StringLiteral *str_literal = malloc(sizeof(BooleanLiteral));
+  StringLiteral *str_literal = malloc(sizeof(StringLiteral));
   if (exp == NULL || str_literal == NULL)
     return NULL;
 
