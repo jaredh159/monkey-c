@@ -13,6 +13,7 @@ enum ObjectTypes {
   NULL_OBJ,
   RETURN_VALUE_OBJ,
   ERROR_OBJ,
+  ARRAY_OBJ,
   BUILT_IN_OBJ,
   NOT_FOUND_OBJ,
 };
@@ -39,6 +40,7 @@ typedef struct Object {
     char *str;
     Function *fn;
     struct Object (*builtin_fn)(List *args);
+    List *array_elements;
   } value;
 } Object;
 

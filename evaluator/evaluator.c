@@ -20,6 +20,8 @@ Object eval_identifier(Identifier *ident, Env *env);
 Object eval_if_expression(IfExpression *if_exp, Env *env);
 Object eval_program(List *statements, Env *env);
 Object eval_block_statement(List *statements, Env *env);
+Object eval_index_expression(Object left, Object index);
+Object eval_array_index_expression(Object array, Object index);
 List *eval_expressions(List *expressions, Env *env);
 Object apply_function(Object fn, List *args);
 Object unwrap_return_value(Object obj);
@@ -107,6 +109,28 @@ Object eval(void *node, NodeType type, Env *env) {
               return *first_arg;
           }
           return apply_function(fn, args);
+        }
+        case EXPRESSION_ARRAY_LITERAL: {
+          ArrayLiteral *array = exp->node;
+          List *elements = eval_expressions(array->elements, env);
+          if (list_count(elements) > 0) {
+            Object *first_el = elements->item;
+            if (list_count(elements) == 1 && is_error(*first_el))
+              return *first_el;
+          }
+          object.type = ARRAY_OBJ;
+          object.value.array_elements = elements;
+          return object;
+        }
+        case EXPRESSION_INDEX: {
+          IndexExpression *ie = exp->node;
+          Object left = eval(ie->left, EXPRESSION_NODE, env);
+          if (is_error(left))
+            return left;
+          Object index = eval(ie->index, EXPRESSION_NODE, env);
+          if (is_error(index))
+            return index;
+          return eval_index_expression(left, index);
         }
         case EXPRESSION_IDENTIFIER:
           return eval_identifier(((Identifier *)exp->node), env);
@@ -387,4 +411,32 @@ Env *extend_function_env(Function *fn, List *args) {
   }
 
   return env;
+}
+
+Object eval_index_expression(Object left, Object index) {
+  if (left.type == ARRAY_OBJ && index.type == INTEGER_OBJ) {
+    return eval_array_index_expression(left, index);
+  }
+  return error(
+    "index operator not supported: %s", (char *[1]){object_type(left)}, 1);
+}
+
+Object eval_array_index_expression(Object array, Object index) {
+  List *elements = array.value.array_elements;
+  int idx = index.value.i;
+  int max = list_count(elements) - 1;
+
+  if (idx < 0 || idx > max)
+    return M_NULL;
+
+  List *current = elements;
+  int i = 0;
+  while (true) {
+    if (i == idx) {
+      Object *obj = current->item;
+      return *obj;
+    }
+    current = current->next;
+    i += 1;
+  }
 }

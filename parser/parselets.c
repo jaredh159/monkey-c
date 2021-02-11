@@ -100,7 +100,41 @@ Expression *parse_call_expression(Expression *fn) {
   exp->node = ce;
   ce->fn = fn;
   ce->token = initial_token;
-  ce->arguments = parse_call_arguments();
+  ce->arguments = parse_expression_list(TOKEN_RIGHT_PAREN);
+  return exp;
+}
+
+Expression *parse_array_literal(void) {
+  Token *initial_token = parser_current_token();
+  Expression *exp = malloc(sizeof(Expression));
+  ArrayLiteral *array_lit = malloc(sizeof(ArrayLiteral));
+  exp->token_literal = initial_token->literal;
+  exp->type = EXPRESSION_ARRAY_LITERAL;
+  exp->node = array_lit;
+  array_lit->token = initial_token;
+  array_lit->elements = parse_expression_list(TOKEN_RIGHT_BRACKET);
+  return exp;
+}
+
+Expression *parse_index_expression(Expression *left) {
+  Expression *exp = malloc(sizeof(Expression));
+  IndexExpression *ie = malloc(sizeof(IndexExpression));
+  if (exp == NULL || ie == NULL)
+    return NULL;
+
+  Token *initial_token = parser_current_token();
+  ie->token = initial_token;
+  ie->left = left;
+
+  parser_next_token();
+  ie->index = parse_expression(PRECEDENCE_LOWEST);
+  if (!parser_expect_peek(TOKEN_RIGHT_BRACKET)) {
+    return NULL;
+  }
+
+  exp->type = EXPRESSION_INDEX;
+  exp->token_literal = initial_token->literal;
+  exp->node = ie;
   return exp;
 }
 
@@ -212,6 +246,8 @@ PrefixParselet get_prefix_parselet(int token_type) {
     case TOKEN_TRUE:
     case TOKEN_FALSE:
       return parse_boolean_literal;
+    case TOKEN_LEFT_BRACKET:
+      return parse_array_literal;
   }
   return NULL;
 }
@@ -229,6 +265,8 @@ InfixParselet get_infix_parselet(int token_type) {
       return parse_infix_expression;
     case TOKEN_LEFT_PAREN:
       return parse_call_expression;
+    case TOKEN_LEFT_BRACKET:
+      return parse_index_expression;
   }
   return NULL;
 }

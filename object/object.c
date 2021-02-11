@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-char inspect_str[1024];
-
+#define INSPECT_STR_LEN 1024
 char *function_inspect(Function *fn);
+char *array_inspect(List *elements);
 
 char *object_inspect(Object object) {
+  char *inspect_str = malloc(INSPECT_STR_LEN);
   switch (object.type) {
     case INTEGER_OBJ:
       sprintf(inspect_str, "%d", object.value.i);
@@ -18,7 +19,11 @@ char *object_inspect(Object object) {
     case STRING_OBJ:
       return object.value.str;
     case RETURN_VALUE_OBJ:
-      return object_inspect(*object.value.return_value);
+      sprintf(inspect_str, "wrapped return_value { %s }",
+        object_inspect(*object.value.return_value));
+      break;
+    case ARRAY_OBJ:
+      return array_inspect(object.value.array_elements);
     case FUNCTION_OBJ:
       return function_inspect(object.value.fn);
     case NULL_OBJ:
@@ -46,13 +51,15 @@ char *object_type(Object object) {
       return "FUNCTION";
     case STRING_OBJ:
       return "STRING";
+    case ARRAY_OBJ:
+      return "ARRAY";
     case BUILT_IN_OBJ:
       return "BUILT_IN";
     case ERROR_OBJ:
       return "ERROR";
   }
-  printf("num: %d\n", object.type);
-  return "UNKNOWN";
+  printf("ERROR: unhandled type in object_type()\n");
+  exit(1);
 }
 
 void object_print(Object object) {
@@ -61,20 +68,39 @@ void object_print(Object object) {
 }
 
 char *function_inspect(Function *fn) {
-  inspect_str[0] = '\0';
-  strcpy(inspect_str, "fn(");
+  char *fn_inspect_str = malloc(INSPECT_STR_LEN);
+  fn_inspect_str[0] = '\0';
+  strcpy(fn_inspect_str, "fn(");
   int num_params = list_count(fn->parameters);
   List *current = fn->parameters;
   for (int i = 0; i < num_params; i++) {
     Identifier *ident = current->item;
-    strcat(inspect_str, ident->value);
+    strcat(fn_inspect_str, ident->value);
     if (i < num_params - 1)
-      strcat(inspect_str, ", ");
+      strcat(fn_inspect_str, ", ");
+    current = current->next;
   }
-  strcat(inspect_str, ") {\n");
-  strcat(inspect_str, block_statement_string(fn->body));
-  strcat(inspect_str, "\n}");
-  return inspect_str;
+  strcat(fn_inspect_str, ") {\n");
+  strcat(fn_inspect_str, block_statement_string(fn->body));
+  strcat(fn_inspect_str, "\n}");
+  return fn_inspect_str;
+}
+
+char *array_inspect(List *elements) {
+  char *array_inspect_str = malloc(INSPECT_STR_LEN);
+  array_inspect_str[0] = '[';
+  array_inspect_str[1] = '\0';
+  int num_elements = list_count(elements);
+  List *current = elements;
+  for (int i = 0; i < num_elements; i++) {
+    Object *obj = current->item;
+    strcat(array_inspect_str, object_inspect(*obj));
+    if (i < num_elements - 1)
+      strcat(array_inspect_str, ", ");
+    current = current->next;
+  }
+  strcat(array_inspect_str, "]");
+  return array_inspect_str;
 }
 
 Object *object_copy(const Object proto) {

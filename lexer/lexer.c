@@ -49,6 +49,12 @@ extern Token *lexer_next_token() {
     case '"':
       tok = new_token(TOKEN_STRING, read_string());
       break;
+    case ']':
+      tok = new_token(TOKEN_RIGHT_BRACKET, "]");
+      break;
+    case '[':
+      tok = new_token(TOKEN_LEFT_BRACKET, "[");
+      break;
     case '-':
       tok = new_token(TOKEN_MINUS, "-");
       break;

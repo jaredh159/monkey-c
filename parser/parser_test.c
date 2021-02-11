@@ -18,6 +18,10 @@ enum LiteralExpressionType {
   LITERAL_TYPE_BOOL,
 };
 
+static LitExpTest one = {LITERAL_TYPE_INT, "", 1, "1"};
+static LitExpTest two = {LITERAL_TYPE_INT, "", 2, "2"};
+static LitExpTest three = {LITERAL_TYPE_INT, "", 3, "3"};
+static LitExpTest four = {LITERAL_TYPE_INT, "", 4, "4"};
 static LitExpTest five = {LITERAL_TYPE_INT, "", 5, "5"};
 static LitExpTest _true = {LITERAL_TYPE_BOOL, "", (int)true, "true"};
 static LitExpTest _false = {LITERAL_TYPE_BOOL, "", (int)false, "false"};
@@ -183,24 +187,108 @@ void test_operator_precedence_parsing() {
     char *expected;
   } PrecedenceTest;
 
-  PrecedenceTest tests[] = {{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
-    {"1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"},
-    {"(5 + 5) * 2", "((5 + 5) * 2)"}, {"2 / (5 + 5)", "(2 / (5 + 5))"},
-    {"-(5 + 5)", "(-(5 + 5))"}, {"!(true == true)", "(!(true == true))"},
-    {"true", "true"}, {"false", "false"},
-    {"3 > 5 == false", "((3 > 5) == false)"},
-    {"3 > 5 == true", "((3 > 5) == true)"}, {"-a * b", "((-a) * b)"},
-    {"!-a", "(!(-a))"}, {"a + b + c", "((a + b) + c)"},
-    {"a * b * c", "((a * b) * c)"}, {"a * b / c", "((a * b) / c)"},
-    {"a + b / c", "(a + (b / c))"},
-    {"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
-    {"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
-    {"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
-    {"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
-    {"a + add(b * c) + d", "((a + add((b * c))) + d)"},
-    {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-      "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
-    {"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"}};
+  PrecedenceTest tests[] = {
+    {
+      "3 + 4; -5 * 5",
+      "(3 + 4)((-5) * 5)",
+    },
+    {
+      "1 + (2 + 3) + 4",
+      "((1 + (2 + 3)) + 4)",
+    },
+    {
+      "(5 + 5) * 2",
+      "((5 + 5) * 2)",
+    },
+    {
+      "2 / (5 + 5)",
+      "(2 / (5 + 5))",
+    },
+    {
+      "-(5 + 5)",
+      "(-(5 + 5))",
+    },
+    {
+      "!(true == true)",
+      "(!(true == true))",
+    },
+    {
+      "true",
+      "true",
+    },
+    {
+      "false",
+      "false",
+    },
+    {
+      "3 > 5 == false",
+      "((3 > 5) == false)",
+    },
+    {
+      "3 > 5 == true",
+      "((3 > 5) == true)",
+    },
+    {
+      "-a * b",
+      "((-a) * b)",
+    },
+    {
+      "!-a",
+      "(!(-a))",
+    },
+    {
+      "a + b + c",
+      "((a + b) + c)",
+    },
+    {
+      "a * b * c",
+      "((a * b) * c)",
+    },
+    {
+      "a * b / c",
+      "((a * b) / c)",
+    },
+    {
+      "a + b / c",
+      "(a + (b / c))",
+    },
+    {
+      "a + b * c + d / e - f",
+      "(((a + (b * c)) + (d / e)) - f)",
+    },
+    {
+      "5 > 4 == 3 < 4",
+      "((5 > 4) == (3 < 4))",
+    },
+    {
+      "5 < 4 != 3 > 4",
+      "((5 < 4) != (3 > 4))",
+    },
+    {
+      "3 + 4 * 5 == 3 * 1 + 4 * 5",
+      "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+    },
+    {
+      "a + add(b * c) + d",
+      "((a + add((b * c))) + d)",
+    },
+    {
+      "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+      "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+    },
+    {
+      "add(a + b + c * d / f + g)",
+      "add((((a + b) + ((c * d) / f)) + g))",
+    },
+    {
+      "a * [1, 2, 3, 4][b * c] * d",
+      "((a * ([1, 2, 3, 4][(b * c)])) * d)",
+    },
+    {
+      "add(a * b[2], b[1], 2 * [1, 2][1])",
+      "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+    },
+  };
   int num_tests = sizeof(tests) / sizeof(PrecedenceTest);
 
   for (int i = 0; i < num_tests; i++) {
@@ -357,10 +445,6 @@ void test_call_expression_parsing() {
   CallExpression *ce = es->expression->node;
   assert_identifier(ce->fn, "add", t);
   assert_int_is(3, list_count(ce->arguments), "correct num args", t);
-  LitExpTest one = {LITERAL_TYPE_INT, "", 1, "1"};
-  LitExpTest two = {LITERAL_TYPE_INT, "", 2, "2"};
-  LitExpTest three = {LITERAL_TYPE_INT, "", 3, "3"};
-  LitExpTest four = {LITERAL_TYPE_INT, "", 4, "4"};
   assert_literal_expression(ce->arguments->item, &one, t);
   assert_infix_expression(ce->arguments->next->item, two, "*", three, t);
   assert_infix_expression(ce->arguments->next->next->item, four, "+", five, t);
@@ -376,8 +460,44 @@ void test_string_literal_expression(void) {
   assert_str_is("hello world", str->value, "string literal correct", t);
 }
 
+void test_array_literal(void) {
+  char *t = "array_literal";
+  Program *program = assert_program("[1, 2 * 2, 3 + 3]", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_ARRAY_LITERAL,
+    "expression is array literal expression", t);
+  ArrayLiteral *al = es->expression->node;
+  assert_int_is(3, list_count(al->elements), "array has 3 items", t);
+  assert_integer_literal(al->elements->item, 1, "1", t);
+  assert_infix_expression(al->elements->next->item, two, "*", two, t);
+  assert_infix_expression(al->elements->next->next->item, three, "+", three, t);
+}
+
+void test_empty_array_literal(void) {
+  char *t = "empty_array_literal";
+  Program *program = assert_program("[]", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_ARRAY_LITERAL,
+    "expression is array literal expression", t);
+  ArrayLiteral *al = es->expression->node;
+  assert_int_is(0, list_count(al->elements), "array has 3 items", t);
+}
+
+void test_parsing_index_expressions(void) {
+  char *t = "parsing_index_expressions";
+  Program *program = assert_program("myArray[1 + 1]", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_INDEX, "expression is index", t);
+  IndexExpression *ie_exp = es->expression->node;
+  assert_identifier(ie_exp->left, "myArray", t);
+  assert_infix_expression(ie_exp->index, one, "+", one, t);
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_parsing_index_expressions();
+  test_array_literal();
+  test_empty_array_literal();
   test_string_literal_expression();
   test_let_statements();
   test_call_expression_parsing();

@@ -11,7 +11,8 @@ enum Precedence {
   PRECEDENCE_SUM,
   PRECEDENCE_PRODUCT,
   PRECEDENCE_PREFIX,
-  PRECEDENCE_CALL
+  PRECEDENCE_CALL,
+  PRECEDENCE_INDEX,
 };
 
 enum ExpressionType {
@@ -20,6 +21,8 @@ enum ExpressionType {
   EXPRESSION_BOOLEAN_LITERAL,
   EXPRESSION_FUNCTION_LITERAL,
   EXPRESSION_STRING_LITERAL,
+  EXPRESSION_ARRAY_LITERAL,
+  EXPRESSION_INDEX,
   EXPRESSION_PREFIX,
   EXPRESSION_INFIX,
   EXPRESSION_IF,
@@ -32,7 +35,7 @@ Program *parse_program(char *input);
 Expression *parse_expression(int precedence);
 BlockStatement *parse_block_statement();
 List *parse_function_parameters();
-List *parse_call_arguments();
+List *parse_expression_list(int end_token_type);
 void parser_next_token();
 void parser_push_error(char *error_msg);
 int parser_current_precedence();

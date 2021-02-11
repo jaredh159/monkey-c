@@ -176,6 +176,16 @@ char *if_expression_string(IfExpression *if_exp) {
   return if_str;
 }
 
+char *array_literal_string(ArrayLiteral *array_literal) {
+  char *array_lit_str = malloc(MAX_STMT_STR_LEN);
+  array_lit_str[0] = '[';
+  array_lit_str[1] = '\0';
+  list_str_join(array_literal->elements, ", ", array_lit_str,
+    (StrHandler)expression_string);
+  strcat(array_lit_str, "]");
+  return array_lit_str;
+}
+
 char *function_params_string(List *params) {
   char *params_str = malloc(MAX_STMT_STR_LEN);
   params_str[0] = '\0';
@@ -205,6 +215,13 @@ char *call_expression_string(CallExpression *ce) {
   return ce_str;
 }
 
+char *index_expression_string(IndexExpression *index) {
+  char *ie_str = malloc(MAX_STMT_STR_LEN);
+  sprintf(ie_str, "(%s[%s])", expression_string(index->left),
+    expression_string(index->index));
+  return ie_str;
+}
+
 int token_precedence(int token_type) {
   switch (token_type) {
     case TOKEN_EQ:
@@ -225,6 +242,8 @@ int token_precedence(int token_type) {
       return PRECEDENCE_PRODUCT;
     case TOKEN_LEFT_PAREN:
       return PRECEDENCE_CALL;
+    case TOKEN_LEFT_BRACKET:
+      return PRECEDENCE_INDEX;
   }
   return PRECEDENCE_LOWEST;
 }
@@ -249,6 +268,10 @@ static char *expression_string(Expression *exp) {
       return prefix_expression_string(exp->node);
     case EXPRESSION_INFIX:
       return infix_expression_string(exp->node);
+    case EXPRESSION_ARRAY_LITERAL:
+      return array_literal_string(exp->node);
+    case EXPRESSION_INDEX:
+      return index_expression_string(exp->node);
   }
   return NULL;
 }

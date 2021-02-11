@@ -64,27 +64,27 @@ BlockStatement *parse_block_statement() {
   return block;
 }
 
-List *parse_call_arguments() {
-  List *args = NULL;
+List *parse_expression_list(int end_token_type) {
+  List *exprs = NULL;
 
-  if (parser_peek_token_is(TOKEN_RIGHT_PAREN)) {
+  if (parser_peek_token_is(end_token_type)) {
     parser_next_token();
-    return args;
+    return exprs;
   }
 
   parser_next_token();
-  args = list_append(args, parse_expression(PRECEDENCE_LOWEST));
+  exprs = list_append(exprs, parse_expression(PRECEDENCE_LOWEST));
 
   while (parser_peek_token_is(TOKEN_COMMA)) {
     parser_next_token();
     parser_next_token();
-    args = list_append(args, parse_expression(PRECEDENCE_LOWEST));
+    exprs = list_append(exprs, parse_expression(PRECEDENCE_LOWEST));
   }
 
-  if (!parser_expect_peek(TOKEN_RIGHT_PAREN))
+  if (!parser_expect_peek(end_token_type))
     return NULL;
 
-  return args;
+  return exprs;
 }
 
 List *parse_function_parameters() {

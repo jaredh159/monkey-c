@@ -15,6 +15,11 @@ typedef struct BooleanLiteral {
   bool value;
 } BooleanLiteral;
 
+typedef struct ArrayLiteral {
+  Token *token;
+  List *elements;
+} ArrayLiteral;
+
 typedef struct IntegerLiteral {
   Token *token;
   int value;
@@ -32,6 +37,12 @@ typedef struct InfixExpression {
   Expression *right;
   Expression *left;
 } InfixExpression;
+
+typedef struct IndexExpression {
+  Token *token;
+  Expression *left;
+  Expression *index;
+} IndexExpression;
 
 typedef struct PrefixExpression {
   Token *token;
@@ -106,6 +117,8 @@ char *identifier_string(Identifier *identifier);
 char *function_params_string(List *params);
 char *block_statement_string(BlockStatement *bs);
 char *string_literal_string(StringLiteral *string);
+char *array_literal_string(ArrayLiteral *array_literal);
+char *index_expression_string(IndexExpression *index);
 void print_program(Program *program);
 void print_statement(Statement *statement);
 void print_expression(Expression *expression);

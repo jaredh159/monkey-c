@@ -259,8 +259,49 @@ void test_builtin_functions(void) {
   }
 }
 
+void test_array_literals(void) {
+  char *t = "array_literals";
+  Object evaluated = eval_test("[1, 2 * 2, 3 + 3]");
+  assert_int_is(ARRAY_OBJ, evaluated.type, "eval'd is array", t);
+  List *elements = evaluated.value.array_elements;
+  assert_int_is(3, list_count(elements), "array.length = 3", t);
+  Object *first = elements->item;
+  assert_integer_object(*first, 1, t);
+  Object *second = elements->next->item;
+  assert_integer_object(*second, 4, t);
+  Object *third = elements->next->next->item;
+  assert_integer_object(*third, 6, t);
+}
+
+void test_array_index_expressions(void) {
+  char *t = "array_index_expressions";
+  IntTest tests[] = {
+    {"[1, 2, 3][0]", 1},
+    {"[1, 2, 3][1]", 2},
+    {"[1, 2, 3][2]", 3},
+    {"let i = 0; [1][i];", 1},
+    {"[1, 2, 3][1 + 1];", 3},
+    {"let myArray = [1, 2, 3]; myArray[2];", 3},
+    {"let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];", 6},
+    {"let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]", 2},
+    {"[1, 2, 3][3]", NULL_SENTINAL},
+    {"[1, 2, 3][-1]", NULL_SENTINAL},
+  };
+
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
+    Object res = eval_test(tests[i].input);
+    if (tests[i].expected == NULL_SENTINAL)
+      assert_null_object(res, t);
+    else
+      assert_integer_object(res, tests[i].expected, t);
+  }
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_array_index_expressions();
+  test_array_literals();
   test_builtin_functions();
   test_string_concatenation();
   test_string_literal();

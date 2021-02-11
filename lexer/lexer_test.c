@@ -126,12 +126,17 @@ void test_two_char_tokens() {
 }
 
 void test_next_token(void) {
-  char *input = "\"foobar\" \"foo bar\"";
+  char *input = "\"foobar\" \"foo bar\" [1, 2]";
   Token expected[] = {
     {TOKEN_STRING, "foobar"},
     {TOKEN_STRING, "foo bar"},
+    {TOKEN_LEFT_BRACKET, "["},
+    {TOKEN_INTEGER, "1"},
+    {TOKEN_COMMA, ","},
+    {TOKEN_INTEGER, "2"},
+    {TOKEN_RIGHT_BRACKET, "]"},
   };
-  assert_lexing(input, expected, 2, "text_token");
+  assert_lexing(input, expected, 7, "text_token");
 }
 
 int main(int argc, char **argv) {

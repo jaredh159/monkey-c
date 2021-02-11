@@ -73,6 +73,10 @@ char *token_type_name(int type) {
       return "LEFT_BRACE";
     case TOKEN_RIGHT_BRACE:
       return "RIGHT_BRACE";
+    case TOKEN_LEFT_BRACKET:
+      return "LEFT_BRACKET";
+    case TOKEN_RIGHT_BRACKET:
+      return "RIGHT_BRACKET";
     case TOKEN_ILLEGAL:
       return "ILLEGAL";
     case TOKEN_COMMA:
