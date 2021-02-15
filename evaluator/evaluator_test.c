@@ -250,12 +250,26 @@ void test_builtin_functions(void) {
     {"len(\"\")", 0},
     {"len(\"four\")", 4},
     {"len(\"hello world\")", 11},
+    {"len([1, 2])", 2},
+    {"len([])", 0},
+    {"first([1, 2])", 1},
+    {"first([])", NULL_SENTINAL},
+    {"last([1, 2])", 2},
+    {"last([4,4,4,99])", 99},
+    {"last([])", NULL_SENTINAL},
+    {"rest([1, 2])[0]", 2},
+    {"len(rest([1, 2, 3, 4]))", 3},
+    {"len(last([\"foo\", \"123456\"]))", 6},
+    {"let a = [1]; let b = push(a, 5); last(b);", 5},
   };
 
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object res = eval_test(tests[i].input);
-    assert_integer_object(res, tests[i].expected, t);
+    if (tests[i].expected == NULL_SENTINAL)
+      assert_null_object(res, t);
+    else
+      assert_integer_object(res, tests[i].expected, t);
   }
 }
 
@@ -300,9 +314,9 @@ void test_array_index_expressions(void) {
 
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_builtin_functions();
   test_array_index_expressions();
   test_array_literals();
-  test_builtin_functions();
   test_string_concatenation();
   test_string_literal();
   test_closures();

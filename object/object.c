@@ -116,10 +116,13 @@ Object *object_copy(const Object proto) {
       copy->value.b = proto.value.b;
       break;
     case RETURN_VALUE_OBJ:
-      copy->value.return_value = proto.value.return_value;
+      copy->value.return_value = object_copy(*proto.value.return_value);
       break;
     case FUNCTION_OBJ:
       copy->value.fn = proto.value.fn;
+      break;
+    case ARRAY_OBJ:
+      copy->value.array_elements = proto.value.array_elements;
       break;
     case NULL_OBJ:
       break;
@@ -128,7 +131,7 @@ Object *object_copy(const Object proto) {
       copy->value.str = strdup(proto.value.str);
       break;
     default:
-      printf("ERROR: unhandled object copy type\n");
+      printf("ERROR: unhandled object copy type %s\n", object_type(proto));
       exit(1);
   }
   return copy;
