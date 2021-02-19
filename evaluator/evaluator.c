@@ -22,6 +22,7 @@ Object eval_program(List *statements, Env *env);
 Object eval_block_statement(List *statements, Env *env);
 Object eval_index_expression(Object left, Object index);
 Object eval_array_index_expression(Object array, Object index);
+Object eval_hash_literal(HashLiteralExpression *hash_lit_exp, Env *env);
 List *eval_expressions(List *expressions, Env *env);
 Object apply_function(Object fn, List *args);
 Object unwrap_return_value(Object obj);
@@ -119,7 +120,7 @@ Object eval(void *node, NodeType type, Env *env) {
               return *first_el;
           }
           object.type = ARRAY_OBJ;
-          object.value.array_elements = elements;
+          object.value.list = elements;
           return object;
         }
         case EXPRESSION_INDEX: {
@@ -132,6 +133,8 @@ Object eval(void *node, NodeType type, Env *env) {
             return index;
           return eval_index_expression(left, index);
         }
+        case EXPRESSION_HASH_LITERAL:
+          return eval_hash_literal(exp->node, env);
         case EXPRESSION_IDENTIFIER:
           return eval_identifier(((Identifier *)exp->node), env);
         case EXPRESSION_IF:
@@ -422,7 +425,7 @@ Object eval_index_expression(Object left, Object index) {
 }
 
 Object eval_array_index_expression(Object array, Object index) {
-  List *elements = array.value.array_elements;
+  List *elements = array.value.list;
   int idx = index.value.i;
   int max = list_count(elements) - 1;
 
@@ -439,4 +442,36 @@ Object eval_array_index_expression(Object array, Object index) {
     current = current->next;
     i += 1;
   }
+}
+
+Object eval_hash_literal(HashLiteralExpression *hash_lit_exp, Env *env) {
+  List *exp_pairs = hash_lit_exp->pairs;  // List<HashLiteralPair>
+  List *obj_pairs = NULL;                 // List<Object>
+
+  int num_pairs = list_count(exp_pairs);
+  List *current = exp_pairs;
+
+  for (int i = 0; i < num_pairs; i++) {
+    HashLiteralPair *current_exp_pair = current->item;
+    Object key = eval(current_exp_pair->key, EXPRESSION_NODE, env);
+    if (is_error(key))
+      return key;
+
+    if (object_hash(key) == NULL)
+      return error(
+        "unusable as hash key: %s", (char *[1]){object_type(key)}, 1);
+
+    Object value = eval(current_exp_pair->value, EXPRESSION_NODE, env);
+    if (is_error(value))
+      return value;
+
+    HashPair *obj_pair = malloc(sizeof(HashPair));
+    obj_pair->key = object_copy(key);
+    obj_pair->value = object_copy(value);
+    obj_pairs = list_append(obj_pairs, obj_pair);
+    current = current->next;
+  }
+
+  Object hash_obj = {.type = HASH_OBJ, .value = {.list = obj_pairs}};
+  return hash_obj;
 }

@@ -14,6 +14,7 @@ enum ObjectTypes {
   RETURN_VALUE_OBJ,
   ERROR_OBJ,
   ARRAY_OBJ,
+  HASH_OBJ,
   BUILT_IN_OBJ,
   NOT_FOUND_OBJ,
 };
@@ -40,9 +41,14 @@ typedef struct Object {
     char *str;
     Function *fn;
     struct Object (*builtin_fn)(List *args);
-    List *array_elements;
+    List *list;  // List<Object> (for array elements) | List<HashPair>
   } value;
 } Object;
+
+typedef struct HashPair {
+  Object *key;
+  Object *value;
+} HashPair;
 
 typedef struct Binding {
   char *name;
@@ -53,6 +59,7 @@ char *object_inspect(Object object);
 char *object_type(Object object);
 void object_print(Object object);
 Object *object_copy(const Object proto);
+char *object_hash(const Object object);
 
 Env *env_new(void);
 Env *env_new_enclosed(Env *outer);

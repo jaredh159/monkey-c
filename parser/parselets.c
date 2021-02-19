@@ -57,6 +57,48 @@ Expression *parse_string_literal(void) {
   return exp;
 }
 
+Expression *parse_hash_literal(void) {
+  Expression *exp = malloc(sizeof(Expression));
+  HashLiteralExpression *hash_lit = malloc(sizeof(HashLiteralExpression));
+  if (exp == NULL || hash_lit == NULL)
+    return NULL;
+
+  hash_lit->token = parser_current_token();
+  exp->token_literal = parser_current_token()->literal;
+  exp->type = EXPRESSION_HASH_LITERAL;
+  exp->node = hash_lit;
+  List *pairs = NULL;
+
+  while (!parser_peek_token_is(TOKEN_RIGHT_BRACE)) {
+    parser_next_token();
+    Expression *key = parse_expression(PRECEDENCE_LOWEST);
+
+    if (!parser_expect_peek(TOKEN_COLON)) {
+      return NULL;
+    }
+
+    parser_next_token();
+    Expression *value = parse_expression(PRECEDENCE_LOWEST);
+
+    HashLiteralPair *pair = malloc(sizeof(HashLiteralPair));
+    pair->key = key;
+    pair->value = value;
+    pairs = list_append(pairs, pair);
+
+    if (!parser_peek_token_is(TOKEN_RIGHT_BRACE) &&
+        !parser_expect_peek(TOKEN_COMMA)) {
+      return NULL;
+    }
+  }
+
+  if (!parser_expect_peek(TOKEN_RIGHT_BRACE)) {
+    return NULL;
+  }
+
+  hash_lit->pairs = pairs;
+  return exp;
+}
+
 Expression *parse_boolean_literal() {
   Expression *exp = malloc(sizeof(Expression));
   BooleanLiteral *bool_literal = malloc(sizeof(BooleanLiteral));
@@ -248,6 +290,8 @@ PrefixParselet get_prefix_parselet(int token_type) {
       return parse_boolean_literal;
     case TOKEN_LEFT_BRACKET:
       return parse_array_literal;
+    case TOKEN_LEFT_BRACE:
+      return parse_hash_literal;
   }
   return NULL;
 }

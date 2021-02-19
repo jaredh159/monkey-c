@@ -18,6 +18,7 @@ enum LiteralExpressionType {
   LITERAL_TYPE_BOOL,
 };
 
+static LitExpTest zero = {LITERAL_TYPE_INT, "", 0, "0"};
 static LitExpTest one = {LITERAL_TYPE_INT, "", 1, "1"};
 static LitExpTest two = {LITERAL_TYPE_INT, "", 2, "2"};
 static LitExpTest three = {LITERAL_TYPE_INT, "", 3, "3"};
@@ -493,8 +494,75 @@ void test_parsing_index_expressions(void) {
   assert_infix_expression(ie_exp->index, one, "+", one, t);
 }
 
+void test_parsing_empty_hash_literal(void) {
+  char *t = "parsing_empty_hash_literal";
+  Program *program = assert_program("{}", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_HASH_LITERAL,
+    "expression is hash literal", t);
+  HashLiteralExpression *hl_exp = es->expression->node;
+  assert_int_is(0, list_count(hl_exp->pairs), "hash has 0 pairs", t);
+}
+
+void test_parsing_hash_literals_with_expressions(void) {
+  char *t = "parsing_hash_literals_with_expressions";
+  Program *program =
+    assert_program("{\"one\": 0 + 1, \"two\": 5 - 1, \"three\": 4 / 2}", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_HASH_LITERAL,
+    "expression is hash literal", t);
+  HashLiteralExpression *hl_exp = es->expression->node;
+  assert_int_is(3, list_count(hl_exp->pairs), "hash has 3 pairs", t);
+  List *pairs = hl_exp->pairs;
+
+  HashLiteralPair *pair1 = pairs->item;
+  assert_infix_expression(pair1->value, zero, "+", one, t);
+
+  HashLiteralPair *pair2 = pairs->next->item;
+  assert_infix_expression(pair2->value, five, "-", one, t);
+
+  HashLiteralPair *pair3 = pairs->next->next->item;
+  assert_infix_expression(pair3->value, four, "/", two, t);
+}
+
+void test_parsing_hash_literals(void) {
+  char *t = "parsing_hash_literals";
+  Program *program =
+    assert_program("{\"one\": 1, \"two\": 2, \"three\": 3}", 1, t);
+  ExpressionStatement *es = get_expression(program->statements->item);
+  assert(es->expression->type == EXPRESSION_HASH_LITERAL,
+    "expression is hash literal", t);
+  HashLiteralExpression *hl_exp = es->expression->node;
+  assert_int_is(3, list_count(hl_exp->pairs), "hash has 3 pairs", t);
+  List *pairs = hl_exp->pairs;
+
+  HashLiteralPair *pair1 = pairs->item;
+  assert(
+    pair1->key->type == EXPRESSION_STRING_LITERAL, "key is str literal", t);
+  StringLiteral *str = pair1->key->node;
+  assert_str_is("one", str->value, "key string literal correct", t);
+  assert_integer_literal(pair1->value, 1, "1", t);
+
+  HashLiteralPair *pair2 = pairs->next->item;
+  assert(
+    pair2->key->type == EXPRESSION_STRING_LITERAL, "key is str literal", t);
+  str = pair2->key->node;
+  assert_str_is("two", str->value, "key string literal correct", t);
+  assert_integer_literal(pair2->value, 2, "2", t);
+
+  HashLiteralPair *pair3 = pairs->next->next->item;
+  assert(
+    pair3->key->type == EXPRESSION_STRING_LITERAL, "key is str literal", t);
+  str = pair3->key->node;
+  assert_str_is("three", str->value, "key string literal correct", t);
+  assert_integer_literal(pair3->value, 3, "3", t);
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_parsing_hash_literals();
+  test_parsing_hash_literals_with_expressions();
+  test_parsing_empty_hash_literal();
   test_parsing_index_expressions();
   test_array_literal();
   test_empty_array_literal();

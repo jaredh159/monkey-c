@@ -31,6 +31,16 @@ typedef struct Expression {
   void *node;
 } Expression;
 
+typedef struct HashLiteralPair {
+  Expression *key;
+  Expression *value;
+} HashLiteralPair;
+
+typedef struct HashLiteralExpression {
+  Token *token;
+  List *pairs;  // List<HashLiteralPair>
+} HashLiteralExpression;
+
 typedef struct InfixExpression {
   Token *token;
   char *operator;
@@ -118,11 +128,8 @@ char *function_params_string(List *params);
 char *block_statement_string(BlockStatement *bs);
 char *string_literal_string(StringLiteral *string);
 char *array_literal_string(ArrayLiteral *array_literal);
+char *hash_literal_string(HashLiteralExpression *hash_literal);
 char *index_expression_string(IndexExpression *index);
-void print_program(Program *program);
-void print_statement(Statement *statement);
-void print_expression(Expression *expression);
-void print_identifier(Identifier *identifier);
 int token_precedence(int token_type);
 ReturnStatement *get_return(Statement *statement);
 LetStatement *get_let(Statement *statement);

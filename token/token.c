@@ -59,6 +59,8 @@ char *token_type_name(int type) {
       return "ELSE";
     case TOKEN_RETURN:
       return "RETURN";
+    case TOKEN_COLON:
+      return "COLON";
     case TOKEN_SEMICOLON:
       return "SEMICOLON";
     case TOKEN_IDENTIFIER:

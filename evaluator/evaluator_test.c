@@ -40,12 +40,23 @@ void assert_integer_object(Object object, int expected, char *test_name) {
 }
 
 void test_eval_integer_expression() {
-  IntTest tests[] = {{"5", 5}, {"10", 10}, {"-5", -5}, {"-10", -10},
-    {"5 + 5 + 5 + 5 - 10", 10}, {"2 * 2 * 2 * 2 * 2", 32},
-    {"-50 + 100 + -50", 0}, {"5 * 2 + 10", 20}, {"5 + 2 * 10", 25},
-    {"20 + 2 * -10", 0}, {"50 / 2 * 2 + 10", 60}, {"2 * (5 + 10)", 30},
-    {"3 * 3 * 3 + 10", 37}, {"3 * (3 * 3) + 10", 37},
-    {"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50}};
+  IntTest tests[] = {
+    {"5", 5},
+    {"10", 10},
+    {"-5", -5},
+    {"-10", -10},
+    {"5 + 5 + 5 + 5 - 10", 10},
+    {"2 * 2 * 2 * 2 * 2", 32},
+    {"-50 + 100 + -50", 0},
+    {"5 * 2 + 10", 20},
+    {"5 + 2 * 10", 25},
+    {"20 + 2 * -10", 0},
+    {"50 / 2 * 2 + 10", 60},
+    {"2 * (5 + 10)", 30},
+    {"3 * 3 * 3 + 10", 37},
+    {"3 * (3 * 3) + 10", 37},
+    {"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
+  };
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object evaluated = eval_test(tests[i].input);
@@ -55,13 +66,27 @@ void test_eval_integer_expression() {
 }
 
 void test_eval_boolean_expression() {
-  IntTest tests[] = {{"true", true}, {"false", false}, {"1 < 2", true},
-    {"1 > 2", false}, {"1 < 1", false}, {"1 > 1", false}, {"1 == 1", true},
-    {"1 != 1", false}, {"1 == 2", false}, {"1 != 2", true},
-    {"true == true", true}, {"false == false", true}, {"true == false", false},
-    {"true != false", true}, {"false != true", true}, {"(1 < 2) == true", true},
-    {"(1 < 2) == false", false}, {"(1 > 2) == true", false},
-    {"(1 > 2) == false", true}};
+  IntTest tests[] = {
+    {"true", true},
+    {"false", false},
+    {"1 < 2", true},
+    {"1 > 2", false},
+    {"1 < 1", false},
+    {"1 > 1", false},
+    {"1 == 1", true},
+    {"1 != 1", false},
+    {"1 == 2", false},
+    {"1 != 2", true},
+    {"true == true", true},
+    {"false == false", true},
+    {"true == false", false},
+    {"true != false", true},
+    {"false != true", true},
+    {"(1 < 2) == true", true},
+    {"(1 < 2) == false", false},
+    {"(1 > 2) == true", false},
+    {"(1 > 2) == false", true},
+  };
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object evaluated = eval_test(tests[i].input);
@@ -76,8 +101,14 @@ void test_bang_operator() {
     bool expected;
   } BoolTest;
 
-  BoolTest tests[] = {{"!true", false}, {"!false", true}, {"!5", false},
-    {"!!true", true}, {"!!false", false}, {"!!5", true}};
+  BoolTest tests[] = {
+    {"!true", false},
+    {"!false", true},
+    {"!5", false},
+    {"!!true", true},
+    {"!!false", false},
+    {"!!5", true},
+  };
 
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
@@ -87,11 +118,15 @@ void test_bang_operator() {
 }
 
 void test_if_else_expressions(void) {
-  IntTest tests[] = {{"if (true) { 10 }", 10},
-    {"if (false) { 10 }", NULL_SENTINAL}, {"if (1) { 10 }", 10},
-    {"if (1 < 2) { 10 }", 10}, {"if (1 > 2) { 10 }", NULL_SENTINAL},
+  IntTest tests[] = {
+    {"if (true) { 10 }", 10},
+    {"if (false) { 10 }", NULL_SENTINAL},
+    {"if (1) { 10 }", 10},
+    {"if (1 < 2) { 10 }", 10},
+    {"if (1 > 2) { 10 }", NULL_SENTINAL},
     {"if (1 > 2) { 10 } else { 20 }", 20},
-    {"if (1 < 2) { 10 } else { 20 }", 10}};
+    {"if (1 < 2) { 10 } else { 20 }", 10},
+  };
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object evald = eval_test(tests[i].input);
@@ -104,9 +139,13 @@ void test_if_else_expressions(void) {
 
 void test_return_statements(void) {
   char *t = "return_statements";
-  IntTest tests[] = {{"return 10;", 10}, {"return 10; 9;", 10},
-    {"return 2 * 5; 9;", 10}, {"9; return 2 * 5; 9;", 10},
-    {"if (10 > 1) { if (10 > 1) { return 10; } return 1; }", 10}};
+  IntTest tests[] = {
+    {"return 10;", 10},
+    {"return 10; 9;", 10},
+    {"return 2 * 5; 9;", 10},
+    {"9; return 2 * 5; 9;", 10},
+    {"if (10 > 1) { if (10 > 1) { return 10; } return 1; }", 10},
+  };
 
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
@@ -277,7 +316,7 @@ void test_array_literals(void) {
   char *t = "array_literals";
   Object evaluated = eval_test("[1, 2 * 2, 3 + 3]");
   assert_int_is(ARRAY_OBJ, evaluated.type, "eval'd is array", t);
-  List *elements = evaluated.value.array_elements;
+  List *elements = evaluated.value.list;
   assert_int_is(3, list_count(elements), "array.length = 3", t);
   Object *first = elements->item;
   assert_integer_object(*first, 1, t);
@@ -312,8 +351,53 @@ void test_array_index_expressions(void) {
   }
 }
 
+void test_hash_literals(void) {
+  char *t = "hash_literals";
+  char *input =
+    "let two = \"two\";\n"
+    "{\n"
+    "  \"one\": 10 - 9,\n"
+    "  two: 1 + 1,\n"
+    "  \"thr\" + \"ee\": 6 / 2,\n"
+    "  4: 4,\n"
+    "  true: 5,\n"
+    "  false: 6\n"
+    "}";
+
+  Object res = eval_test(input);
+  List *pairs = res.value.list;
+
+  assert_int_is(HASH_OBJ, res.type, "result should be hash", t);
+  assert_int_is(6, list_count(pairs), "should have 6 pairs", t);
+
+  HashPair *pair1 = pairs->item;
+  assert_str_is("one", pair1->key->value.str, "key one is \"one\"", t);
+  assert_integer_object(*pair1->value, 1, t);
+
+  HashPair *pair2 = pairs->next->item;
+  assert_str_is("two", pair2->key->value.str, "key two is \"two\"", t);
+  assert_integer_object(*pair2->value, 2, t);
+
+  HashPair *pair3 = pairs->next->next->item;
+  assert_str_is("three", pair3->key->value.str, "key three is \"three\"", t);
+  assert_integer_object(*pair3->value, 3, t);
+
+  HashPair *pair4 = pairs->next->next->next->item;
+  assert_integer_object(*pair4->key, 4, t);
+  assert_integer_object(*pair4->value, 4, t);
+
+  HashPair *pair5 = pairs->next->next->next->next->item;
+  assert_boolean_object(*pair5->key, true, t);
+  assert_integer_object(*pair5->value, 5, t);
+
+  HashPair *pair6 = pairs->next->next->next->next->next->item;
+  assert_boolean_object(*pair6->key, false, t);
+  assert_integer_object(*pair6->value, 6, t);
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_hash_literals();
   test_builtin_functions();
   test_array_index_expressions();
   test_array_literals();

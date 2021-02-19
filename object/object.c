@@ -6,6 +6,7 @@
 #define INSPECT_STR_LEN 1024
 char *function_inspect(Function *fn);
 char *array_inspect(List *elements);
+char *hash_inspect(List *pairs);
 
 char *object_inspect(Object object) {
   char *inspect_str = malloc(INSPECT_STR_LEN);
@@ -23,9 +24,11 @@ char *object_inspect(Object object) {
         object_inspect(*object.value.return_value));
       break;
     case ARRAY_OBJ:
-      return array_inspect(object.value.array_elements);
+      return array_inspect(object.value.list);
     case FUNCTION_OBJ:
       return function_inspect(object.value.fn);
+    case HASH_OBJ:
+      return hash_inspect(object.value.list);
     case NULL_OBJ:
       return "null";
     case BUILT_IN_OBJ:
@@ -55,6 +58,8 @@ char *object_type(Object object) {
       return "ARRAY";
     case BUILT_IN_OBJ:
       return "BUILT_IN";
+    case HASH_OBJ:
+      return "HASH";
     case ERROR_OBJ:
       return "ERROR";
   }
@@ -103,6 +108,24 @@ char *array_inspect(List *elements) {
   return array_inspect_str;
 }
 
+char *hash_inspect(List *pairs) {
+  char *hash_str = malloc(INSPECT_STR_LEN);
+  strcat(hash_str, "{");
+  int num_elements = list_count(pairs);
+  List *current = pairs;
+  for (int i = 0; i < num_elements; i++) {
+    HashPair *pair = current->item;
+    strcat(hash_str, object_inspect(*pair->key));
+    strcat(hash_str, ": ");
+    strcat(hash_str, object_inspect(*pair->value));
+    if (i < num_elements - 1)
+      strcat(hash_str, ", ");
+    current = current->next;
+  }
+  strcat(hash_str, "}");
+  return hash_str;
+}
+
 Object *object_copy(const Object proto) {
   Object *copy = malloc(sizeof(Object));
   if (copy == NULL)
@@ -122,7 +145,8 @@ Object *object_copy(const Object proto) {
       copy->value.fn = proto.value.fn;
       break;
     case ARRAY_OBJ:
-      copy->value.array_elements = proto.value.array_elements;
+    case HASH_OBJ: /* intentional fallthrough */
+      copy->value.list = proto.value.list;
       break;
     case NULL_OBJ:
       break;
@@ -135,4 +159,24 @@ Object *object_copy(const Object proto) {
       exit(1);
   }
   return copy;
+}
+
+char *object_hash(const Object object) {
+  char *hash;
+  switch (object.type) {
+    case STRING_OBJ:
+      hash = malloc(strlen(object.value.str) + 2);
+      sprintf(hash, "S=%s", object.value.str);
+      return hash;
+    case BOOLEAN_OBJ:
+      hash = malloc(8);
+      sprintf(hash, "B=%s", object.value.b ? "true" : "false");
+      return hash;
+    case INTEGER_OBJ:
+      hash = malloc(50);
+      sprintf(hash, "I=%d", object.value.i);
+      return hash;
+    default:
+      return NULL;
+  }
 }

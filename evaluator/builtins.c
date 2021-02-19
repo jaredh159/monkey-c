@@ -17,7 +17,7 @@ Object builtin_len(List *args) {
     case STRING_OBJ:
       return (Object){INTEGER_OBJ, {.i = strlen(arg.value.str)}};
     case ARRAY_OBJ:
-      return (Object){INTEGER_OBJ, {.i = list_count(arg.value.array_elements)}};
+      return (Object){INTEGER_OBJ, {.i = list_count(arg.value.list)}};
     default: {
       char *msg = malloc(100);
       sprintf(msg, "argument to `len` not supported, got %s", object_type(arg));
@@ -37,8 +37,8 @@ Object builtin_first(List *args) {
     return wrong_arg_type_error("first", "ARRAY", arg);
   }
 
-  if (list_count(arg.value.array_elements) > 0) {
-    Object *pi = arg.value.array_elements->item;
+  if (list_count(arg.value.list) > 0) {
+    Object *pi = arg.value.list->item;
     return *pi;
   }
 
@@ -55,11 +55,11 @@ Object builtin_last(List *args) {
     return wrong_arg_type_error("first", "ARRAY", arg);
   }
 
-  if (list_count(arg.value.array_elements) == 0) {
+  if (list_count(arg.value.list) == 0) {
     return (Object){NULL_OBJ, {.i = 0}};
   }
 
-  List *current = arg.value.array_elements;
+  List *current = arg.value.list;
   while (current != NULL && current->next != NULL) current = current->next;
 
   Object *last = current->item;
@@ -76,11 +76,11 @@ Object builtin_rest(List *args) {
     return wrong_arg_type_error("first", "ARRAY", arg);
   }
 
-  if (list_count(arg.value.array_elements) == 0) {
+  if (list_count(arg.value.list) == 0) {
     return (Object){NULL_OBJ, {.i = 0}};
   }
 
-  List *current = arg.value.array_elements->next;
+  List *current = arg.value.list->next;
   List *rest = NULL;
   while (current != NULL) {
     Object *obj = current->item;
@@ -90,7 +90,7 @@ Object builtin_rest(List *args) {
 
   Object new_array;
   new_array.type = ARRAY_OBJ;
-  new_array.value.array_elements = rest;
+  new_array.value.list = rest;
   return new_array;
 }
 
@@ -105,7 +105,7 @@ Object builtin_push(List *args) {
   }
 
   // copy the array
-  List *current = arr_obj.value.array_elements;
+  List *current = arr_obj.value.list;
   List *new_list = NULL;
   while (current != NULL) {
     Object *obj = current->item;
@@ -119,7 +119,7 @@ Object builtin_push(List *args) {
 
   Object new_arr_obj;
   new_arr_obj.type = ARRAY_OBJ;
-  new_arr_obj.value.array_elements = new_list;
+  new_arr_obj.value.list = new_list;
   return new_arr_obj;
 }
 

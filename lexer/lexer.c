@@ -49,6 +49,9 @@ extern Token *lexer_next_token() {
     case '"':
       tok = new_token(TOKEN_STRING, read_string());
       break;
+    case ':':
+      tok = new_token(TOKEN_COLON, ":");
+      break;
     case ']':
       tok = new_token(TOKEN_RIGHT_BRACKET, "]");
       break;

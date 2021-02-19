@@ -9,6 +9,9 @@ test_parser:
 test_lexer:
 	clang -o .bin/test_lexer lexer/lexer.c lexer/lexer_test.c token/token.c test/test.c utils/argv.c $(FLAGS)
 
+test_object:
+	clang -o .bin/test_object object/object_test.c object/object.c token/token.c test/test.c utils/argv.c utils/list.c ast/ast.c $(FLAGS)
+
 test_ast:
 	clang -o .bin/test_ast ast/ast_test.c ast/ast.c token/token.c test/test.c utils/argv.c utils/list.c $(FLAGS)
 

@@ -6,74 +6,14 @@
 #include "../parser/parser.h"
 #include "../utils/colors.h"
 
-#define INDENT_0 ""
-#define INDENT_2 "  "
-#define INDENT_4 "    "
-#define INDENT_6 "      "
-#define INDENT_8 "        "
-
-void print_statement_indented(Statement *statement, char *indent);
-void print_expression_indented(Expression *expression, char *indent);
-void print_identifier_indented(Identifier *identifier, char *indent);
 static char *expression_string(Expression *exp);
-
-void print_program(Program *program) {
-  int num_stmts = list_count(program->statements);
-  printf(COLOR_GREY "Program {\n");
-  printf("  address: %p\n", (void *)program);
-  printf("  num_statements: %d\n", num_stmts);
-  if (num_stmts == 0)
-    printf("  statements: []\n");
-  else {
-    printf("  statements: [\n");
-    List *current = program->statements;
-    for (current = program->statements; current != NULL;
-         current = current->next)
-      if (current->item != NULL)
-        print_statement_indented(current->item, INDENT_4);
-    printf("  ]\n");
-  }
-  printf("}\n" COLOR_RESET);
-}
-
-void print_statement(Statement *statement) {
-  print_statement_indented(statement, INDENT_0);
-}
-
-char *statement_type_str(int type) {
-  if (type == STATEMENT_EXPRESSION)
-    return "expression";
-  else if (type == STATEMENT_LET)
-    return "let";
-  return "return";
-}
-
-void print_statement_indented(Statement *statement, char *indent) {
-  printf("%sStatement {\n", indent);
-  printf("%s  address: %p\n", indent, (void *)statement);
-  printf("%s  type: %s\n", indent, statement_type_str(statement->type));
-  printf("%s  token_literal: \"%s\"\n", indent, statement->token_literal);
-  if (statement->type == STATEMENT_LET) {
-    LetStatement *ls = (LetStatement *)(statement->node);
-    printf("%s  let_statement->identifier: \"%s\"\n", indent, ls->name->value);
-  }
-  printf("%s}\n", indent);
-}
-
-void print_expression(Expression *expression) {
-  printf("expression pointer: %p\n", (void *)expression);
-}
-
-void print_identifier(Identifier *identifier) {
-  printf("identifier pointer: %p\n", (void *)identifier);
-}
 
 void statement_invariant(
   Statement *statement, bool type_predicate, char *type) {
   if (type_predicate)
     return;
   printf(COLOR_RED "statement not of required type `%s`\n" COLOR_RESET, type);
-  print_statement(statement);
+  printf("statement: %s", statement_string(statement));
   exit(1);
 }
 
@@ -222,6 +162,22 @@ char *index_expression_string(IndexExpression *index) {
   return ie_str;
 }
 
+char *hash_literal_pair_string(HashLiteralPair *pair) {
+  char *pair_str = malloc(MAX_STMT_STR_LEN);
+  sprintf(pair_str, "%s:%s", expression_string(pair->key),
+    expression_string(pair->value));
+  return pair_str;
+}
+
+char *hash_literal_string(HashLiteralExpression *hash_literal) {
+  char *hl_str = malloc(MAX_STMT_STR_LEN);
+  strcat(hl_str, "{");
+  list_strcat_each(
+    hash_literal->pairs, hl_str, (StrHandler)hash_literal_pair_string);
+  strcat(hl_str, "}");
+  return hl_str;
+}
+
 int token_precedence(int token_type) {
   switch (token_type) {
     case TOKEN_EQ:
@@ -272,6 +228,8 @@ static char *expression_string(Expression *exp) {
       return array_literal_string(exp->node);
     case EXPRESSION_INDEX:
       return index_expression_string(exp->node);
+    case EXPRESSION_HASH_LITERAL:
+      return hash_literal_string(exp->node);
   }
   return NULL;
 }
