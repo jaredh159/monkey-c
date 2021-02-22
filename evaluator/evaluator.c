@@ -22,6 +22,7 @@ Object eval_program(List *statements, Env *env);
 Object eval_block_statement(List *statements, Env *env);
 Object eval_index_expression(Object left, Object index);
 Object eval_array_index_expression(Object array, Object index);
+Object eval_hash_index_expression(Object hash, Object index);
 Object eval_hash_literal(HashLiteralExpression *hash_lit_exp, Env *env);
 List *eval_expressions(List *expressions, Env *env);
 Object apply_function(Object fn, List *args);
@@ -417,9 +418,10 @@ Env *extend_function_env(Function *fn, List *args) {
 }
 
 Object eval_index_expression(Object left, Object index) {
-  if (left.type == ARRAY_OBJ && index.type == INTEGER_OBJ) {
+  if (left.type == ARRAY_OBJ && index.type == INTEGER_OBJ)
     return eval_array_index_expression(left, index);
-  }
+  if (left.type == HASH_OBJ)
+    return eval_hash_index_expression(left, index);
   return error(
     "index operator not supported: %s", (char *[1]){object_type(left)}, 1);
 }
@@ -442,6 +444,22 @@ Object eval_array_index_expression(Object array, Object index) {
     current = current->next;
     i += 1;
   }
+}
+
+Object eval_hash_index_expression(Object hash, Object index) {
+  char *index_hash = object_hash(index);
+  if (index_hash == NULL)
+    return error(
+      "unusable as hash key: %s", (char *[1]){object_type(index)}, 1);
+
+  List *current = hash.value.list;
+  for (; current != NULL; current = current->next) {
+    HashPair *pair = current->item;
+    char *key_hash = object_hash(*pair->key);
+    if (strcmp(key_hash, index_hash) == 0)
+      return *pair->value;
+  }
+  return M_NULL;
 }
 
 Object eval_hash_literal(HashLiteralExpression *hash_lit_exp, Env *env) {

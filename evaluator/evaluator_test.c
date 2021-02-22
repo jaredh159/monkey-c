@@ -207,6 +207,10 @@ void test_error_handling(void) {
       "len(\"one\", \"two\")",
       "wrong number of arguments. got=2, want=1",
     },
+    {
+      "{\"name\": \"Monkey\"}[fn(x) { x }]",
+      "unusable as hash key: FUNCTION",
+    },
   };
 
   int num_tests = sizeof tests / sizeof(tests[0]);
@@ -395,8 +399,52 @@ void test_hash_literals(void) {
   assert_integer_object(*pair6->value, 6, t);
 }
 
+void test_hash_index_expressions(void) {
+  char *t = "hash_index_expressions";
+  IntTest tests[] = {
+    {
+      "{\"foo\": 5}[\"foo\"]",
+      5,
+    },
+    {
+      "{\"foo\": 5}[\"bar\"]",
+      NULL_SENTINAL,
+    },
+    {
+      "let key = \"foo\"; {\"foo\": 5}[key]",
+      5,
+    },
+    {
+      "{}[\"foo\"]",
+      NULL_SENTINAL,
+    },
+    {
+      "{5: 5}[5]",
+      5,
+    },
+    {
+      "{true: 5}[true]",
+      5,
+    },
+    {
+      "{false: 5}[false]",
+      5,
+    },
+  };
+
+  int num_tests = sizeof tests / sizeof(tests[0]);
+  for (int i = 0; i < num_tests; i++) {
+    Object res = eval_test(tests[i].input);
+    if (tests[i].expected == NULL_SENTINAL)
+      assert_null_object(res, t);
+    else
+      assert_integer_object(res, tests[i].expected, t);
+  }
+}
+
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_hash_index_expressions();
   test_hash_literals();
   test_builtin_functions();
   test_array_index_expressions();
