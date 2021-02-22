@@ -7,6 +7,14 @@
 Object wrong_num_args_error(int got, int want);
 Object wrong_arg_type_error(char *fn, char *expected_type, Object arg);
 
+Object builtin_puts(List *args) {
+  for (List *cur = args; cur != NULL; cur = cur->next) {
+    Object *object = cur->item;
+    puts(object_inspect(*object));
+  }
+  return (Object){NULL_OBJ, {.i = 0}};
+}
+
 Object builtin_len(List *args) {
   if (list_count(args) != 1) {
     return wrong_num_args_error(list_count(args), 1);
@@ -132,6 +140,8 @@ Object get_builtin(char *name) {
     return (Object){BUILT_IN_OBJ, {.builtin_fn = builtin_rest}};
   } else if (strcmp("push", name) == 0) {
     return (Object){BUILT_IN_OBJ, {.builtin_fn = builtin_push}};
+  } else if (strcmp("puts", name) == 0) {
+    return (Object){BUILT_IN_OBJ, {.builtin_fn = builtin_puts}};
   } else if (strcmp("last", name) == 0) {
     return (Object){BUILT_IN_OBJ, {.builtin_fn = builtin_last}};
   }
