@@ -22,5 +22,14 @@
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "make test_eval"
     },
+    {
+      "name": "test_code",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_code",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_code"
+    },
   ]
 }

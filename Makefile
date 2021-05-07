@@ -18,18 +18,23 @@ test_ast:
 test_eval:
 	clang -o .bin/test_eval evaluator/evaluator_test.c evaluator/evaluator.c evaluator/builtins.c object/object.c object/environment.c parser/parser.c lexer/lexer.c parser/parselets.c ast/ast.c token/token.c test/test.c utils/argv.c utils/list.c $(FLAGS)
 
+test_code:
+	clang -o .bin/test_code code/code.c code/code_test.c test/test.c token/token.c utils/argv.c $(FLAGS)
+
 test_all:
 	make test_lexer
 	make test_parser
 	make test_ast
 	make test_eval
-	printf "\nLEXER:  " && ./.bin/test_lexer && printf "AST:    " && ./.bin/test_ast && printf "EVAL:   " && ./.bin/test_eval && printf "PARSER: " && ./.bin/test_parser && echo
+	make test_code
+	printf "\nLEXER:  " && ./.bin/test_lexer && printf "AST:    " && ./.bin/test_ast && printf "EVAL:   " && ./.bin/test_eval && printf "CODE:   " && ./.bin/test_code && printf "PARSER: " && ./.bin/test_parser && echo
 
 all:
 	make monkey
 	make test_lexer
 	make test_parser
 	make test_ast
+	make test_code
 
 clean:
 	rm -rf .bin/monkey .bin/test_*
