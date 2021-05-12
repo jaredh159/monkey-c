@@ -5,6 +5,19 @@
 #include "../token/token.h"
 #include "../utils/list.h"
 
+enum {
+  PROGRAM_NODE,
+  EXPRESSION_NODE,
+  EXPRESSION_STATEMENT_NODE,
+  RETURN_STATEMENT_NODE,
+  LET_STATEMENT_NODE,
+  INTEGER_LITERAL_NODE,
+  BOOLEAN_LITERAL_NODE,
+  BLOCK_STATEMENTS_NODE,
+};
+
+typedef int NodeType;
+
 typedef struct StringLiteral {
   Token *token;
   char *value;

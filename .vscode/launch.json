@@ -31,5 +31,14 @@
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "make test_code"
     },
+    {
+      "name": "test_compiler",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_compiler",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_compiler"
+    },
   ]
 }

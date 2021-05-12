@@ -9,12 +9,17 @@ typedef struct OpCodes {
   Byte constant;
 } OpCodes;
 
-typedef struct BytecodeFragment {
+extern OpCodes OP;
+
+typedef struct Instruct {
   UInt8 length;
   Byte* bytes;
-} BytecodeFragment;
+} Instruct;
 
-extern OpCodes OP;
+typedef struct IntBag {
+  int arr[3];
+  int len;
+} IntBag;
 
 typedef struct Definition {
   char* name;
@@ -23,6 +28,11 @@ typedef struct Definition {
 } Definition;
 
 Definition* code_opcode_lookup(Opcode);
-BytecodeFragment* code_make(Opcode, int*);
+Instruct* code_make(int, ...);
+Instruct* code_concat_ins(int, ...);
+IntBag int_bag(int len, ...);
+IntBag i(int i1);
+IntBag ii(int i1, int i2);
+IntBag iii(int i1, int i2, int i3);
 
 #endif  // __CODE_H__

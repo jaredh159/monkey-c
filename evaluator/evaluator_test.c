@@ -33,12 +33,6 @@ void assert_boolean_object(Object object, bool expected, char *test_name) {
     (int)expected, object.value.b, "bool has correct value", test_name);
 }
 
-void assert_integer_object(Object object, int expected, char *test_name) {
-  assert_int_is(INTEGER_OBJ, object.type, "object is type=INTEGER", test_name);
-  assert_int_is(
-    expected, object.value.i, "integer has correct value", test_name);
-}
-
 void test_eval_integer_expression() {
   IntTest tests[] = {
     {"5", 5},
@@ -61,7 +55,7 @@ void test_eval_integer_expression() {
   for (int i = 0; i < num_tests; i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_integer_object(
-      evaluated, tests[i].expected, "eval_integer_expression");
+      tests[i].expected, evaluated, "eval_integer_expression");
   }
 }
 
@@ -133,7 +127,7 @@ void test_if_else_expressions(void) {
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(evald, "if_else_expressions");
     else
-      assert_integer_object(evald, tests[i].expected, "if_else_expressions");
+      assert_integer_object(tests[i].expected, evald, "if_else_expressions");
   }
 }
 
@@ -155,7 +149,7 @@ void test_return_statements(void) {
       assert_int_is(tests[i].expected, res.value.return_value->value.i,
         "return value correct", t);
     } else {
-      assert_integer_object(res, tests[i].expected, t);
+      assert_integer_object(tests[i].expected, res, t);
     }
   }
 }
@@ -233,7 +227,7 @@ void test_let_statements(void) {
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object res = eval_test(tests[i].input);
-    assert_integer_object(res, tests[i].expected, t);
+    assert_integer_object(tests[i].expected, res, t);
   }
 }
 
@@ -261,7 +255,7 @@ void test_function_application(void) {
   int num_tests = sizeof tests / sizeof(tests[0]);
   for (int i = 0; i < num_tests; i++) {
     Object res = eval_test(tests[i].input);
-    assert_integer_object(res, tests[i].expected, "function_application");
+    assert_integer_object(tests[i].expected, res, "function_application");
   }
 }
 
@@ -284,7 +278,7 @@ void test_closures(void) {
     "let newAdder = fn(x) { fn(y) { x + y }; };"
     "let addTwo = newAdder(2);"
     "addTwo(2);";
-  assert_integer_object(eval_test(input), 4, "closures");
+  assert_integer_object(4, eval_test(input), "closures");
 }
 
 void test_builtin_functions(void) {
@@ -312,7 +306,7 @@ void test_builtin_functions(void) {
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(res, t);
     else
-      assert_integer_object(res, tests[i].expected, t);
+      assert_integer_object(tests[i].expected, res, t);
   }
 }
 
@@ -323,11 +317,11 @@ void test_array_literals(void) {
   List *elements = evaluated.value.list;
   assert_int_is(3, list_count(elements), "array.length = 3", t);
   Object *first = elements->item;
-  assert_integer_object(*first, 1, t);
+  assert_integer_object(1, *first, t);
   Object *second = elements->next->item;
-  assert_integer_object(*second, 4, t);
+  assert_integer_object(4, *second, t);
   Object *third = elements->next->next->item;
-  assert_integer_object(*third, 6, t);
+  assert_integer_object(6, *third, t);
 }
 
 void test_array_index_expressions(void) {
@@ -351,7 +345,7 @@ void test_array_index_expressions(void) {
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(res, t);
     else
-      assert_integer_object(res, tests[i].expected, t);
+      assert_integer_object(tests[i].expected, res, t);
   }
 }
 
@@ -376,27 +370,27 @@ void test_hash_literals(void) {
 
   HashPair *pair1 = pairs->item;
   assert_str_is("one", pair1->key->value.str, "key one is \"one\"", t);
-  assert_integer_object(*pair1->value, 1, t);
+  assert_integer_object(1, *pair1->value, t);
 
   HashPair *pair2 = pairs->next->item;
   assert_str_is("two", pair2->key->value.str, "key two is \"two\"", t);
-  assert_integer_object(*pair2->value, 2, t);
+  assert_integer_object(2, *pair2->value, t);
 
   HashPair *pair3 = pairs->next->next->item;
   assert_str_is("three", pair3->key->value.str, "key three is \"three\"", t);
-  assert_integer_object(*pair3->value, 3, t);
+  assert_integer_object(3, *pair3->value, t);
 
   HashPair *pair4 = pairs->next->next->next->item;
-  assert_integer_object(*pair4->key, 4, t);
-  assert_integer_object(*pair4->value, 4, t);
+  assert_integer_object(4, *pair4->key, t);
+  assert_integer_object(4, *pair4->value, t);
 
   HashPair *pair5 = pairs->next->next->next->next->item;
   assert_boolean_object(*pair5->key, true, t);
-  assert_integer_object(*pair5->value, 5, t);
+  assert_integer_object(5, *pair5->value, t);
 
   HashPair *pair6 = pairs->next->next->next->next->next->item;
   assert_boolean_object(*pair6->key, false, t);
-  assert_integer_object(*pair6->value, 6, t);
+  assert_integer_object(6, *pair6->value, t);
 }
 
 void test_hash_index_expressions(void) {
@@ -438,7 +432,7 @@ void test_hash_index_expressions(void) {
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(res, t);
     else
-      assert_integer_object(res, tests[i].expected, t);
+      assert_integer_object(tests[i].expected, res, t);
   }
 }
 

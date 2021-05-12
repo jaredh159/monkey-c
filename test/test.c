@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../object/object.h"
 #include "../token/token.h"
 #include "../utils/argv.h"
 #include "../utils/colors.h"
@@ -72,4 +73,24 @@ void assert_int_is(int expected, int actual, char *msg, char *test_name) {
     sprintf(failmsg, "expected `%d`, got `%d` --  %s", expected, actual, msg);
     fail(failmsg, test_name);
   }
+}
+
+void assert_integer_object(int expected_int, Object actual, char *test_name) {
+  if (actual.type != INTEGER_OBJ) {
+    char failmsg[200];
+    sprintf(
+      failmsg, "object was not type=INTEGER, got=%s", object_type(actual));
+    fail(failmsg, test_name);
+    return;
+  }
+
+  if (actual.value.i == expected_int) {
+    assert(true, "integer object correct", test_name);
+    return;
+  }
+
+  char failmsg[200];
+  sprintf(failmsg, "incorrect integer object value, want=%d, got=%d",
+    expected_int, actual.value.i);
+  fail(failmsg, test_name);
 }

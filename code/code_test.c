@@ -10,7 +10,7 @@ void test_make(void) {
 
   struct MakeTest {
     Opcode op;
-    int* operands;
+    IntBag operands;
     Byte* expected;
     int expected_len;
   };
@@ -18,7 +18,7 @@ void test_make(void) {
   struct MakeTest tests[] = {
     {
       .op = OP.constant,
-      .operands = (int[1]){65534},
+      .operands = i(65534),
       .expected = (Byte[3]){OP.constant, 255, 254},
       .expected_len = 3,
     },
@@ -27,7 +27,7 @@ void test_make(void) {
   int num_tests = sizeof(tests) / sizeof(struct MakeTest);
   for (int i = 0; i < num_tests; i++) {
     struct MakeTest t = tests[i];
-    BytecodeFragment* code = code_make(t.op, t.operands);
+    Instruct* code = code_make(t.op, t.operands);
 
     assert_int_is(t.expected_len, code->length, "num operands", n);
 
