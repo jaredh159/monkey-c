@@ -8,7 +8,7 @@ OpCodes OP = {.constant = 0};
 
 Instruct* code_make(int op_int, ...) {
   // can't `va_start()` with type smaller than a word
-  Opcode op = op_int;
+  OpCode op = op_int;
 
   Instruct* code = malloc(sizeof(Instruct));
   code->length = 0;
@@ -46,7 +46,7 @@ Instruct* code_make(int op_int, ...) {
   return code;
 }
 
-Definition* code_opcode_lookup(Opcode op) {
+Definition* code_opcode_lookup(OpCode op) {
   Definition* def = malloc(sizeof(Definition));
   switch (op) {
     case 0:
@@ -86,6 +86,87 @@ Instruct* code_concat_ins(int len, ...) {
   concatted->length = total_len;
   concatted->bytes = bytes;
   return concatted;
+}
+
+char* instructions_str(Instruct ins) {
+  char* str = malloc(50 * sizeof(char) * ins.length);
+  int pos = 0;
+  int total_length = ins.length;
+
+  for (int i = 0; i < total_length;) {
+    Definition* def = code_opcode_lookup(ins.bytes[i]);
+    if (def == NULL) {
+      pos += sprintf(&str[pos], "ERROR: no def. for opcode=%d\n", ins.bytes[i]);
+      continue;
+    }
+
+    pos += sprintf(&str[pos], "%04d ", i);
+
+    ReadOpResult res = code_read_operands(*def, ins);
+    if (res.operands.len != def->num_operands) {
+      pos +=
+        sprintf(&str[pos], "ERROR: operand len %d does not match defined %d\n",
+          res.operands.len, def->num_operands);
+      continue;
+    }
+
+    switch (def->num_operands) {
+      case 1:
+        pos += sprintf(&str[pos], "%s %d\n", def->name, res.operands.arr[0]);
+        break;
+      default:
+        pos += sprintf(
+          &str[pos], "ERROR: unhandled operand count for %s\n", def->name);
+        break;
+    }
+
+    int consumed_bytes = 1 + res.bytes_read;
+    i += consumed_bytes;
+    ins.length -= consumed_bytes;
+    ins.bytes = ins.bytes + consumed_bytes;
+  }
+
+  str[pos + 1] = '\0';
+  return str;
+}
+
+UInt16 read_uint16(Byte* byte) {
+  Byte first = *byte;
+  Byte second = *(byte + 1);
+  return (first << 8) + second;
+}
+
+ReadOpResult code_read_operands(Definition def, Instruct instructions) {
+  IntBag operands;
+  operands.len = def.num_operands;
+
+  int bytes_read = 0;
+  for (int i = 0; i < def.num_operands; i++) {
+    int width = def.operand_widths[i];
+    switch (width) {
+      case 2:
+        operands.arr[i] = (int)read_uint16(&instructions.bytes[bytes_read + 1]);
+        break;
+    }
+    bytes_read += width;
+  }
+
+  return (ReadOpResult){.operands = operands, .bytes_read = bytes_read};
+}
+
+Instruct* code_make_nv(int op_int, IntBag operands) {
+  switch (operands.len) {
+    case 1:
+      return code_make(op_int, operands.arr[0]);
+    case 2:
+      return code_make(op_int, operands.arr[0], operands.arr[1]);
+    case 3:
+      return code_make(
+        op_int, operands.arr[0], operands.arr[1], operands.arr[2]);
+    default:
+      printf("ERROR: unexpected num int operands: %d\n", operands.len);
+      exit(EXIT_FAILURE);
+  }
 }
 
 IntBag int_bag(int len, ...) {

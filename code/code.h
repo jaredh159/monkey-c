@@ -2,8 +2,9 @@
 #define __CODE_H__
 
 typedef unsigned char UInt8;
+typedef unsigned short UInt16;
 typedef unsigned char Byte;
-typedef unsigned char Opcode;
+typedef unsigned char OpCode;
 
 typedef struct OpCodes {
   Byte constant;
@@ -27,9 +28,27 @@ typedef struct Definition {
   int num_operands;
 } Definition;
 
-Definition* code_opcode_lookup(Opcode);
+typedef struct ReadOpResult {
+  IntBag operands;
+  int bytes_read;
+} ReadOpResult;
+
+Definition* code_opcode_lookup(OpCode);
+
+/**
+ * Variadic version
+ */
 Instruct* code_make(int, ...);
+
+/**
+ * Non-variadic (`nv`) version
+ */
+Instruct* code_make_nv(int, IntBag);
+
 Instruct* code_concat_ins(int, ...);
+ReadOpResult code_read_operands(Definition, Instruct);
+char* instructions_str(Instruct instructions);
+
 IntBag int_bag(int len, ...);
 IntBag i(int i1);
 IntBag ii(int i1, int i2);

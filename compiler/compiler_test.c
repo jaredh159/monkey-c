@@ -18,7 +18,7 @@ void test_instructions(Instruct* expected, Instruct* actual, char* test) {
   assert_int_is(expected->length, actual->length, "instructions length", test);
   for (int i = 0; i < expected->length; i++) {
     assert_int_is(expected->bytes[i], actual->bytes[i],
-      int_embed("instruction byte at pos=%d", i), test);
+      si("instruction byte at pos=%d", i), test);
   }
 }
 

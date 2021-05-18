@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,11 +8,6 @@
 #include "../utils/argv.h"
 #include "../utils/colors.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wvariadic-macros"
-#define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
-#pragma clang diagnostic push
-
 static bool verbose = false;
 static char embedded[500];
 
@@ -20,13 +16,77 @@ void pass_argv(int argc, char *argv[]) {
     verbose = true;
 }
 
-char *int_embed(char *format, int integer) {
-  sprintf(embedded, format, integer);
+char *ss(char *format, ...) {
+  int args_len = 0;
+
+  for (char *p = format; *p; p++) {
+    if (*p == '%' && *(p + 1) != '%') {
+      args_len++;
+    }
+  }
+
+  va_list ap;
+  va_start(ap, format);
+
+  char *strs[args_len];
+  for (int i = 0; i < args_len; i++) {
+    strs[i] = va_arg(ap, char *);
+  }
+
+  va_end(ap);
+
+  switch (args_len) {
+    case 1:
+      sprintf(embedded, format, strs[0]);
+      break;
+    case 2:
+      sprintf(embedded, format, strs[0], strs[1]);
+      break;
+    case 3:
+      sprintf(embedded, format, strs[0], strs[1], strs[2]);
+      break;
+    default:
+      printf("Unhandled arg count=%d\n", args_len);
+      exit(EXIT_FAILURE);
+  }
+
   return embedded;
 }
 
-char *str_embed(char *format, char *str) {
-  sprintf(embedded, format, str);
+char *si(char *format, ...) {
+  int args_len = 0;
+
+  for (char *p = format; *p; p++) {
+    if (*p == '%' && *(p + 1) != '%') {
+      args_len++;
+    }
+  }
+
+  va_list ap;
+  va_start(ap, format);
+
+  int ints[args_len];
+  for (int i = 0; i < args_len; i++) {
+    ints[i] = va_arg(ap, int);
+  }
+
+  va_end(ap);
+
+  switch (args_len) {
+    case 1:
+      sprintf(embedded, format, ints[0]);
+      break;
+    case 2:
+      sprintf(embedded, format, ints[0], ints[1]);
+      break;
+    case 3:
+      sprintf(embedded, format, ints[0], ints[1], ints[2]);
+      break;
+    default:
+      printf("Unhandled arg count=%d\n", args_len);
+      exit(EXIT_FAILURE);
+  }
+
   return embedded;
 }
 

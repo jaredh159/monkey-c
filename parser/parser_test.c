@@ -139,8 +139,8 @@ void test_parses_prefix_expressions() {
     Expression *exp = es->expression;
     assert_int_is(exp->type, EXPRESSION_PREFIX, "expression type is PREFIX", t);
     PrefixExpression *prefix = exp->node;
-    assert_str_is(test.operator, prefix->operator,
-      str_embed("operator is %s", test.operator), t);
+    assert_str_is(
+      test.operator, prefix->operator, ss("operator is %s", test.operator), t);
     assert_literal_expression(prefix->right, &test.value, t);
   }
 }
@@ -684,7 +684,7 @@ Program *assert_program(
 
   check_parser_errors(test_name);
   assert_int_is(expected_num_statements, list_count(program->statements),
-    int_embed("program has %d statements", expected_num_statements), test_name);
+    si("program has %d statements", expected_num_statements), test_name);
 
   return program;
 }
