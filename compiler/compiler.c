@@ -11,7 +11,7 @@ static Instruct* instructions;
 static ConstantPool* constant_pool;
 static bool init_complete = false;
 
-CompilerError compile_statements(List*);
+CompilerErr compile_statements(List*);
 int add_constant(Object*);
 int emit(OpCode, IntBag);
 int add_instruction(Instruct*);
@@ -32,8 +32,8 @@ void compiler_init(void) {
   init_complete = true;
 }
 
-CompilerError compile(void* node, NodeType type) {
-  CompilerError err = NULL;
+CompilerErr compile(void* node, NodeType type) {
+  CompilerErr err = NULL;
   switch (type) {
     case PROGRAM_NODE:
       err = compile_statements(((Program*)node)->statements);
@@ -82,8 +82,8 @@ int emit(OpCode op, IntBag operands) {
   return pos;
 }
 
-CompilerError compile_statements(List* statements) {
-  CompilerError err = NULL;
+CompilerErr compile_statements(List* statements) {
+  CompilerErr err = NULL;
   List* current = statements;
   for (; current != NULL; current = current->next) {
     if (current->item != NULL) {

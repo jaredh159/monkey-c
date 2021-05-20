@@ -8,11 +8,11 @@
 
 extern OpCodes OP;
 
-typedef struct CompilerTestCase {
+typedef struct CompilerTest {
   char* input;
   Instruct* expected_instructions;
   ConstantPool* expected_constants;
-} CompilerTestCase;
+} CompilerTest;
 
 void test_instructions(Instruct* expected, Instruct* actual, char* test) {
   assert_int_is(expected->length, actual->length, "instructions length", test);
@@ -39,9 +39,9 @@ void test_constants(ConstantPool* expected, ConstantPool* actual, char* test) {
   }
 }
 
-void run_compiler_tests(int len, CompilerTestCase tests[len], char* test) {
+void run_compiler_tests(int len, CompilerTest tests[len], char* test) {
   for (int i = 0; i < len; i++) {
-    CompilerTestCase t = tests[i];
+    CompilerTest t = tests[i];
     Program* program = parse_program(t.input);
     compiler_init();
     compile(program, PROGRAM_NODE);
@@ -53,7 +53,7 @@ void run_compiler_tests(int len, CompilerTestCase tests[len], char* test) {
 
 void test_integer_arithmetic(void) {
   char* n = "integer_arithmetic";
-  CompilerTestCase test = {
+  CompilerTest test = {
     .input = "1 + 2",
     .expected_constants = make_constant_pool(2,   //
       (Object){INTEGER_OBJ, .value = {.i = 1}},   //
@@ -62,7 +62,7 @@ void test_integer_arithmetic(void) {
       code_make(OP.constant, 0),                  //
       code_make(OP.constant, 1)),                 //
   };
-  run_compiler_tests(1, (CompilerTestCase[1]){test}, n);
+  run_compiler_tests(1, (CompilerTest[1]){test}, n);
 }
 
 int main(int argc, char** argv) {

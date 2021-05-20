@@ -97,7 +97,7 @@ bool token_literal_is(Token *token, char *literal) {
 void fail(char *msg, char *test_name) {
   printf(
     COLOR_RED "%sX %s: %s\n" COLOR_RESET, verbose ? "" : "\n", test_name, msg);
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 void assert(bool predicate, char *msg, char *test_name) {

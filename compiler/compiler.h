@@ -5,7 +5,7 @@
 #include "../code/code.h"
 #include "../object/object.h"
 
-typedef char* CompilerError;
+typedef char* CompilerErr;
 
 typedef struct ConstantPool {
   UInt8 length;
@@ -18,7 +18,7 @@ typedef struct Bytecode {
 } Bytecode;
 
 void compiler_init(void);
-CompilerError compile(void* node, NodeType type);
+CompilerErr compile(void* node, NodeType type);
 Bytecode* compiler_bytecode(void);
 ConstantPool* make_constant_pool(int len, ...);
 

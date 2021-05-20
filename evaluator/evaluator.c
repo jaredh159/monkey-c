@@ -318,7 +318,7 @@ Object error(char *fmt, char **types, int num_types) {
       break;
     default:
       printf("ERROR: unhandled error types amount\n");
-      exit(1);
+      exit(EXIT_FAILURE);
   }
   Object error = {ERROR_OBJ, {.str = err_msg}};
   return error;
@@ -384,7 +384,7 @@ Env *extend_function_env(Function *fn, List *args) {
 
   if (list_count(args) != list_count(fn->parameters)) {
     printf("Error: num params does not match num args\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   List *current_arg = args;

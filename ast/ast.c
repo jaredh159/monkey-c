@@ -28,7 +28,7 @@ void statement_invariant(
     return;
   printf(COLOR_RED "statement not of required type `%s`\n" COLOR_RESET, type);
   printf("statement: %s", statement_string(statement));
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 ReturnStatement *get_return(Statement *statement) {

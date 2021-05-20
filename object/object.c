@@ -64,7 +64,7 @@ char *object_type(Object object) {
       return "ERROR";
   }
   printf("ERROR: unhandled type in object_type()\n");
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 void object_print(Object object) {
@@ -156,7 +156,7 @@ Object *object_copy(const Object proto) {
       break;
     default:
       printf("ERROR: unhandled object copy type %s\n", object_type(proto));
-      exit(1);
+      exit(EXIT_FAILURE);
   }
   return copy;
 }
