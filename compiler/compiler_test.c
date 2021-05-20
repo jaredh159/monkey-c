@@ -54,13 +54,13 @@ void run_compiler_tests(int len, CompilerTestCase tests[len], char* test) {
 void test_integer_arithmetic(void) {
   char* n = "integer_arithmetic";
   CompilerTestCase test = {
-    .input = "1 + 1",
+    .input = "1 + 2",
     .expected_constants = make_constant_pool(2,   //
       (Object){INTEGER_OBJ, .value = {.i = 1}},   //
       (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
     .expected_instructions = code_concat_ins(2,   //
-      code_make(OP.constant, 1),                  //
-      code_make(OP.constant, 2)),                 //
+      code_make(OP.constant, 0),                  //
+      code_make(OP.constant, 1)),                 //
   };
   run_compiler_tests(1, (CompilerTestCase[1]){test}, n);
 }

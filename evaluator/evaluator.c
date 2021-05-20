@@ -151,22 +151,7 @@ Object eval(void *node, NodeType type, Env *env) {
 }
 
 Object eval_statement(Statement *stmt, Env *env) {
-  int type;
-  switch (stmt->type) {
-    case STATEMENT_RETURN:
-      type = RETURN_STATEMENT_NODE;
-      break;
-    case STATEMENT_LET:
-      type = LET_STATEMENT_NODE;
-      break;
-    case STATEMENT_EXPRESSION:
-      type = EXPRESSION_STATEMENT_NODE;
-      break;
-    default:
-      printf("Unknown statement type: %d\n", stmt->type);
-      exit(1);
-  }
-  return eval(stmt->node, type, env);
+  return eval(stmt->node, ast_statement_node_type(stmt), env);
 }
 
 Object eval_program(List *statements, Env *env) {
