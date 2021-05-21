@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-OpCodes OP = {.constant = 0};
-
 Instruct* code_make(int op_int, ...) {
   // can't `va_start()` with type smaller than a word
   OpCode op = op_int;

@@ -4,12 +4,8 @@
 #include <stdlib.h>
 #include "../parser/parser.h"
 
-#define MAX_CONSTANTS 64
-#define MAX_INSTRUCTIONS 1024
-
-static Instruct* instructions;
-static ConstantPool* constant_pool;
-static bool init_complete = false;
+static Instruct* instructions = NULL;
+static ConstantPool* constant_pool = NULL;
 
 CompilerErr compile_statements(List*);
 int add_constant(Object*);
@@ -17,7 +13,7 @@ int emit(OpCode, IntBag);
 int add_instruction(Instruct*);
 
 void compiler_init(void) {
-  if (init_complete) {
+  if (instructions != NULL) {
     free(constant_pool->constants);
     free(instructions->bytes);
     free(instructions);
@@ -29,7 +25,6 @@ void compiler_init(void) {
   constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
   instructions->length = 0;
   instructions->bytes = malloc(sizeof(Byte) * MAX_INSTRUCTIONS);
-  init_complete = true;
 }
 
 CompilerErr compile(void* node, NodeType type) {
@@ -50,7 +45,7 @@ CompilerErr compile(void* node, NodeType type) {
       int_lit->type = INTEGER_OBJ;
       int_lit->value.i = ((IntegerLiteral*)node)->value;
       int constant_idx = add_constant(int_lit);
-      emit(OP.constant, i(constant_idx));
+      emit(OP_CONSTANT, i(constant_idx));
     } break;
     case EXPRESSION_NODE: {
       Expression* exp = node;

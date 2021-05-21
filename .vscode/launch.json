@@ -40,5 +40,14 @@
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "make test_compiler"
     },
+    {
+      "name": "test_vm",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_vm",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_vm"
+    },
   ]
 }

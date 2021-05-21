@@ -6,11 +6,9 @@ typedef unsigned short UInt16;
 typedef unsigned char Byte;
 typedef unsigned char OpCode;
 
-typedef struct OpCodes {
-  Byte constant;
-} OpCodes;
-
-extern OpCodes OP;
+enum OpCodes {
+  OP_CONSTANT,
+};
 
 typedef struct Instruct {
   UInt8 length;
@@ -48,6 +46,7 @@ Instruct* code_make_nv(int, IntBag);
 Instruct* code_concat_ins(int, ...);
 ReadOpResult code_read_operands(Definition, Instruct);
 char* instructions_str(Instruct instructions);
+UInt16 read_uint16(Byte* byte);
 
 IntBag int_bag(int len, ...);
 IntBag i(int i1);

@@ -5,6 +5,9 @@
 #include "../code/code.h"
 #include "../object/object.h"
 
+#define MAX_CONSTANTS 64
+#define MAX_INSTRUCTIONS 1024
+
 typedef char* CompilerErr;
 
 typedef struct ConstantPool {

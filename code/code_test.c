@@ -3,8 +3,6 @@
 #include "../test/test.h"
 #include "../utils/colors.h"
 
-extern OpCodes OP;
-
 void test_make(void) {
   char* n = "make";
 
@@ -17,9 +15,9 @@ void test_make(void) {
 
   struct MakeTest tests[] = {
     {
-      .op = OP.constant,
+      .op = OP_CONSTANT,
       .operands = i(65534),
-      .expected = (Byte[3]){OP.constant, 255, 254},
+      .expected = (Byte[3]){OP_CONSTANT, 255, 254},
       .expected_len = 3,
     },
   };
@@ -47,7 +45,7 @@ void test_read_operands(void) {
 
   struct ReadOpTest tests[] = {
     {
-      .op = OP.constant,
+      .op = OP_CONSTANT,
       .operands = i(65535),
       .bytes_read = 2,
     },
@@ -75,9 +73,9 @@ void test_read_operands(void) {
 void test_instructions_string(void) {
   char* n = "instructions_string";
   Instruct* ins = code_concat_ins(3,  //
-    code_make(OP.constant, 1),        //
-    code_make(OP.constant, 2),        //
-    code_make(OP.constant, 65535)     //
+    code_make(OP_CONSTANT, 1),        //
+    code_make(OP_CONSTANT, 2),        //
+    code_make(OP_CONSTANT, 65535)     //
   );
 
   char* expected =

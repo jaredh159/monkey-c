@@ -6,8 +6,6 @@
 #include "../test/test.h"
 #include "../utils/colors.h"
 
-extern OpCodes OP;
-
 typedef struct CompilerTest {
   char* input;
   Instruct* expected_instructions;
@@ -59,8 +57,8 @@ void test_integer_arithmetic(void) {
       (Object){INTEGER_OBJ, .value = {.i = 1}},   //
       (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
     .expected_instructions = code_concat_ins(2,   //
-      code_make(OP.constant, 0),                  //
-      code_make(OP.constant, 1)),                 //
+      code_make(OP_CONSTANT, 0),                  //
+      code_make(OP_CONSTANT, 1)),                 //
   };
   run_compiler_tests(1, (CompilerTest[1]){test}, n);
 }

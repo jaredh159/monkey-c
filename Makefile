@@ -34,7 +34,8 @@ test_all:
 	make test_eval
 	make test_code
 	make test_compiler
-	printf "\nLEXER:  " && ./.bin/test_lexer && printf "AST:    " && ./.bin/test_ast && printf "EVAL:   " && ./.bin/test_eval && printf "CODE:   " && ./.bin/test_code && printf "COMPILER:" && ./.bin/test_compiler && printf "PARSER: " && ./.bin/test_parser && echo
+	make test_vm
+	printf "\nLEXER:  " && ./.bin/test_lexer && printf "AST:    " && ./.bin/test_ast && printf "EVAL:   " && ./.bin/test_eval && printf "CODE:   " && ./.bin/test_code && printf "COMPILER:" && ./.bin/test_compiler && printf "VM:     " && ./.bin/test_vm && printf "PARSER: " && ./.bin/test_parser && echo
 
 all:
 	make monkey
