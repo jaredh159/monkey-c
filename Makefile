@@ -1,5 +1,7 @@
 FLAGS = -Wall -O -W -pedantic -g
 
+.SILENT: test_all test_lexer test_parser test_ast test_code test_compiler test_vm test_eval
+
 monkey:
 	clang -o .bin/monkey monkey.c repl/repl.c token/token.c code/code.c vm/vm.c compiler/compiler.c lexer/lexer.c parser/parser.c parser/parselets.c evaluator/evaluator.c evaluator/builtins.c object/object.c object/environment.c utils/argv.c ast/ast.c utils/list.c $(FLAGS)
 
@@ -27,6 +29,8 @@ test_code:
 test_vm:
 	clang -o .bin/test_vm vm/vm.c vm/vm_test.c compiler/compiler.c test/test.c object/object.c code/code.c ast/ast.c token/token.c parser/parser.c parser/parselets.c lexer/lexer.c utils/list.c utils/argv.c $(FLAGS)
 
+FMT = "%-10s"
+
 test_all:
 	make test_lexer
 	make test_parser
@@ -35,7 +39,22 @@ test_all:
 	make test_code
 	make test_compiler
 	make test_vm
-	printf "\nLEXER:  " && ./.bin/test_lexer && printf "AST:    " && ./.bin/test_ast && printf "EVAL:   " && ./.bin/test_eval && printf "CODE:   " && ./.bin/test_code && printf "COMPILER:" && ./.bin/test_compiler && printf "VM:     " && ./.bin/test_vm && printf "PARSER: " && ./.bin/test_parser && echo
+	echo
+	printf $(FMT) "LEXER:"
+	TEST_ALL=true ./.bin/test_lexer
+	printf $(FMT) "AST:"
+	TEST_ALL=true ./.bin/test_ast
+	printf $(FMT) "EVAL:"
+	TEST_ALL=true ./.bin/test_eval
+	printf $(FMT) "CODE:"
+	TEST_ALL=true ./.bin/test_code
+	printf $(FMT) "COMPILER:"
+	TEST_ALL=true ./.bin/test_compiler
+	printf $(FMT) "VM:"
+	TEST_ALL=true ./.bin/test_vm
+	printf $(FMT) "PARSER:"
+	TEST_ALL=true ./.bin/test_parser
+	echo
 
 all:
 	make monkey

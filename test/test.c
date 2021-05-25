@@ -8,10 +8,19 @@
 #include "../utils/argv.h"
 #include "../utils/colors.h"
 
+#define MAX_ROW_DOTS 100
+
+static int num_passes = 0;
+static bool testing_all = false;
 static bool verbose = false;
 static char embedded[500];
 
 void pass_argv(int argc, char *argv[]) {
+  num_passes = 0;
+  testing_all = false;
+  char *env_var = getenv("TEST_ALL");
+  if (env_var && strcmp(env_var, "true") == 0)
+    testing_all = true;
   if (argv_has_flag('v', argc, argv) || argv_idx("--verbose", argc, argv) != -1)
     verbose = true;
 }
@@ -106,7 +115,12 @@ void assert(bool predicate, char *msg, char *test_name) {
     return;
   }
 
+  num_passes++;
   if (!verbose) {
+    if (num_passes == MAX_ROW_DOTS) {
+      printf("\n%s", testing_all ? "          " : "");
+      num_passes = 1;
+    }
     printf(COLOR_GREEN "•" COLOR_RESET);
     return;
   }

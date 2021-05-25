@@ -50,6 +50,7 @@ Instruct* code_make(int op_int, ...) {
 
 Definition* code_opcode_lookup(OpCode op) {
   Definition* def = malloc(sizeof(Definition));
+  def->num_operands = 0;
   memcpy(def->operand_widths, (int[3]){0, 0, 0}, 3 * sizeof(int));
   switch (op) {
     case OP_CONSTANT:
@@ -58,12 +59,19 @@ Definition* code_opcode_lookup(OpCode op) {
       def->name = "OpConstant";
       break;
     case OP_ADD:
-      def->num_operands = 0;
       def->name = "OpAdd";
       break;
     case OP_POP:
-      def->num_operands = 0;
       def->name = "OpPop";
+      break;
+    case OP_SUB:
+      def->name = "OpSub";
+      break;
+    case OP_MUL:
+      def->name = "OpMul";
+      break;
+    case OP_DIV:
+      def->name = "OpDiv";
       break;
     default:
       free(def);
@@ -106,7 +114,7 @@ char* instructions_str(Instruct ins) {
   int total_length = ins.length;
 
   for (int i = 0; i < total_length;) {
-    Definition* def = code_opcode_lookup(ins.bytes[i]);
+    Definition* def = code_opcode_lookup(*ins.bytes);
     if (def == NULL) {
       pos += sprintf(&str[pos], "ERROR: no def. for opcode=%d\n", ins.bytes[i]);
       continue;

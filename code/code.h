@@ -10,6 +10,9 @@ enum OpCodes {
   OP_CONSTANT,
   OP_ADD,
   OP_POP,
+  OP_SUB,
+  OP_MUL,
+  OP_DIV,
 };
 
 typedef struct Instruct {

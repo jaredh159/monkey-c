@@ -64,9 +64,19 @@ CompilerErr compile(void* node, NodeType type) {
             case '+':
               emit(OP_ADD, (IntBag){0});
               break;
+            case '-':
+              emit(OP_SUB, (IntBag){0});
+              break;
+            case '/':
+              emit(OP_DIV, (IntBag){0});
+              break;
+            case '*':
+              emit(OP_MUL, (IntBag){0});
+              break;
             default:
-              printf("ERROR: unknown operator %s\n", infix->operator);
-              exit(EXIT_FAILURE);
+              err = malloc(100);
+              sprintf(err, "ERROR: unknown operator %s\n", infix->operator);
+              return err;
           }
         } break;
         case EXPRESSION_INTEGER_LITERAL:

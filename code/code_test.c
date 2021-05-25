@@ -93,10 +93,30 @@ void test_instructions_string(void) {
     expected, instructions_str(*ins), "instruction string correct", n);
 }
 
+void test_another_instructions_string(void) {
+  char* n = "another_instructions_string";
+  Instruct* ins = code_concat_ins(4,  //
+    code_make(OP_CONSTANT, 0),        //
+    code_make(OP_CONSTANT, 1),        //
+    code_make(OP_SUB),                //
+    code_make(OP_POP)                 //
+  );
+
+  char* expected =
+    "0000 OpConstant 0\n"
+    "0003 OpConstant 1\n"
+    "0006 OpSub\n"
+    "0007 OpPop\n";
+
+  assert_str_is(
+    expected, instructions_str(*ins), "instruction string correct", n);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
   test_read_operands();
   test_instructions_string();
+  test_another_instructions_string();
   test_make();
   printf("\n");
   return 0;

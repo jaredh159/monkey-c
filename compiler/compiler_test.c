@@ -78,7 +78,40 @@ void test_integer_arithmetic(void) {
       code_make(OP_CONSTANT, 1),                  //
       code_make(OP_POP)),                         //
   };
-  run_compiler_tests(1, (CompilerTest[]){t1, t2}, n);
+  CompilerTest t3 = {
+    .input = "1 - 2",
+    .expected_constants = make_constant_pool(2,   //
+      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+    .expected_instructions = code_concat_ins(4,   //
+      code_make(OP_CONSTANT, 0),                  //
+      code_make(OP_CONSTANT, 1),                  //
+      code_make(OP_SUB),                          //
+      code_make(OP_POP)),                         //
+  };
+  CompilerTest t4 = {
+    .input = "1 * 2",
+    .expected_constants = make_constant_pool(2,   //
+      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+    .expected_instructions = code_concat_ins(4,   //
+      code_make(OP_CONSTANT, 0),                  //
+      code_make(OP_CONSTANT, 1),                  //
+      code_make(OP_MUL),                          //
+      code_make(OP_POP)),                         //
+  };
+  CompilerTest t5 = {
+    .input = "2 / 1",
+    .expected_constants = make_constant_pool(2,   //
+      (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+      (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+    .expected_instructions = code_concat_ins(4,   //
+      code_make(OP_CONSTANT, 0),                  //
+      code_make(OP_CONSTANT, 1),                  //
+      code_make(OP_DIV),                          //
+      code_make(OP_POP)),                         //
+  };
+  run_compiler_tests(5, (CompilerTest[]){t1, t2, t3, t4, t5}, n);
 }
 
 int main(int argc, char** argv) {
