@@ -9,6 +9,7 @@ typedef unsigned char OpCode;
 enum OpCodes {
   OP_CONSTANT,
   OP_ADD,
+  OP_POP,
 };
 
 typedef struct Instruct {

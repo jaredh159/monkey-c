@@ -40,8 +40,8 @@ void repl_start(void) {
         printf("Whoops! Executing bytecode failed:\n %s\n", err);
         continue;
       }
-      Object *stack_top = vm_stack_top();
-      printf("%s\n", object_inspect(*stack_top));
+      Object *last_popped = vm_last_popped();
+      printf("%s\n", object_inspect(*last_popped));
     }
   } while (num_chars != EOF);
   printf("\n");

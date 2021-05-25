@@ -56,17 +56,29 @@ void run_compiler_tests(int len, CompilerTest tests[len], char* test) {
 
 void test_integer_arithmetic(void) {
   char* n = "integer_arithmetic";
-  CompilerTest test = {
+  CompilerTest t1 = {
     .input = "1 + 2",
     .expected_constants = make_constant_pool(2,   //
       (Object){INTEGER_OBJ, .value = {.i = 1}},   //
       (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
-    .expected_instructions = code_concat_ins(3,   //
+    .expected_instructions = code_concat_ins(4,   //
       code_make(OP_CONSTANT, 0),                  //
       code_make(OP_CONSTANT, 1),                  //
-      code_make(OP_ADD)),                         //
+      code_make(OP_ADD),                          //
+      code_make(OP_POP)),                         //
   };
-  run_compiler_tests(1, (CompilerTest[1]){test}, n);
+  CompilerTest t2 = {
+    .input = "1; 2",
+    .expected_constants = make_constant_pool(2,   //
+      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+    .expected_instructions = code_concat_ins(4,   //
+      code_make(OP_CONSTANT, 0),                  //
+      code_make(OP_POP),                          //
+      code_make(OP_CONSTANT, 1),                  //
+      code_make(OP_POP)),                         //
+  };
+  run_compiler_tests(1, (CompilerTest[]){t1, t2}, n);
 }
 
 int main(int argc, char** argv) {

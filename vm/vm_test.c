@@ -58,8 +58,8 @@ void run_vm_tests(int len, VmTest tests[len], char* test) {
       fail(ss("vm error: %s", err), test);
     }
 
-    Object* stack_top = vm_stack_top();
-    test_expected_object(t.expected, stack_top, test);
+    Object* last_popped = vm_last_popped();
+    test_expected_object(t.expected, last_popped, test);
   }
 }
 

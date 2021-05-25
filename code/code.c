@@ -61,6 +61,10 @@ Definition* code_opcode_lookup(OpCode op) {
       def->num_operands = 0;
       def->name = "OpAdd";
       break;
+    case OP_POP:
+      def->num_operands = 0;
+      def->name = "OpPop";
+      break;
     default:
       free(def);
       return NULL;

@@ -1,6 +1,7 @@
 #include "compiler.h"
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "../parser/parser.h"
 
@@ -39,6 +40,7 @@ CompilerErr compile(void* node, NodeType type) {
       err = compile(((ExpressionStatement*)node)->expression, EXPRESSION_NODE);
       if (err)
         return err;
+      emit(OP_POP, (IntBag){0});
       break;
     case INTEGER_LITERAL_NODE: {
       Object* int_lit = malloc(sizeof(Object));

@@ -41,7 +41,10 @@ VmErr vm_run(void) {
         object->type = INTEGER_OBJ;
         object->value.i = rightValue + leftValue;
         push(object);
-      }
+      } break;
+      case OP_POP:
+        pop();
+        break;
     }
   }
   return NULL;
@@ -64,4 +67,8 @@ Object* vm_stack_top(void) {
   } else {
     return stack[sp - 1];
   }
+}
+
+Object* vm_last_popped(void) {
+  return stack[sp];
 }
