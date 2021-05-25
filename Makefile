@@ -1,6 +1,6 @@
 FLAGS = -Wall -O -W -pedantic -g
 
-.SILENT: test_all test_lexer test_parser test_ast test_code test_compiler test_vm test_eval
+.SILENT: test_all test_lexer test_parser test_ast test_code test_compiler test_vm test_eval test_bb
 
 monkey:
 	clang -o .bin/monkey monkey.c repl/repl.c token/token.c code/code.c vm/vm.c compiler/compiler.c lexer/lexer.c parser/parser.c parser/parselets.c evaluator/evaluator.c evaluator/builtins.c object/object.c object/environment.c utils/argv.c ast/ast.c utils/list.c $(FLAGS)
@@ -46,14 +46,28 @@ test_all:
 	TEST_ALL=true ./.bin/test_ast
 	printf $(FMT) "EVAL:"
 	TEST_ALL=true ./.bin/test_eval
+	printf $(FMT) "PARSER:"
+	TEST_ALL=true ./.bin/test_parser
 	printf $(FMT) "CODE:"
 	TEST_ALL=true ./.bin/test_code
 	printf $(FMT) "COMPILER:"
 	TEST_ALL=true ./.bin/test_compiler
 	printf $(FMT) "VM:"
 	TEST_ALL=true ./.bin/test_vm
-	printf $(FMT) "PARSER:"
-	TEST_ALL=true ./.bin/test_parser
+	echo
+
+# bb = "book 2"
+test_bb:
+	make test_code
+	make test_compiler
+	make test_vm
+	echo
+	printf $(FMT) "CODE:"
+	TEST_ALL=true ./.bin/test_code
+	printf $(FMT) "COMPILER:"
+	TEST_ALL=true ./.bin/test_compiler
+	printf $(FMT) "VM:"
+	TEST_ALL=true ./.bin/test_vm
 	echo
 
 all:
