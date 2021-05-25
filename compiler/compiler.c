@@ -58,6 +58,14 @@ CompilerErr compile(void* node, NodeType type) {
           err = compile(infix->right, EXPRESSION_NODE);
           if (err)
             return err;
+          switch ((int)infix->operator[0]) {
+            case '+':
+              emit(OP_ADD, (IntBag){0});
+              break;
+            default:
+              printf("ERROR: unknown operator %s\n", infix->operator);
+              exit(EXIT_FAILURE);
+          }
         } break;
         case EXPRESSION_INTEGER_LITERAL:
           err = compile(exp->node, INTEGER_LITERAL_NODE);

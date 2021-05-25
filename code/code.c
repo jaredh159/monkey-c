@@ -24,7 +24,12 @@ Instruct* code_make(int op_int, ...) {
   }
 
   Byte* bytes = malloc(code->length * sizeof(Byte));
+  code->bytes = bytes;
   bytes[0] = op;
+
+  if (def->num_operands == 0) {
+    return code;
+  }
 
   va_list ap;
   va_start(ap, op_int);
@@ -40,22 +45,27 @@ Instruct* code_make(int op_int, ...) {
   }
 
   va_end(ap);
-  code->bytes = bytes;
   return code;
 }
 
 Definition* code_opcode_lookup(OpCode op) {
   Definition* def = malloc(sizeof(Definition));
+  memcpy(def->operand_widths, (int[3]){0, 0, 0}, 3 * sizeof(int));
   switch (op) {
-    case 0:
-      memcpy(def->operand_widths, (int[3]){2}, 3 * sizeof(int));
+    case OP_CONSTANT:
+      def->operand_widths[0] = 2;
       def->num_operands = 1;
       def->name = "OpConstant";
-      return def;
+      break;
+    case OP_ADD:
+      def->num_operands = 0;
+      def->name = "OpAdd";
+      break;
     default:
       free(def);
       return NULL;
   }
+  return def;
 }
 
 Instruct* code_concat_ins(int len, ...) {
@@ -109,6 +119,9 @@ char* instructions_str(Instruct ins) {
     }
 
     switch (def->num_operands) {
+      case 0:
+        pos += sprintf(&str[pos], "%s\n", def->name);
+        break;
       case 1:
         pos += sprintf(&str[pos], "%s %d\n", def->name, res.operands.arr[0]);
         break;
@@ -154,6 +167,8 @@ ReadOpResult code_read_operands(Definition def, Instruct instructions) {
 
 Instruct* code_make_nv(int op_int, IntBag operands) {
   switch (operands.len) {
+    case 0:
+      return code_make(op_int);
     case 1:
       return code_make(op_int, operands.arr[0]);
     case 2:

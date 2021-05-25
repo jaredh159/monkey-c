@@ -12,6 +12,7 @@ static Object* stack[STACK_SIZE];
 int sp;
 
 static VmErr push(Object* object);
+Object* pop();
 
 void vm_init(Bytecode* bytecode) {
   instructions = bytecode->instructions;
@@ -31,6 +32,16 @@ VmErr vm_run(void) {
         if (err)
           return err;
       } break;
+      case OP_ADD: {
+        Object* right = pop();
+        Object* left = pop();
+        int rightValue = ((IntegerLiteral*)right)->value;
+        int leftValue = ((IntegerLiteral*)left)->value;
+        Object* object = malloc(sizeof(Object));
+        object->type = INTEGER_OBJ;
+        object->value.i = rightValue + leftValue;
+        push(object);
+      }
     }
   }
   return NULL;
@@ -41,6 +52,10 @@ VmErr push(Object* object) {
     return "stack overflow";
   stack[sp++] = object;
   return NULL;
+}
+
+Object* pop() {
+  return stack[--sp];
 }
 
 Object* vm_stack_top(void) {

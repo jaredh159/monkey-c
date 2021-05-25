@@ -28,7 +28,7 @@ void test_integer_arithmetic(void) {
   VmTest tests[] = {
     {.input = "1", .expected = expect_int(1)},      //
     {.input = "2", .expected = expect_int(2)},      //
-    {.input = "1 + 2", .expected = expect_int(2)},  // FIXME
+    {.input = "1 + 2", .expected = expect_int(3)},  //
   };
   int num_tests = sizeof(tests) / sizeof(VmTest);
   run_vm_tests(num_tests, tests, "integer_arithmetic");

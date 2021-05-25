@@ -9,6 +9,9 @@ int main(int argc, char **argv) {
 
   if (argv_has_flag('t', argc, argv) || argv_idx("--tokens", argc, argv) != -1)
     repl_start_tokens();
+  else if (argv_has_flag('e', argc, argv) ||
+           argv_idx("--eval", argc, argv) != -1)
+    repl_start_eval();
   else if (argv_has_flag('p', argc, argv) ||
            argv_idx("--parsed", argc, argv) != -1)
     repl_start_parsed_string();

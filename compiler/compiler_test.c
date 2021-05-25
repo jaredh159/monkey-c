@@ -13,6 +13,11 @@ typedef struct CompilerTest {
 } CompilerTest;
 
 void test_instructions(Instruct* expected, Instruct* actual, char* test) {
+  if (expected->length != actual->length) {
+    fail(ss("wrong instructions length, want=%s, got=%s",
+           instructions_str(*expected), instructions_str(*actual)),
+      test);
+  }
   assert_int_is(expected->length, actual->length, "instructions length", test);
   for (int i = 0; i < expected->length; i++) {
     assert_int_is(expected->bytes[i], actual->bytes[i],
@@ -56,9 +61,10 @@ void test_integer_arithmetic(void) {
     .expected_constants = make_constant_pool(2,   //
       (Object){INTEGER_OBJ, .value = {.i = 1}},   //
       (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
-    .expected_instructions = code_concat_ins(2,   //
+    .expected_instructions = code_concat_ins(3,   //
       code_make(OP_CONSTANT, 0),                  //
-      code_make(OP_CONSTANT, 1)),                 //
+      code_make(OP_CONSTANT, 1),                  //
+      code_make(OP_ADD)),                         //
   };
   run_compiler_tests(1, (CompilerTest[1]){test}, n);
 }

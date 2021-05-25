@@ -20,6 +20,12 @@ void test_make(void) {
       .expected = (Byte[3]){OP_CONSTANT, 255, 254},
       .expected_len = 3,
     },
+    {
+      .op = OP_ADD,
+      .operands = (IntBag){0},
+      .expected = (Byte[1]){OP_ADD},
+      .expected_len = 1,
+    },
   };
 
   int num_tests = sizeof(tests) / sizeof(struct MakeTest);
@@ -73,15 +79,15 @@ void test_read_operands(void) {
 void test_instructions_string(void) {
   char* n = "instructions_string";
   Instruct* ins = code_concat_ins(3,  //
-    code_make(OP_CONSTANT, 1),        //
+    code_make(OP_ADD),                //
     code_make(OP_CONSTANT, 2),        //
     code_make(OP_CONSTANT, 65535)     //
   );
 
   char* expected =
-    "0000 OpConstant 1\n"
-    "0003 OpConstant 2\n"
-    "0006 OpConstant 65535\n";
+    "0000 OpAdd\n"
+    "0001 OpConstant 2\n"
+    "0004 OpConstant 65535\n";
 
   assert_str_is(
     expected, instructions_str(*ins), "instruction string correct", n);
