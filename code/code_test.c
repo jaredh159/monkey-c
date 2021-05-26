@@ -28,8 +28,7 @@ void test_make(void) {
     },
   };
 
-  int num_tests = sizeof(tests) / sizeof(struct MakeTest);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     struct MakeTest t = tests[i];
     Instruct* code = code_make(t.op, t.operands);
 
@@ -57,8 +56,7 @@ void test_read_operands(void) {
     },
   };
 
-  int num_tests = sizeof(tests) / sizeof(struct ReadOpTest);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     struct ReadOpTest t = tests[i];
     Instruct* instruction = code_make_nv(t.op, t.operands);
     Definition* def = code_opcode_lookup(t.op);

@@ -51,8 +51,7 @@ void test_eval_integer_expression() {
     {"3 * (3 * 3) + 10", 37},
     {"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
   };
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_integer_object(
       tests[i].expected, evaluated, "eval_integer_expression");
@@ -81,8 +80,7 @@ void test_eval_boolean_expression() {
     {"(1 > 2) == true", false},
     {"(1 > 2) == false", true},
   };
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_boolean_object(
       evaluated, tests[i].expected, "eval_boolean_expression");
@@ -104,8 +102,7 @@ void test_bang_operator() {
     {"!!5", true},
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object evaluated = eval_test(tests[i].input);
     assert_boolean_object(evaluated, tests[i].expected, "test_bang_operator");
   }
@@ -121,8 +118,7 @@ void test_if_else_expressions(void) {
     {"if (1 > 2) { 10 } else { 20 }", 20},
     {"if (1 < 2) { 10 } else { 20 }", 10},
   };
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object evald = eval_test(tests[i].input);
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(evald, "if_else_expressions");
@@ -141,8 +137,7 @@ void test_return_statements(void) {
     {"if (10 > 1) { if (10 > 1) { return 10; } return 1; }", 10},
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     if (res.type == RETURN_VALUE_OBJ) {
       assert_int_is(RETURN_VALUE_OBJ, res.type, "result is RETURN_VALUE", t);
@@ -207,8 +202,7 @@ void test_error_handling(void) {
     },
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     assert_int_is(ERROR_OBJ, res.type, "result object.type=ERROR", t);
     assert_str_is(tests[i].expected, res.value.str, "error msg correct", t);
@@ -224,8 +218,7 @@ void test_let_statements(void) {
     {"let a = 5; let b = a; let c = a + b + 5; c;", 15},
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     assert_integer_object(tests[i].expected, res, t);
   }
@@ -252,8 +245,7 @@ void test_function_application(void) {
     {"fn(x) { x; }(5)", 5},
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     assert_integer_object(tests[i].expected, res, "function_application");
   }
@@ -300,8 +292,7 @@ void test_builtin_functions(void) {
     {"let a = [1]; let b = push(a, 5); last(b);", 5},
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(res, t);
@@ -339,8 +330,7 @@ void test_array_index_expressions(void) {
     {"[1, 2, 3][-1]", NULL_SENTINAL},
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(res, t);
@@ -426,8 +416,7 @@ void test_hash_index_expressions(void) {
     },
   };
 
-  int num_tests = sizeof tests / sizeof(tests[0]);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     Object res = eval_test(tests[i].input);
     if (tests[i].expected == NULL_SENTINAL)
       assert_null_object(res, t);

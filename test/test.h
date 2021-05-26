@@ -5,6 +5,8 @@
 #include "../object/object.h"
 #include "../token/token.h"
 
+#define LEN(array) ((int)sizeof(array) / (int)sizeof(array[0]))
+
 /**
  * Return a string embedded with strings (up to 3)
  */

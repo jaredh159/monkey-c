@@ -168,8 +168,7 @@ void test_parses_infix_expressions() {
     {"5 != 5;", five, "!=", five},
   };
 
-  int num_tests = sizeof(tests) / sizeof(InfixTest);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     InfixTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
@@ -290,9 +289,8 @@ void test_operator_precedence_parsing() {
       "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
     },
   };
-  int num_tests = sizeof(tests) / sizeof(PrecedenceTest);
 
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     PrecedenceTest test = tests[i];
     Program *program = assert_program(test.input, i == 0 ? 2 : 1, t);
     char *actual = program_string(program);
@@ -390,9 +388,8 @@ void test_function_parameter_parsing() {
 
   ParamTest tests[] = {{"fn() {}", 0, {"", "", ""}},
     {"fn(x) {}", 1, {"x", "", ""}}, {"fn(x, y, z) {}", 3, {"x", "y", "z"}}};
-  int num_tests = sizeof tests / sizeof(ParamTest);
 
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     ParamTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
@@ -426,8 +423,7 @@ void test_let_statements() {
     {"let foobar = y;", "foobar", y},
   };
 
-  int num_tests = sizeof tests / sizeof(LetTest);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     LetTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;

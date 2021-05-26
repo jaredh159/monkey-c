@@ -39,8 +39,7 @@ void test_integer_arithmetic(void) {
     {.input = "5 + 2 * 10", .expected = expect_int(25)},           //
     {.input = "5 * (2 + 10)", .expected = expect_int(60)},         //
   };
-  int num_tests = sizeof(tests) / sizeof(VmTest);
-  run_vm_tests(num_tests, tests, "integer_arithmetic");
+  run_vm_tests(LEN(tests), tests, "integer_arithmetic");
 }
 
 int main(int argc, char** argv) {
