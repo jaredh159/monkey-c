@@ -45,6 +45,10 @@ typedef struct Object {
   } value;
 } Object;
 
+extern Object M_NULL;
+extern Object TRUE;
+extern Object FALSE;
+
 typedef struct HashPair {
   Object *key;
   Object *value;

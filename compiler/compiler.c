@@ -7,6 +7,7 @@
 
 static Instruct* instructions = NULL;
 static ConstantPool* constant_pool = NULL;
+static IntBag _ = {0};
 
 CompilerErr compile_statements(List*);
 int add_constant(Object*);
@@ -40,7 +41,7 @@ CompilerErr compile(void* node, NodeType type) {
       err = compile(((ExpressionStatement*)node)->expression, EXPRESSION_NODE);
       if (err)
         return err;
-      emit(OP_POP, (IntBag){0});
+      emit(OP_POP, _);
       break;
     case INTEGER_LITERAL_NODE: {
       Object* int_lit = malloc(sizeof(Object));
@@ -49,6 +50,13 @@ CompilerErr compile(void* node, NodeType type) {
       int constant_idx = add_constant(int_lit);
       emit(OP_CONSTANT, i(constant_idx));
     } break;
+    case BOOLEAN_LITERAL_NODE:
+      if (((BooleanLiteral*)node)->value) {
+        emit(OP_TRUE, _);
+      } else {
+        emit(OP_FALSE, _);
+      }
+      break;
     case EXPRESSION_NODE: {
       Expression* exp = node;
       switch (exp->type) {
@@ -62,16 +70,16 @@ CompilerErr compile(void* node, NodeType type) {
             return err;
           switch ((int)infix->operator[0]) {
             case '+':
-              emit(OP_ADD, (IntBag){0});
+              emit(OP_ADD, _);
               break;
             case '-':
-              emit(OP_SUB, (IntBag){0});
+              emit(OP_SUB, _);
               break;
             case '/':
-              emit(OP_DIV, (IntBag){0});
+              emit(OP_DIV, _);
               break;
             case '*':
-              emit(OP_MUL, (IntBag){0});
+              emit(OP_MUL, _);
               break;
             default:
               err = malloc(100);
@@ -79,6 +87,11 @@ CompilerErr compile(void* node, NodeType type) {
               return err;
           }
         } break;
+        case EXPRESSION_BOOLEAN_LITERAL:
+          err = compile(exp->node, BOOLEAN_LITERAL_NODE);
+          if (err)
+            return err;
+          break;
         case EXPRESSION_INTEGER_LITERAL:
           err = compile(exp->node, INTEGER_LITERAL_NODE);
           if (err)

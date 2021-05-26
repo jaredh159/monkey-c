@@ -37,6 +37,16 @@ VmErr vm_run(void) {
         if (err)
           return err;
       } break;
+      case OP_TRUE:
+        err = push(&TRUE);
+        if (err)
+          return err;
+        break;
+      case OP_FALSE:
+        err = push(&FALSE);
+        if (err)
+          return err;
+        break;
       case OP_ADD:  // fallthrough
       case OP_SUB:  // fallthrough
       case OP_MUL:  // fallthrough

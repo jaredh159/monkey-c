@@ -48,38 +48,6 @@ Instruct* code_make(int op_int, ...) {
   return code;
 }
 
-Definition* code_opcode_lookup(OpCode op) {
-  Definition* def = malloc(sizeof(Definition));
-  def->num_operands = 0;
-  memcpy(def->operand_widths, (int[3]){0, 0, 0}, 3 * sizeof(int));
-  switch (op) {
-    case OP_CONSTANT:
-      def->operand_widths[0] = 2;
-      def->num_operands = 1;
-      def->name = "OpConstant";
-      break;
-    case OP_ADD:
-      def->name = "OpAdd";
-      break;
-    case OP_POP:
-      def->name = "OpPop";
-      break;
-    case OP_SUB:
-      def->name = "OpSub";
-      break;
-    case OP_MUL:
-      def->name = "OpMul";
-      break;
-    case OP_DIV:
-      def->name = "OpDiv";
-      break;
-    default:
-      free(def);
-      return NULL;
-  }
-  return def;
-}
-
 Instruct* code_concat_ins(int len, ...) {
   va_list ap;
   va_start(ap, len);
@@ -192,6 +160,44 @@ Instruct* code_make_nv(int op_int, IntBag operands) {
       printf("ERROR: unexpected num int operands: %d\n", operands.len);
       exit(EXIT_FAILURE);
   }
+}
+
+Definition* code_opcode_lookup(OpCode op) {
+  Definition* def = malloc(sizeof(Definition));
+  def->num_operands = 0;
+  memcpy(def->operand_widths, (int[3]){0, 0, 0}, 3 * sizeof(int));
+  switch (op) {
+    case OP_CONSTANT:
+      def->operand_widths[0] = 2;
+      def->num_operands = 1;
+      def->name = "OpConstant";
+      break;
+    case OP_ADD:
+      def->name = "OpAdd";
+      break;
+    case OP_POP:
+      def->name = "OpPop";
+      break;
+    case OP_SUB:
+      def->name = "OpSub";
+      break;
+    case OP_MUL:
+      def->name = "OpMul";
+      break;
+    case OP_DIV:
+      def->name = "OpDiv";
+      break;
+    case OP_TRUE:
+      def->name = "OpTrue";
+      break;
+    case OP_FALSE:
+      def->name = "OpFalse";
+      break;
+    default:
+      free(def);
+      return NULL;
+  }
+  return def;
 }
 
 IntBag int_bag(int len, ...) {

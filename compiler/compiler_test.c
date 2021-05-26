@@ -114,8 +114,23 @@ void test_integer_arithmetic(void) {
   run_compiler_tests(5, (CompilerTest[]){t1, t2, t3, t4, t5}, n);
 }
 
+void test_boolean_expressions(void) {
+  char* n = "boolean_expressions";
+  CompilerTest tests[] = {
+    {
+      .input = "true",
+      .expected_constants = make_constant_pool(0),
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_TRUE),                        //
+        code_make(OP_POP)),                        //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, n);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_boolean_expressions();
   test_integer_arithmetic();
   printf("\n");
   return 0;

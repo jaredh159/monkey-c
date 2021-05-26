@@ -8,6 +8,10 @@ char *function_inspect(Function *fn);
 char *array_inspect(List *elements);
 char *hash_inspect(List *pairs);
 
+Object M_NULL = {NULL_OBJ, {0}};
+Object TRUE = {BOOLEAN_OBJ, {.b = true}};
+Object FALSE = {BOOLEAN_OBJ, {.b = false}};
+
 char *object_inspect(Object object) {
   char *inspect_str = malloc(INSPECT_STR_LEN);
   switch (object.type) {

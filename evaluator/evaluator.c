@@ -8,10 +8,6 @@
 #include "../parser/parser.h"
 #include "../utils/list.h"
 
-Object M_NULL = {NULL_OBJ, {0}};
-Object TRUE = {BOOLEAN_OBJ, {.b = true}};
-Object FALSE = {BOOLEAN_OBJ, {.b = false}};
-
 Object eval_integer_infix_expression(char *operator, Object left, Object right);
 Object eval_string_infix_expression(char *operator, Object left, Object right);
 Object eval_infix_expression(char *operator, Object left, Object right);

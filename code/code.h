@@ -13,6 +13,8 @@ enum OpCodes {
   OP_SUB,
   OP_MUL,
   OP_DIV,
+  OP_TRUE,
+  OP_FALSE,
 };
 
 typedef struct Instruct {
