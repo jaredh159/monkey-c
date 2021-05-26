@@ -26,9 +26,18 @@ void test_expected_object(Expected exp, Object* obj, char* test);
 
 void test_integer_arithmetic(void) {
   VmTest tests[] = {
-    {.input = "1", .expected = expect_int(1)},      //
-    {.input = "2", .expected = expect_int(2)},      //
-    {.input = "1 + 2", .expected = expect_int(3)},  //
+    {.input = "1", .expected = expect_int(1)},                     //
+    {.input = "2", .expected = expect_int(2)},                     //
+    {.input = "1 + 2", .expected = expect_int(3)},                 //
+    {.input = "1 - 2", .expected = expect_int(-1)},                //
+    {.input = "1 * 2", .expected = expect_int(2)},                 //
+    {.input = "4 / 2", .expected = expect_int(2)},                 //
+    {.input = "50 / 2 * 2 + 10 - 5", .expected = expect_int(55)},  //
+    {.input = "5 + 5 + 5 + 5 - 10", .expected = expect_int(10)},   //
+    {.input = "2 * 2 * 2 * 2 * 2", .expected = expect_int(32)},    //
+    {.input = "5 * 2 + 10", .expected = expect_int(20)},           //
+    {.input = "5 + 2 * 10", .expected = expect_int(25)},           //
+    {.input = "5 * (2 + 10)", .expected = expect_int(60)},         //
   };
   int num_tests = sizeof(tests) / sizeof(VmTest);
   run_vm_tests(num_tests, tests, "integer_arithmetic");
@@ -59,7 +68,8 @@ void run_vm_tests(int len, VmTest tests[len], char* test) {
     }
 
     Object* last_popped = vm_last_popped();
-    test_expected_object(t.expected, last_popped, test);
+    test_expected_object(
+      t.expected, last_popped, ss("%s, input=`%s`", test, t.input));
   }
 }
 
