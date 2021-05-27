@@ -202,6 +202,12 @@ Definition* code_opcode_lookup(OpCode op) {
     case OP_GREATER_THAN:
       def->name = "OpGreaterThan";
       break;
+    case OP_MINUS:
+      def->name = "OpMinus";
+      break;
+    case OP_BANG:
+      def->name = "OpBang";
+      break;
     default:
       free(def);
       return NULL;

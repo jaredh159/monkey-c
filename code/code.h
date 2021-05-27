@@ -18,6 +18,8 @@ enum OpCodes {
   OP_EQUAL,
   OP_NOT_EQUAL,
   OP_GREATER_THAN,
+  OP_MINUS,
+  OP_BANG,
 };
 
 typedef struct Instruct {

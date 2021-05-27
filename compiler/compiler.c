@@ -30,7 +30,7 @@ void compiler_init(void) {
 }
 
 CompilerErr compile(void* node, NodeType type) {
-  CompilerErr err = NULL;
+  CompilerErr err = malloc(100);
   switch (type) {
     case PROGRAM_NODE:
       err = compile_statements(((Program*)node)->statements);
@@ -101,8 +101,24 @@ CompilerErr compile(void* node, NodeType type) {
               emit(OP_NOT_EQUAL, _);
               break;
             default:
-              err = malloc(100);
               sprintf(err, "unknown operator %s", infix->operator);
+              return err;
+          }
+        } break;
+        case EXPRESSION_PREFIX: {
+          PrefixExpression* prefix = exp->node;
+          err = compile(prefix->right, EXPRESSION_NODE);
+          if (err)
+            return err;
+          switch ((int)prefix->operator[0]) {
+            case '!':
+              emit(OP_BANG, _);
+              break;
+            case '-':
+              emit(OP_MINUS, _);
+              break;
+            default:
+              sprintf(err, "unknown operator %s", prefix->operator);
               return err;
           }
         } break;

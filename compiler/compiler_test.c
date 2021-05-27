@@ -61,63 +61,73 @@ void run_compiler_tests(int len, CompilerTest tests[len], char* test) {
 }
 
 void test_integer_arithmetic(void) {
-  char* n = "integer_arithmetic";
-  CompilerTest t1 = {
-    .input = "1 + 2",
-    .expected_constants = make_constant_pool(2,   //
-      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
-      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
-    .expected_instructions = code_concat_ins(4,   //
-      code_make(OP_CONSTANT, 0),                  //
-      code_make(OP_CONSTANT, 1),                  //
-      code_make(OP_ADD),                          //
-      code_make(OP_POP)),                         //
+  CompilerTest tests[] = {
+    {
+      .input = "1 + 2",                             //
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_ADD),                          //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "1; 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_POP),                          //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "1 - 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_SUB),                          //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "1 * 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_MUL),                          //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "2 / 1",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_DIV),                          //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "-1",
+      .expected_constants = make_constant_pool(1,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(3,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_MINUS),                        //
+        code_make(OP_POP)),                         //
+    },
   };
-  CompilerTest t2 = {
-    .input = "1; 2",
-    .expected_constants = make_constant_pool(2,   //
-      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
-      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
-    .expected_instructions = code_concat_ins(4,   //
-      code_make(OP_CONSTANT, 0),                  //
-      code_make(OP_POP),                          //
-      code_make(OP_CONSTANT, 1),                  //
-      code_make(OP_POP)),                         //
-  };
-  CompilerTest t3 = {
-    .input = "1 - 2",
-    .expected_constants = make_constant_pool(2,   //
-      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
-      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
-    .expected_instructions = code_concat_ins(4,   //
-      code_make(OP_CONSTANT, 0),                  //
-      code_make(OP_CONSTANT, 1),                  //
-      code_make(OP_SUB),                          //
-      code_make(OP_POP)),                         //
-  };
-  CompilerTest t4 = {
-    .input = "1 * 2",
-    .expected_constants = make_constant_pool(2,   //
-      (Object){INTEGER_OBJ, .value = {.i = 1}},   //
-      (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
-    .expected_instructions = code_concat_ins(4,   //
-      code_make(OP_CONSTANT, 0),                  //
-      code_make(OP_CONSTANT, 1),                  //
-      code_make(OP_MUL),                          //
-      code_make(OP_POP)),                         //
-  };
-  CompilerTest t5 = {
-    .input = "2 / 1",
-    .expected_constants = make_constant_pool(2,   //
-      (Object){INTEGER_OBJ, .value = {.i = 2}},   //
-      (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
-    .expected_instructions = code_concat_ins(4,   //
-      code_make(OP_CONSTANT, 0),                  //
-      code_make(OP_CONSTANT, 1),                  //
-      code_make(OP_DIV),                          //
-      code_make(OP_POP)),                         //
-  };
-  run_compiler_tests(5, (CompilerTest[]){t1, t2, t3, t4, t5}, n);
+  run_compiler_tests(LEN(tests), tests, "integer_arithmetic");
 }
 
 void test_boolean_expressions(void) {
@@ -196,6 +206,14 @@ void test_boolean_expressions(void) {
         code_make(OP_TRUE),                        //
         code_make(OP_FALSE),                       //
         code_make(OP_NOT_EQUAL),                   //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "!true",
+      .expected_constants = make_constant_pool(0),
+      .expected_instructions = code_concat_ins(3,  //
+        code_make(OP_TRUE),                        //
+        code_make(OP_BANG),                        //
         code_make(OP_POP)),                        //
     },
   };
