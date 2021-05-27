@@ -14,8 +14,12 @@ static VmErr err = NULL;
 
 static VmErr push(Object* object);
 Object* pop();
+Object* bool_obj(bool boolean);
 VmErr execute_binary_operation(OpCode op);
 VmErr execute_binary_integer_operation(
+  OpCode op, IntegerLiteral* left, IntegerLiteral* right);
+VmErr execute_comparison(OpCode op);
+VmErr execute_integer_comparison(
   OpCode op, IntegerLiteral* left, IntegerLiteral* right);
 
 void vm_init(Bytecode* bytecode) {
@@ -55,12 +59,60 @@ VmErr vm_run(void) {
         if (err)
           return err;
         break;
+      case OP_EQUAL:         // fallthrough
+      case OP_NOT_EQUAL:     // fallthrough
+      case OP_GREATER_THAN:  // fallthrough
+        err = execute_comparison(op);
+        if (err)
+          return err;
+        break;
       case OP_POP:
         pop();
         break;
     }
   }
   return NULL;
+}
+
+VmErr execute_comparison(OpCode op) {
+  Object* right = pop();
+  Object* left = pop();
+  if (left->type == INTEGER_OBJ && right->type == INTEGER_OBJ) {
+    return execute_integer_comparison(
+      op, (IntegerLiteral*)left, (IntegerLiteral*)right);
+  }
+  if (left->type != BOOLEAN_OBJ && right->type != BOOLEAN_OBJ) {
+    sprintf(err, "unsupported types for comparison operation: %s %s",
+      object_type(*left), object_type(*right));
+    return err;
+  }
+  BooleanLiteral* rightBool = (BooleanLiteral*)right;
+  BooleanLiteral* leftBool = (BooleanLiteral*)left;
+  switch (op) {
+    case OP_EQUAL:
+      return push(bool_obj(rightBool->value == leftBool->value));
+    case OP_NOT_EQUAL:
+      return push(bool_obj(rightBool->value != leftBool->value));
+    default:
+      sprintf(err, "unknown operator: %d, (%s %s)", op, object_type(*left),
+        object_type(*right));
+      return err;
+  }
+}
+
+VmErr execute_integer_comparison(
+  OpCode op, IntegerLiteral* left, IntegerLiteral* right) {
+  switch (op) {
+    case OP_EQUAL:
+      return push(bool_obj(left->value == right->value));
+    case OP_NOT_EQUAL:
+      return push(bool_obj(left->value != right->value));
+    case OP_GREATER_THAN:
+      return push(bool_obj(left->value > right->value));
+    default:
+      sprintf(err, "unknown operator: %d", op);
+      return err;
+  }
 }
 
 VmErr execute_binary_operation(OpCode op) {
@@ -122,4 +174,8 @@ Object* vm_stack_top(void) {
 
 Object* vm_last_popped(void) {
   return stack[sp];
+}
+
+Object* bool_obj(bool boolean) {
+  return boolean ? &TRUE : &FALSE;
 }

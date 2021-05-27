@@ -62,6 +62,16 @@ CompilerErr compile(void* node, NodeType type) {
       switch (exp->type) {
         case EXPRESSION_INFIX: {
           InfixExpression* infix = exp->node;
+          if (infix->operator[0] == '<') {
+            err = compile(infix->right, EXPRESSION_NODE);
+            if (err)
+              return err;
+            err = compile(infix->left, EXPRESSION_NODE);
+            if (err)
+              return err;
+            emit(OP_GREATER_THAN, _);
+            return NULL;
+          }
           err = compile(infix->left, EXPRESSION_NODE);
           if (err)
             return err;
@@ -78,12 +88,21 @@ CompilerErr compile(void* node, NodeType type) {
             case '/':
               emit(OP_DIV, _);
               break;
+            case '>':
+              emit(OP_GREATER_THAN, _);
+              break;
             case '*':
               emit(OP_MUL, _);
               break;
+            case '=':
+              emit(OP_EQUAL, _);
+              break;
+            case '!':
+              emit(OP_NOT_EQUAL, _);
+              break;
             default:
               err = malloc(100);
-              sprintf(err, "ERROR: unknown operator %s\n", infix->operator);
+              sprintf(err, "unknown operator %s", infix->operator);
               return err;
           }
         } break;

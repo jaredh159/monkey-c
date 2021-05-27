@@ -47,8 +47,25 @@ void test_integer_arithmetic(void) {
 
 void test_boolean_expressions(void) {
   VmTest tests[] = {
-    {.input = "true", .expected = expect_bool(true)},    //
-    {.input = "false", .expected = expect_bool(false)},  //
+    {.input = "true", .expected = expect_bool(true)},               //
+    {.input = "false", .expected = expect_bool(false)},             //
+    {.input = "1 < 2", .expected = expect_bool(true)},              //
+    {.input = "1 > 2", .expected = expect_bool(false)},             //
+    {.input = "1 < 1", .expected = expect_bool(false)},             //
+    {.input = "1 > 1", .expected = expect_bool(false)},             //
+    {.input = "1 == 1", .expected = expect_bool(true)},             //
+    {.input = "1 != 1", .expected = expect_bool(false)},            //
+    {.input = "1 == 2", .expected = expect_bool(false)},            //
+    {.input = "1 != 2", .expected = expect_bool(true)},             //
+    {.input = "true == true", .expected = expect_bool(true)},       //
+    {.input = "false == false", .expected = expect_bool(true)},     //
+    {.input = "true == false", .expected = expect_bool(false)},     //
+    {.input = "true != false", .expected = expect_bool(true)},      //
+    {.input = "false != true", .expected = expect_bool(true)},      //
+    {.input = "(1 < 2) == true", .expected = expect_bool(true)},    //
+    {.input = "(1 < 2) == false", .expected = expect_bool(false)},  //
+    {.input = "(1 > 2) == true", .expected = expect_bool(false)},   //
+    {.input = "(1 > 2) == false", .expected = expect_bool(true)},   //
   };
   run_vm_tests(LEN(tests), tests, "boolean_expressions");
 }

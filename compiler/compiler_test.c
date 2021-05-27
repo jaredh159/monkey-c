@@ -47,10 +47,16 @@ void run_compiler_tests(int len, CompilerTest tests[len], char* test) {
     CompilerTest t = tests[i];
     Program* program = parse_program(t.input);
     compiler_init();
-    compile(program, PROGRAM_NODE);
+    char* err = compile(program, PROGRAM_NODE);
+    if (err) {
+      fail(ss("compiler error: %s", err), test);
+    }
     Bytecode* bytecode = compiler_bytecode();
-    test_instructions(t.expected_instructions, bytecode->instructions, test);
-    test_constants(t.expected_constants, bytecode->constants, test);
+    char test_input[256];
+    sprintf(test_input, "%s, input=`%s`", test, t.input);
+    test_instructions(
+      t.expected_instructions, bytecode->instructions, test_input);
+    test_constants(t.expected_constants, bytecode->constants, test_input);
   }
 }
 
@@ -115,7 +121,6 @@ void test_integer_arithmetic(void) {
 }
 
 void test_boolean_expressions(void) {
-  char* n = "boolean_expressions";
   CompilerTest tests[] = {
     {
       .input = "true",
@@ -124,8 +129,77 @@ void test_boolean_expressions(void) {
         code_make(OP_TRUE),                        //
         code_make(OP_POP)),                        //
     },
+    {
+      .input = "false",
+      .expected_constants = make_constant_pool(0),
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_FALSE),                       //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "1 > 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_GREATER_THAN),                 //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "1 < 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_GREATER_THAN),                 //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "1 == 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_EQUAL),                        //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "1 != 2",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_NOT_EQUAL),                    //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "true == false",
+      .expected_constants = make_constant_pool(0),
+      .expected_instructions = code_concat_ins(4,  //
+        code_make(OP_TRUE),                        //
+        code_make(OP_FALSE),                       //
+        code_make(OP_EQUAL),                       //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "true != false",
+      .expected_constants = make_constant_pool(0),
+      .expected_instructions = code_concat_ins(4,  //
+        code_make(OP_TRUE),                        //
+        code_make(OP_FALSE),                       //
+        code_make(OP_NOT_EQUAL),                   //
+        code_make(OP_POP)),                        //
+    },
   };
-  run_compiler_tests(LEN(tests), tests, n);
+  run_compiler_tests(LEN(tests), tests, "boolean_expressions");
 }
 
 int main(int argc, char** argv) {

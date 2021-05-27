@@ -15,6 +15,9 @@ enum OpCodes {
   OP_DIV,
   OP_TRUE,
   OP_FALSE,
+  OP_EQUAL,
+  OP_NOT_EQUAL,
+  OP_GREATER_THAN,
 };
 
 typedef struct Instruct {

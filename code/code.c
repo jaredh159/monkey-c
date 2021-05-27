@@ -193,6 +193,15 @@ Definition* code_opcode_lookup(OpCode op) {
     case OP_FALSE:
       def->name = "OpFalse";
       break;
+    case OP_EQUAL:
+      def->name = "OpEqual";
+      break;
+    case OP_NOT_EQUAL:
+      def->name = "OpNotEqual";
+      break;
+    case OP_GREATER_THAN:
+      def->name = "OpGreaterThan";
+      break;
     default:
       free(def);
       return NULL;
