@@ -21,6 +21,8 @@ VmErr execute_binary_integer_operation(
 VmErr execute_comparison(OpCode op);
 VmErr execute_integer_comparison(
   OpCode op, IntegerLiteral* left, IntegerLiteral* right);
+VmErr execute_bang_operator(void);
+VmErr execute_minus_operator(void);
 
 void vm_init(Bytecode* bytecode) {
   free(err);
@@ -69,9 +71,39 @@ VmErr vm_run(void) {
       case OP_POP:
         pop();
         break;
+      case OP_MINUS:
+        err = execute_minus_operator();
+        if (err)
+          return err;
+        break;
+      case OP_BANG:
+        err = execute_bang_operator();
+        if (err)
+          return err;
+        break;
     }
   }
   return NULL;
+}
+
+VmErr execute_minus_operator(void) {
+  Object* operand = pop();
+  if (operand->type != INTEGER_OBJ) {
+    sprintf(err, "unsupported type for negation: %s", object_type(*operand));
+    return err;
+  }
+  Object* inverse = malloc(sizeof(Object));
+  inverse->type = INTEGER_OBJ;
+  inverse->value.i = -(operand->value.i);
+  return push(inverse);
+}
+
+VmErr execute_bang_operator(void) {
+  Object* operand = pop();
+  if (operand->type == BOOLEAN_OBJ) {
+    return push(bool_obj(!operand->value.b));
+  }
+  return push(&FALSE);
 }
 
 VmErr execute_comparison(OpCode op) {

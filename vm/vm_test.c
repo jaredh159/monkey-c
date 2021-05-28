@@ -41,6 +41,10 @@ void test_integer_arithmetic(void) {
     {.input = "5 * 2 + 10", .expected = expect_int(20)},           //
     {.input = "5 + 2 * 10", .expected = expect_int(25)},           //
     {.input = "5 * (2 + 10)", .expected = expect_int(60)},         //
+    {.input = "-5", .expected = expect_int(-5)},                   //
+    {.input = "-10", .expected = expect_int(-10)},                 //
+    {.input = "-50 + 100 + -50", .expected = expect_int(0)},       //
+    {.input = "(5 + 10 / 3) * -2", .expected = expect_int(-16)},   //
   };
   run_vm_tests(LEN(tests), tests, "integer_arithmetic");
 }
@@ -66,6 +70,12 @@ void test_boolean_expressions(void) {
     {.input = "(1 < 2) == false", .expected = expect_bool(false)},  //
     {.input = "(1 > 2) == true", .expected = expect_bool(false)},   //
     {.input = "(1 > 2) == false", .expected = expect_bool(true)},   //
+    {.input = "!true", expect_bool(false)},                         //
+    {.input = "!false", expect_bool(true)},                         //
+    {.input = "!5", expect_bool(false)},                            //
+    {.input = "!!true", expect_bool(true)},                         //
+    {.input = "!!false", expect_bool(false)},                       //
+    {.input = "!!5", expect_bool(true)},                            //
   };
   run_vm_tests(LEN(tests), tests, "boolean_expressions");
 }
