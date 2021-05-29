@@ -20,6 +20,8 @@ enum OpCodes {
   OP_GREATER_THAN,
   OP_MINUS,
   OP_BANG,
+  OP_JUMP,
+  OP_JUMP_NOT_TRUTHY,
 };
 
 typedef struct Instruct {

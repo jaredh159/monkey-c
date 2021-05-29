@@ -220,8 +220,28 @@ void test_boolean_expressions(void) {
   run_compiler_tests(LEN(tests), tests, "boolean_expressions");
 }
 
+void test_conditionals(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "if (true) { 10 }; 3333;",
+      .expected_constants = make_constant_pool(2,      //
+        (Object){INTEGER_OBJ, .value = {.i = 10}},     //
+        (Object){INTEGER_OBJ, .value = {.i = 3333}}),  //
+      .expected_instructions = code_concat_ins(6,      //
+        code_make(OP_TRUE),                            // 0000
+        code_make(OP_JUMP_NOT_TRUTHY, 7),              // 0001
+        code_make(OP_CONSTANT, 0),                     // 0004
+        code_make(OP_POP),                             // 0007
+        code_make(OP_CONSTANT, 1),                     // 0008
+        code_make(OP_POP)),                            // 0011
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, "test_conditionals");
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_conditionals();
   test_boolean_expressions();
   test_integer_arithmetic();
   printf("\n");

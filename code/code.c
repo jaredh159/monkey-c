@@ -208,6 +208,16 @@ Definition* code_opcode_lookup(OpCode op) {
     case OP_BANG:
       def->name = "OpBang";
       break;
+    case OP_JUMP:
+      def->operand_widths[0] = 2;
+      def->num_operands = 1;
+      def->name = "OpJump";
+      break;
+    case OP_JUMP_NOT_TRUTHY:
+      def->operand_widths[0] = 2;
+      def->num_operands = 1;
+      def->name = "OpJumpNotTruthy";
+      break;
     default:
       free(def);
       return NULL;

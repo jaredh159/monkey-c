@@ -3,16 +3,30 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../parser/parser.h"
+
+#define BACKPATCH_LATER i(255)
+
+typedef struct EmittedInstruction {
+  OpCode op_code;
+  int position;
+} EmittedInstruction;
 
 static Instruct* instructions = NULL;
 static ConstantPool* constant_pool = NULL;
+static EmittedInstruction last_instruction = {0};
+static EmittedInstruction previous_instruction = {0};
 static IntBag _ = {0};
 
-CompilerErr compile_statements(List*);
-int add_constant(Object*);
-int emit(OpCode, IntBag);
-int add_instruction(Instruct*);
+static CompilerErr compile_statements(List* statements);
+static int add_constant(Object* object);
+static int emit(OpCode op_code, IntBag operands);
+static int add_instruction(Instruct* instructions);
+static void set_last_instruction(OpCode op_code, int position);
+static void remove_last_pop(void);
+static void replace_instruction(int pos, Instruct* new_instruction);
+static void change_operand(int op_code_pos, int operand);
 
 void compiler_init(void) {
   if (instructions != NULL) {
@@ -32,8 +46,9 @@ void compiler_init(void) {
 CompilerErr compile(void* node, NodeType type) {
   CompilerErr err = malloc(100);
   switch (type) {
-    case PROGRAM_NODE:
-      err = compile_statements(((Program*)node)->statements);
+    case PROGRAM_NODE:           // fallthrough
+    case BLOCK_STATEMENTS_NODE:  // fallthrough
+      err = compile_statements(((BlockStatement*)node)->statements);
       if (err)
         return err;
       break;
@@ -132,6 +147,24 @@ CompilerErr compile(void* node, NodeType type) {
           if (err)
             return err;
           break;
+        case EXPRESSION_IF: {
+          IfExpression* if_exp = (IfExpression*)exp->node;
+          err = compile(if_exp->condition, EXPRESSION_NODE);
+          if (err)
+            return err;
+
+          int jump_pos = emit(OP_JUMP_NOT_TRUTHY, BACKPATCH_LATER);
+          err = compile(if_exp->consequence, BLOCK_STATEMENTS_NODE);
+          if (err)
+            return err;
+
+          if (last_instruction.op_code == OP_POP) {
+            remove_last_pop();
+          }
+
+          int after_conseq_pos = instructions->length;
+          change_operand(jump_pos, after_conseq_pos);
+        } break;
       }
       break;
     }
@@ -142,7 +175,31 @@ CompilerErr compile(void* node, NodeType type) {
 int emit(OpCode op, IntBag operands) {
   Instruct* instruction = code_make_nv(op, operands);
   int pos = add_instruction(instruction);
+  set_last_instruction(op, pos);
   return pos;
+}
+
+static void replace_instruction(int pos, Instruct* new_instruction) {
+  for (int i = 0; i < new_instruction->length; i++) {
+    instructions->bytes[pos + i] = new_instruction->bytes[i];
+  }
+}
+
+static void change_operand(int op_code_pos, int operand) {
+  OpCode op = instructions->bytes[op_code_pos];
+  Instruct* new_instruction = code_make(op, operand);
+  replace_instruction(op_code_pos, new_instruction);
+}
+
+static void remove_last_pop(void) {
+  instructions->length--;
+  last_instruction = previous_instruction;
+}
+
+void set_last_instruction(OpCode op_code, int position) {
+  previous_instruction = last_instruction;
+  last_instruction.op_code = op_code;
+  last_instruction.position = position;
 }
 
 CompilerErr compile_statements(List* statements) {
