@@ -153,7 +153,7 @@ CompilerErr compile(void* node, NodeType type) {
           if (err)
             return err;
 
-          int jump_pos = emit(OP_JUMP_NOT_TRUTHY, BACKPATCH_LATER);
+          int jump_not_truthy_pos = emit(OP_JUMP_NOT_TRUTHY, BACKPATCH_LATER);
           err = compile(if_exp->consequence, BLOCK_STATEMENTS_NODE);
           if (err)
             return err;
@@ -162,8 +162,26 @@ CompilerErr compile(void* node, NodeType type) {
             remove_last_pop();
           }
 
-          int after_conseq_pos = instructions->length;
-          change_operand(jump_pos, after_conseq_pos);
+          if (if_exp->alternative == NULL) {
+            int after_conseq_pos = instructions->length;
+            change_operand(jump_not_truthy_pos, after_conseq_pos);
+          } else {
+            int jump_pos = emit(OP_JUMP, BACKPATCH_LATER);
+
+            int after_conseq_pos = instructions->length;
+            change_operand(jump_not_truthy_pos, after_conseq_pos);
+
+            err = compile(if_exp->alternative, BLOCK_STATEMENTS_NODE);
+            if (err)
+              return err;
+
+            if (last_instruction.op_code == OP_POP) {
+              remove_last_pop();
+            }
+
+            int after_alt_pos = instructions->length;
+            change_operand(jump_pos, after_alt_pos);
+          }
         } break;
       }
       break;
