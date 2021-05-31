@@ -279,15 +279,6 @@ Object eval_string_infix_expression(char *operator, Object left, Object right) {
   return (Object){STRING_OBJ, {.str = combined}};
 }
 
-bool is_truthy(Object obj) {
-  if (obj.type == NULL_OBJ)
-    return false;
-  else if (obj.type == BOOLEAN_OBJ && obj.value.b == false)
-    return false;
-  else
-    return true;
-}
-
 Object eval_if_expression(IfExpression *if_exp, Env *env) {
   Object condition = eval(if_exp->condition, EXPRESSION_NODE, env);
   if (is_error(condition))

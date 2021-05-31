@@ -184,3 +184,12 @@ char *object_hash(const Object object) {
       return NULL;
   }
 }
+
+bool is_truthy(Object obj) {
+  if (obj.type == NULL_OBJ)
+    return false;
+  else if (obj.type == BOOLEAN_OBJ && obj.value.b == false)
+    return false;
+  else
+    return true;
+}

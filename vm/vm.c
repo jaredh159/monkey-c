@@ -1,4 +1,5 @@
 #include "vm.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "../code/code.h"
@@ -81,6 +82,23 @@ VmErr vm_run(void) {
         if (err)
           return err;
         break;
+      case OP_JUMP: {
+        int pos = read_uint16(&instructions->bytes[ip + 1]);
+        ip = pos - 1;
+      } break;
+      case OP_JUMP_NOT_TRUTHY: {
+        int pos = read_uint16(&instructions->bytes[ip + 1]);
+        ip += 2;
+        Object* condition = pop();
+        if (!is_truthy(*condition)) {
+          ip = pos - 1;
+        }
+      } break;
+      case OP_NULL:
+        err = push(&M_NULL);
+        if (err)
+          return err;
+        break;
     }
   }
   return NULL;
@@ -102,8 +120,11 @@ VmErr execute_bang_operator(void) {
   Object* operand = pop();
   if (operand->type == BOOLEAN_OBJ) {
     return push(bool_obj(!operand->value.b));
+  } else if (operand->type == NULL_OBJ) {
+    return push(&TRUE);
+  } else {
+    return push(&FALSE);
   }
-  return push(&FALSE);
 }
 
 VmErr execute_comparison(OpCode op) {

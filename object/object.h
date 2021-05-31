@@ -64,6 +64,7 @@ char *object_type(Object object);
 void object_print(Object object);
 Object *object_copy(const Object proto);
 char *object_hash(const Object object);
+bool is_truthy(Object obj);
 
 Env *env_new(void);
 Env *env_new_enclosed(Env *outer);

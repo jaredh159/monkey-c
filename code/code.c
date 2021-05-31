@@ -193,6 +193,9 @@ Definition* code_opcode_lookup(OpCode op) {
     case OP_FALSE:
       def->name = "OpFalse";
       break;
+    case OP_NULL:
+      def->name = "OpNull";
+      break;
     case OP_EQUAL:
       def->name = "OpEqual";
       break;

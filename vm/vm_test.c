@@ -7,7 +7,7 @@
 #include "../test/test.h"
 #include "../utils/colors.h"
 
-enum ExpectedTypes { EXP_INT, EXP_BOOL };
+enum ExpectedTypes { EXP_INT, EXP_BOOL, EXP_NULL };
 
 typedef struct Expected {
   int type;
@@ -24,6 +24,7 @@ typedef struct VmTest {
 
 Expected expect_int(int expected_int);
 Expected expect_bool(bool boolean);
+Expected expect_null();
 void run_vm_tests(int len, VmTest tests[len], char* test);
 void test_expected_object(Expected exp, Object* obj, char* test);
 
@@ -51,37 +52,55 @@ void test_integer_arithmetic(void) {
 
 void test_boolean_expressions(void) {
   VmTest tests[] = {
-    {.input = "true", .expected = expect_bool(true)},               //
-    {.input = "false", .expected = expect_bool(false)},             //
-    {.input = "1 < 2", .expected = expect_bool(true)},              //
-    {.input = "1 > 2", .expected = expect_bool(false)},             //
-    {.input = "1 < 1", .expected = expect_bool(false)},             //
-    {.input = "1 > 1", .expected = expect_bool(false)},             //
-    {.input = "1 == 1", .expected = expect_bool(true)},             //
-    {.input = "1 != 1", .expected = expect_bool(false)},            //
-    {.input = "1 == 2", .expected = expect_bool(false)},            //
-    {.input = "1 != 2", .expected = expect_bool(true)},             //
-    {.input = "true == true", .expected = expect_bool(true)},       //
-    {.input = "false == false", .expected = expect_bool(true)},     //
-    {.input = "true == false", .expected = expect_bool(false)},     //
-    {.input = "true != false", .expected = expect_bool(true)},      //
-    {.input = "false != true", .expected = expect_bool(true)},      //
-    {.input = "(1 < 2) == true", .expected = expect_bool(true)},    //
-    {.input = "(1 < 2) == false", .expected = expect_bool(false)},  //
-    {.input = "(1 > 2) == true", .expected = expect_bool(false)},   //
-    {.input = "(1 > 2) == false", .expected = expect_bool(true)},   //
-    {.input = "!true", expect_bool(false)},                         //
-    {.input = "!false", expect_bool(true)},                         //
-    {.input = "!5", expect_bool(false)},                            //
-    {.input = "!!true", expect_bool(true)},                         //
-    {.input = "!!false", expect_bool(false)},                       //
-    {.input = "!!5", expect_bool(true)},                            //
+    {.input = "true", .expected = expect_bool(true)},                      //
+    {.input = "false", .expected = expect_bool(false)},                    //
+    {.input = "1 < 2", .expected = expect_bool(true)},                     //
+    {.input = "1 > 2", .expected = expect_bool(false)},                    //
+    {.input = "1 < 1", .expected = expect_bool(false)},                    //
+    {.input = "1 > 1", .expected = expect_bool(false)},                    //
+    {.input = "1 == 1", .expected = expect_bool(true)},                    //
+    {.input = "1 != 1", .expected = expect_bool(false)},                   //
+    {.input = "1 == 2", .expected = expect_bool(false)},                   //
+    {.input = "1 != 2", .expected = expect_bool(true)},                    //
+    {.input = "true == true", .expected = expect_bool(true)},              //
+    {.input = "false == false", .expected = expect_bool(true)},            //
+    {.input = "true == false", .expected = expect_bool(false)},            //
+    {.input = "true != false", .expected = expect_bool(true)},             //
+    {.input = "false != true", .expected = expect_bool(true)},             //
+    {.input = "(1 < 2) == true", .expected = expect_bool(true)},           //
+    {.input = "(1 < 2) == false", .expected = expect_bool(false)},         //
+    {.input = "(1 > 2) == true", .expected = expect_bool(false)},          //
+    {.input = "(1 > 2) == false", .expected = expect_bool(true)},          //
+    {.input = "!true", expect_bool(false)},                                //
+    {.input = "!false", expect_bool(true)},                                //
+    {.input = "!5", expect_bool(false)},                                   //
+    {.input = "!!true", expect_bool(true)},                                //
+    {.input = "!!false", expect_bool(false)},                              //
+    {.input = "!!5", expect_bool(true)},                                   //
+    {.input = "!(if (false) { 5; })", expect_bool(true)},                  //
+    {.input = "if ((if (false) { 1 })) { 1 } else { 2 }", expect_int(2)},  //
   };
   run_vm_tests(LEN(tests), tests, "boolean_expressions");
 }
 
+void test_conditionals(void) {
+  VmTest tests[] = {
+    {.input = "if (true) { 10 }", .expected = expect_int(10)},                //
+    {.input = "if (true) { 10 } else { 20 }", .expected = expect_int(10)},    //
+    {.input = "if (false) { 10 } else { 20 } ", .expected = expect_int(20)},  //
+    {.input = "if (1) { 10 }", .expected = expect_int(10)},                   //
+    {.input = "if (1 < 2) { 10 }", .expected = expect_int(10)},               //
+    {.input = "if (1 < 2) { 10 } else { 20 }", .expected = expect_int(10)},   //
+    {.input = "if (1 > 2) { 10 } else { 20 }", .expected = expect_int(20)},   //
+    {.input = "if (1 > 2) { 10 }", .expected = expect_null()},                //
+    {.input = "if (false) { 10 }", .expected = expect_null()},                //
+  };
+  run_vm_tests(LEN(tests), tests, "conditionals");
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_conditionals();
   test_boolean_expressions();
   test_integer_arithmetic();
   printf("\n");
@@ -118,6 +137,9 @@ void test_expected_object(Expected exp, Object* obj, char* test) {
     case EXP_BOOL:
       assert(exp.v.b == ((BooleanLiteral*)obj)->value, "boolean correct", test);
       break;
+    case EXP_NULL:
+      assert(obj->type == NULL_OBJ, "null correct", test);
+      break;
     default:
       printf("ERROR: unhandled expected object type=%d\n", exp.type);
       exit(EXIT_FAILURE);
@@ -130,4 +152,8 @@ Expected expect_bool(bool boolean) {
 
 Expected expect_int(int expected_int) {
   return (Expected){.type = EXP_INT, .v = {.i = expected_int}};
+}
+
+Expected expect_null() {
+  return (Expected){.type = EXP_NULL};
 }

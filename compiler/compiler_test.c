@@ -227,13 +227,15 @@ void test_conditionals(void) {
       .expected_constants = make_constant_pool(2,      //
         (Object){INTEGER_OBJ, .value = {.i = 10}},     //
         (Object){INTEGER_OBJ, .value = {.i = 3333}}),  //
-      .expected_instructions = code_concat_ins(6,      //
+      .expected_instructions = code_concat_ins(8,      //
         code_make(OP_TRUE),                            // 0000
-        code_make(OP_JUMP_NOT_TRUTHY, 7),              // 0001
+        code_make(OP_JUMP_NOT_TRUTHY, 10),             // 0001
         code_make(OP_CONSTANT, 0),                     // 0004
-        code_make(OP_POP),                             // 0007
-        code_make(OP_CONSTANT, 1),                     // 0008
-        code_make(OP_POP)),                            // 0011
+        code_make(OP_JUMP, 11),                        // 0007
+        code_make(OP_NULL),                            // 0010
+        code_make(OP_POP),                             // 0011
+        code_make(OP_CONSTANT, 1),                     // 0012
+        code_make(OP_POP)),                            // 0015
     },
     {
       .input = "if (true) { 10 } else { 20 }; 3333;",
