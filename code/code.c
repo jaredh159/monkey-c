@@ -172,6 +172,16 @@ Definition* code_opcode_lookup(OpCode op) {
       def->num_operands = 1;
       def->name = "OpConstant";
       break;
+    case OP_SET_GLOBAL:
+      def->operand_widths[0] = 2;
+      def->num_operands = 1;
+      def->name = "OpSetGlobal";
+      break;
+    case OP_GET_GLOBAL:
+      def->operand_widths[0] = 2;
+      def->num_operands = 1;
+      def->name = "OpGetGlobal";
+      break;
     case OP_ADD:
       def->name = "OpAdd";
       break;

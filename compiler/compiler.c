@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../parser/parser.h"
+#include "symbol_table.h"
 
 #define BACKPATCH_LATER i(255)
 
@@ -17,6 +18,7 @@ static Instruct* instructions = NULL;
 static ConstantPool* constant_pool = NULL;
 static EmittedInstruction last_instruction = {0};
 static EmittedInstruction previous_instruction = {0};
+static SymbolTable symbol_table = NULL;
 static IntBag _ = {0};
 
 static CompilerErr compile_statements(List* statements);
@@ -29,18 +31,20 @@ static void replace_instruction(int pos, Instruct* new_instruction);
 static void change_operand(int op_code_pos, int operand);
 
 void compiler_init(void) {
-  if (instructions != NULL) {
-    free(constant_pool->constants);
+  if (instructions)
     free(instructions->bytes);
-    free(instructions);
-    free(constant_pool);
-  }
+  if (constant_pool)
+    free(constant_pool->constants);
+  free(instructions);
+  free(constant_pool);
+  free(symbol_table);
   instructions = malloc(sizeof(Instruct));
   constant_pool = malloc(sizeof(ConstantPool));
   constant_pool->length = 0;
   constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
   instructions->length = 0;
   instructions->bytes = malloc(sizeof(Byte) * MAX_INSTRUCTIONS);
+  symbol_table = symbol_table_new();
 }
 
 CompilerErr compile(void* node, NodeType type) {
@@ -52,12 +56,23 @@ CompilerErr compile(void* node, NodeType type) {
       if (err)
         return err;
       break;
+
+    case LET_STATEMENT_NODE: {
+      LetStatement* let_stmt = (LetStatement*)node;
+      err = compile(let_stmt->value, EXPRESSION_NODE);
+      if (err)
+        return err;
+      Symbol* symbol = symbol_table_define(symbol_table, let_stmt->name->value);
+      emit(OP_SET_GLOBAL, i(symbol->index));
+    } break;
+
     case EXPRESSION_STATEMENT_NODE:
       err = compile(((ExpressionStatement*)node)->expression, EXPRESSION_NODE);
       if (err)
         return err;
       emit(OP_POP, _);
       break;
+
     case INTEGER_LITERAL_NODE: {
       Object* int_lit = malloc(sizeof(Object));
       int_lit->type = INTEGER_OBJ;
@@ -65,6 +80,7 @@ CompilerErr compile(void* node, NodeType type) {
       int constant_idx = add_constant(int_lit);
       emit(OP_CONSTANT, i(constant_idx));
     } break;
+
     case BOOLEAN_LITERAL_NODE:
       if (((BooleanLiteral*)node)->value) {
         emit(OP_TRUE, _);
@@ -72,6 +88,7 @@ CompilerErr compile(void* node, NodeType type) {
         emit(OP_FALSE, _);
       }
       break;
+
     case EXPRESSION_NODE: {
       Expression* exp = node;
       switch (exp->type) {
@@ -120,6 +137,7 @@ CompilerErr compile(void* node, NodeType type) {
               return err;
           }
         } break;
+
         case EXPRESSION_PREFIX: {
           PrefixExpression* prefix = exp->node;
           err = compile(prefix->right, EXPRESSION_NODE);
@@ -137,16 +155,29 @@ CompilerErr compile(void* node, NodeType type) {
               return err;
           }
         } break;
+
         case EXPRESSION_BOOLEAN_LITERAL:
           err = compile(exp->node, BOOLEAN_LITERAL_NODE);
           if (err)
             return err;
           break;
+
         case EXPRESSION_INTEGER_LITERAL:
           err = compile(exp->node, INTEGER_LITERAL_NODE);
           if (err)
             return err;
           break;
+
+        case EXPRESSION_IDENTIFIER: {
+          Identifier* ident = (Identifier*)exp->node;
+          Symbol* symbol = symbol_table_resolve(symbol_table, ident->value);
+          if (symbol == NULL) {
+            sprintf(err, "undefined variable %s", ident->value);
+            return err;
+          }
+          emit(OP_GET_GLOBAL, i(symbol->index));
+        } break;
+
         case EXPRESSION_IF: {
           IfExpression* if_exp = (IfExpression*)exp->node;
           err = compile(if_exp->condition, EXPRESSION_NODE);

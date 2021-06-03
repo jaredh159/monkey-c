@@ -257,8 +257,48 @@ void test_conditionals(void) {
   run_compiler_tests(LEN(tests), tests, "test_conditionals");
 }
 
+void test_global_let_statements(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "let one = 1; let two = 2;",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_SET_GLOBAL, 0),                //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_SET_GLOBAL, 1)),               //
+    },
+    {
+      .input = "let one = 1; one;",
+      .expected_constants = make_constant_pool(1,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_SET_GLOBAL, 0),                //
+        code_make(OP_GET_GLOBAL, 0),                //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "let one = 1; let two = one; two;",
+      .expected_constants = make_constant_pool(1,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(6,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_SET_GLOBAL, 0),                //
+        code_make(OP_GET_GLOBAL, 0),                //
+        code_make(OP_SET_GLOBAL, 1),                //
+        code_make(OP_GET_GLOBAL, 1),                //
+        code_make(OP_POP)),                         //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, "global_let_statements");
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_global_let_statements();
   test_conditionals();
   test_boolean_expressions();
   test_integer_arithmetic();
