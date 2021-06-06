@@ -10,6 +10,7 @@
 static Instruct* instructions;
 static ConstantPool* constant_pool;
 static Object* stack[STACK_SIZE];
+static Object* globals[GLOBALS_SIZE];
 static int sp;
 static VmErr err = NULL;
 
@@ -34,6 +35,7 @@ void vm_init(Bytecode* bytecode) {
 }
 
 VmErr vm_run(void) {
+  int global_index;
   for (int ip = 0; ip < instructions->length; ip++) {
     OpCode op = instructions->bytes[ip];
     switch (op) {
@@ -98,6 +100,18 @@ VmErr vm_run(void) {
         err = push(&M_NULL);
         if (err)
           return err;
+        break;
+      case OP_GET_GLOBAL:
+        global_index = read_uint16(&instructions->bytes[ip + 1]);
+        ip += 2;
+        err = push(globals[global_index]);
+        if (err)
+          return err;
+        break;
+      case OP_SET_GLOBAL:
+        global_index = read_uint16(&instructions->bytes[ip + 1]);
+        ip += 2;
+        globals[global_index] = pop();
         break;
     }
   }

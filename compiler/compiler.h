@@ -4,6 +4,7 @@
 #include "../ast/ast.h"
 #include "../code/code.h"
 #include "../object/object.h"
+#include "symbol_table.h"
 
 #define MAX_CONSTANTS 64
 #define MAX_INSTRUCTIONS 1024

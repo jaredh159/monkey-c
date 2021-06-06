@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../code/code.h"
 #include "../compiler/compiler.h"
+#include "../compiler/symbol_table.h"
 #include "../evaluator/evaluator.h"
 #include "../lexer/lexer.h"
 #include "../object/object.h"

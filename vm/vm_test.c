@@ -98,9 +98,19 @@ void test_conditionals(void) {
   run_vm_tests(LEN(tests), tests, "conditionals");
 }
 
+void test_global_let_statements(void) {
+  VmTest tests[] = {
+    {.input = "let one = 1; one", .expected = expect_int(1)},                 //
+    {.input = "let a = 1; let b = 2; a + b", .expected = expect_int(3)},      //
+    {.input = "let a = 1; let b = a + a; a + b", .expected = expect_int(3)},  //
+  };
+  run_vm_tests(LEN(tests), tests, "global_let_statements");
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
   test_conditionals();
+  test_global_let_statements();
   test_boolean_expressions();
   test_integer_arithmetic();
   printf("\n");
