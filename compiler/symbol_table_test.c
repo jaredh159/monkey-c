@@ -20,14 +20,20 @@ void test_resolve(void) {
   SymbolTable global = symbol_table_new();
   symbol_table_define(global, "a");
   symbol_table_define(global, "b");
+  symbol_table_define(global, "bb");
+  symbol_table_define(global, "bbb");
   symbol_table_define(global, "abc");
   Symbol* a = symbol_table_resolve(global, "a");
   Symbol* b = symbol_table_resolve(global, "b");
+  Symbol* bb = symbol_table_resolve(global, "bb");
+  Symbol* bbb = symbol_table_resolve(global, "bbb");
   Symbol* abc = symbol_table_resolve(global, "abc");
   Symbol* unknown = symbol_table_resolve(global, "unknown");
   assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, t);
   assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, t);
-  assert_symbol_is(abc, "abc", SCOPE_GLOBAL, 2, t);
+  assert_symbol_is(bb, "bb", SCOPE_GLOBAL, 2, t);
+  assert_symbol_is(bbb, "bbb", SCOPE_GLOBAL, 3, t);
+  assert_symbol_is(abc, "abc", SCOPE_GLOBAL, 4, t);
   assert(unknown == NULL, "unknown ident is NULL", t);
 }
 
