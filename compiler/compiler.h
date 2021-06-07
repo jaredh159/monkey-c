@@ -25,6 +25,8 @@ typedef struct Bytecode {
 } Bytecode;
 
 Compiler compiler_new(void);
+Compiler compiler_new_with_state(
+  SymbolTable symbol_table, ConstantPool* constant_pool);
 CompilerErr compile(Compiler c, void* node, NodeType type);
 Bytecode* compiler_bytecode(Compiler c);
 ConstantPool* make_constant_pool(int len, ...);

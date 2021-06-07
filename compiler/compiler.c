@@ -45,6 +45,14 @@ Compiler compiler_new() {
   return compiler;
 }
 
+Compiler compiler_new_with_state(
+  SymbolTable symbol_table, ConstantPool* constant_pool) {
+  Compiler compiler = compiler_new();
+  compiler->symbol_table = symbol_table;
+  compiler->constant_pool = constant_pool;
+  return compiler;
+}
+
 CompilerErr compile(Compiler c, void* node, NodeType type) {
   CompilerErr err = malloc(100);
   switch (type) {

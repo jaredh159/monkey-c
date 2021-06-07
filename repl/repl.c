@@ -19,6 +19,13 @@ void repl_start(void) {
   size_t bufsize = MAX_LINE_LEN + 1;
   char *buffer = (char *)malloc(bufsize * sizeof(char));
   char *err = NULL;
+  Bytecode *bytecode = NULL;
+
+  ConstantPool *constant_pool = malloc(sizeof(ConstantPool));
+  constant_pool->length = 0;
+  constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
+  Object **globals = malloc(GLOBALS_SIZE * sizeof(Object *));
+  SymbolTable symbol_table = symbol_table_new();
 
   do {
     printf(COLOR_CYAN ">> " COLOR_RESET);
@@ -29,13 +36,16 @@ void repl_start(void) {
         parser_print_errors();
         continue;
       }
-      Compiler compiler = compiler_new();
+      Compiler compiler = compiler_new_with_state(symbol_table, constant_pool);
       err = compile(compiler, program, PROGRAM_NODE);
       if (err) {
         printf("Whoops! Compilation failed:\n %s\n", err);
         continue;
       }
-      vm_init(compiler_bytecode(compiler));
+
+      bytecode = compiler_bytecode(compiler);
+      constant_pool = bytecode->constants;
+      vm_init_with_globals(bytecode, globals);
       err = vm_run();
       if (err) {
         printf("Whoops! Executing bytecode failed:\n %s\n", err);

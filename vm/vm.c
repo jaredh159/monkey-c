@@ -10,9 +10,9 @@
 static Instruct* instructions;
 static ConstantPool* constant_pool;
 static Object* stack[STACK_SIZE];
-static Object* globals[GLOBALS_SIZE];
-static int sp;
+static Object** globals = NULL;
 static VmErr err = NULL;
+static int sp;
 
 static VmErr push(Object* object);
 Object* pop();
@@ -27,8 +27,19 @@ VmErr execute_bang_operator(void);
 VmErr execute_minus_operator(void);
 
 void vm_init(Bytecode* bytecode) {
+  free(globals);
   free(err);
   err = malloc(500);
+  globals = malloc(GLOBALS_SIZE * sizeof(Object*));
+  instructions = bytecode->instructions;
+  constant_pool = bytecode->constants;
+  sp = 0;
+}
+
+void vm_init_with_globals(Bytecode* bytecode, Object** restore_globals) {
+  free(err);
+  err = malloc(500);
+  globals = restore_globals;
   instructions = bytecode->instructions;
   constant_pool = bytecode->constants;
   sp = 0;
