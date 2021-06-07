@@ -17,7 +17,7 @@
 void repl_start(void) {
   int num_chars;
   size_t bufsize = MAX_LINE_LEN + 1;
-  char *buffer = (char *)malloc(bufsize * sizeof(char));
+  char *buffer = malloc(bufsize * sizeof(char));
   char *err = NULL;
   Bytecode *bytecode = NULL;
 
@@ -61,7 +61,7 @@ void repl_start(void) {
 void repl_start_eval(void) {
   int num_chars;
   size_t bufsize = MAX_LINE_LEN + 1;
-  char *buffer = (char *)malloc(bufsize * sizeof(char));
+  char *buffer = malloc(bufsize * sizeof(char));
   Env *env = env_new();
 
   do {
@@ -85,7 +85,7 @@ void repl_start_eval(void) {
 void repl_start_parsed_string(void) {
   int num_chars;
   size_t bufsize = MAX_LINE_LEN + 1;
-  char *buffer = (char *)malloc(bufsize * sizeof(char));
+  char *buffer = malloc(bufsize * sizeof(char));
 
   do {
     printf(COLOR_CYAN ">> " COLOR_RESET);
@@ -106,7 +106,7 @@ void repl_start_tokens(void) {
   Token *tok;
   ssize_t num_chars = 0;
   size_t bufsize = MAX_LINE_LEN + 1;
-  char *buffer = (char *)malloc(bufsize * sizeof(char));
+  char *buffer = malloc(bufsize * sizeof(char));
 
   do {
     printf(COLOR_CYAN ">> " COLOR_RESET);
