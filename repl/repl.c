@@ -29,13 +29,13 @@ void repl_start(void) {
         parser_print_errors();
         continue;
       }
-      compiler_init();
-      err = compile(program, PROGRAM_NODE);
+      Compiler compiler = compiler_new();
+      err = compile(compiler, program, PROGRAM_NODE);
       if (err) {
         printf("Whoops! Compilation failed:\n %s\n", err);
         continue;
       }
-      vm_init(compiler_bytecode());
+      vm_init(compiler_bytecode(compiler));
       err = vm_run();
       if (err) {
         printf("Whoops! Executing bytecode failed:\n %s\n", err);

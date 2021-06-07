@@ -122,13 +122,13 @@ void run_vm_tests(int len, VmTest tests[len], char* test) {
   for (int i = 0; i < len; i++) {
     VmTest t = tests[i];
     Program* program = parse_program(t.input);
-    compiler_init();
-    err = compile(program, PROGRAM_NODE);
+    Compiler compiler = compiler_new();
+    err = compile(compiler, program, PROGRAM_NODE);
     if (err) {
       fail(ss("compiler error: %s", err), test);
     }
 
-    vm_init(compiler_bytecode());
+    vm_init(compiler_bytecode(compiler));
     err = vm_run();
     if (err)
       fail(ss("vm error: %s", err), test);

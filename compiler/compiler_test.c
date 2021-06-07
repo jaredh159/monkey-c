@@ -46,12 +46,12 @@ void run_compiler_tests(int len, CompilerTest tests[len], char* test) {
   for (int i = 0; i < len; i++) {
     CompilerTest t = tests[i];
     Program* program = parse_program(t.input);
-    compiler_init();
-    char* err = compile(program, PROGRAM_NODE);
+    Compiler compiler = compiler_new();
+    char* err = compile(compiler, program, PROGRAM_NODE);
     if (err) {
       fail(ss("compiler error: %s", err), test);
     }
-    Bytecode* bytecode = compiler_bytecode();
+    Bytecode* bytecode = compiler_bytecode(compiler);
     char test_input[256];
     sprintf(test_input, "%s, input=`%s`", test, t.input);
     test_instructions(

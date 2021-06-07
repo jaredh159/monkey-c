@@ -9,6 +9,9 @@
 #define MAX_CONSTANTS 64
 #define MAX_INSTRUCTIONS 1024
 
+// incomplete declaration for encapsulation
+typedef struct Compiler_t* Compiler;
+
 typedef char* CompilerErr;
 
 typedef struct ConstantPool {
@@ -21,9 +24,9 @@ typedef struct Bytecode {
   ConstantPool* constants;
 } Bytecode;
 
-void compiler_init(void);
-CompilerErr compile(void* node, NodeType type);
-Bytecode* compiler_bytecode(void);
+Compiler compiler_new(void);
+CompilerErr compile(Compiler c, void* node, NodeType type);
+Bytecode* compiler_bytecode(Compiler c);
 ConstantPool* make_constant_pool(int len, ...);
 
 #endif  // __COMPILER_H__

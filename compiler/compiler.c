@@ -14,78 +14,78 @@ typedef struct EmittedInstruction {
   int position;
 } EmittedInstruction;
 
-static Instruct* instructions = NULL;
-static ConstantPool* constant_pool = NULL;
-static EmittedInstruction last_instruction = {0};
-static EmittedInstruction previous_instruction = {0};
-static SymbolTable symbol_table = NULL;
-static IntBag _ = {0};
+struct Compiler_t {
+  Instruct* instructions;
+  ConstantPool* constant_pool;
+  EmittedInstruction last_instruction;
+  EmittedInstruction previous_instruction;
+  SymbolTable symbol_table;
+};
 
-static CompilerErr compile_statements(List* statements);
-static int add_constant(Object* object);
-static int emit(OpCode op_code, IntBag operands);
-static int add_instruction(Instruct* instructions);
-static void set_last_instruction(OpCode op_code, int position);
-static void remove_last_pop(void);
-static void replace_instruction(int pos, Instruct* new_instruction);
-static void change_operand(int op_code_pos, int operand);
+static const IntBag _ = {0};
 
-void compiler_init(void) {
-  if (instructions)
-    free(instructions->bytes);
-  if (constant_pool)
-    free(constant_pool->constants);
-  free(instructions);
-  free(constant_pool);
-  free(symbol_table);
-  instructions = malloc(sizeof(Instruct));
-  constant_pool = malloc(sizeof(ConstantPool));
-  constant_pool->length = 0;
-  constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
-  instructions->length = 0;
-  instructions->bytes = malloc(sizeof(Byte) * MAX_INSTRUCTIONS);
-  symbol_table = symbol_table_new();
+static CompilerErr compile_statements(Compiler c, List* statements);
+static int add_constant(Compiler c, Object* object);
+static int emit(Compiler c, OpCode op_code, IntBag operands);
+static int add_instruction(Compiler c, Instruct* instructions);
+static void set_last_instruction(Compiler c, OpCode op_code, int position);
+static void remove_last_pop(Compiler c);
+static void replace_instruction(Compiler c, int pos, Instruct* new_instruction);
+static void change_operand(Compiler c, int op_code_pos, int operand);
+
+Compiler compiler_new() {
+  Compiler compiler = malloc(sizeof(struct Compiler_t));
+  compiler->instructions = malloc(sizeof(Instruct));
+  compiler->constant_pool = malloc(sizeof(ConstantPool));
+  compiler->constant_pool->length = 0;
+  compiler->constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
+  compiler->instructions->length = 0;
+  compiler->instructions->bytes = malloc(sizeof(Byte) * MAX_INSTRUCTIONS);
+  compiler->symbol_table = symbol_table_new();
+  return compiler;
 }
 
-CompilerErr compile(void* node, NodeType type) {
+CompilerErr compile(Compiler c, void* node, NodeType type) {
   CompilerErr err = malloc(100);
   switch (type) {
     case PROGRAM_NODE:           // fallthrough
     case BLOCK_STATEMENTS_NODE:  // fallthrough
-      err = compile_statements(((BlockStatement*)node)->statements);
+      err = compile_statements(c, ((BlockStatement*)node)->statements);
       if (err)
         return err;
       break;
 
     case LET_STATEMENT_NODE: {
       LetStatement* let_stmt = (LetStatement*)node;
-      err = compile(let_stmt->value, EXPRESSION_NODE);
+      err = compile(c, let_stmt->value, EXPRESSION_NODE);
       if (err)
         return err;
-      Symbol* symbol = symbol_table_define(symbol_table, let_stmt->name->value);
-      emit(OP_SET_GLOBAL, i(symbol->index));
+      Symbol* symbol =
+        symbol_table_define(c->symbol_table, let_stmt->name->value);
+      emit(c, OP_SET_GLOBAL, i(symbol->index));
     } break;
 
     case EXPRESSION_STATEMENT_NODE:
-      err = compile(((ExpressionStatement*)node)->expression, EXPRESSION_NODE);
+      err =
+        compile(c, ((ExpressionStatement*)node)->expression, EXPRESSION_NODE);
       if (err)
         return err;
-      emit(OP_POP, _);
+      emit(c, OP_POP, _);
       break;
 
     case INTEGER_LITERAL_NODE: {
       Object* int_lit = malloc(sizeof(Object));
       int_lit->type = INTEGER_OBJ;
       int_lit->value.i = ((IntegerLiteral*)node)->value;
-      int constant_idx = add_constant(int_lit);
-      emit(OP_CONSTANT, i(constant_idx));
+      int constant_idx = add_constant(c, int_lit);
+      emit(c, OP_CONSTANT, i(constant_idx));
     } break;
 
     case BOOLEAN_LITERAL_NODE:
       if (((BooleanLiteral*)node)->value) {
-        emit(OP_TRUE, _);
+        emit(c, OP_TRUE, _);
       } else {
-        emit(OP_FALSE, _);
+        emit(c, OP_FALSE, _);
       }
       break;
 
@@ -95,42 +95,42 @@ CompilerErr compile(void* node, NodeType type) {
         case EXPRESSION_INFIX: {
           InfixExpression* infix = exp->node;
           if (infix->operator[0] == '<') {
-            err = compile(infix->right, EXPRESSION_NODE);
+            err = compile(c, infix->right, EXPRESSION_NODE);
             if (err)
               return err;
-            err = compile(infix->left, EXPRESSION_NODE);
+            err = compile(c, infix->left, EXPRESSION_NODE);
             if (err)
               return err;
-            emit(OP_GREATER_THAN, _);
+            emit(c, OP_GREATER_THAN, _);
             return NULL;
           }
-          err = compile(infix->left, EXPRESSION_NODE);
+          err = compile(c, infix->left, EXPRESSION_NODE);
           if (err)
             return err;
-          err = compile(infix->right, EXPRESSION_NODE);
+          err = compile(c, infix->right, EXPRESSION_NODE);
           if (err)
             return err;
           switch ((int)infix->operator[0]) {
             case '+':
-              emit(OP_ADD, _);
+              emit(c, OP_ADD, _);
               break;
             case '-':
-              emit(OP_SUB, _);
+              emit(c, OP_SUB, _);
               break;
             case '/':
-              emit(OP_DIV, _);
+              emit(c, OP_DIV, _);
               break;
             case '>':
-              emit(OP_GREATER_THAN, _);
+              emit(c, OP_GREATER_THAN, _);
               break;
             case '*':
-              emit(OP_MUL, _);
+              emit(c, OP_MUL, _);
               break;
             case '=':
-              emit(OP_EQUAL, _);
+              emit(c, OP_EQUAL, _);
               break;
             case '!':
-              emit(OP_NOT_EQUAL, _);
+              emit(c, OP_NOT_EQUAL, _);
               break;
             default:
               sprintf(err, "unknown operator %s", infix->operator);
@@ -140,15 +140,15 @@ CompilerErr compile(void* node, NodeType type) {
 
         case EXPRESSION_PREFIX: {
           PrefixExpression* prefix = exp->node;
-          err = compile(prefix->right, EXPRESSION_NODE);
+          err = compile(c, prefix->right, EXPRESSION_NODE);
           if (err)
             return err;
           switch ((int)prefix->operator[0]) {
             case '!':
-              emit(OP_BANG, _);
+              emit(c, OP_BANG, _);
               break;
             case '-':
-              emit(OP_MINUS, _);
+              emit(c, OP_MINUS, _);
               break;
             default:
               sprintf(err, "unknown operator %s", prefix->operator);
@@ -157,59 +157,60 @@ CompilerErr compile(void* node, NodeType type) {
         } break;
 
         case EXPRESSION_BOOLEAN_LITERAL:
-          err = compile(exp->node, BOOLEAN_LITERAL_NODE);
+          err = compile(c, exp->node, BOOLEAN_LITERAL_NODE);
           if (err)
             return err;
           break;
 
         case EXPRESSION_INTEGER_LITERAL:
-          err = compile(exp->node, INTEGER_LITERAL_NODE);
+          err = compile(c, exp->node, INTEGER_LITERAL_NODE);
           if (err)
             return err;
           break;
 
         case EXPRESSION_IDENTIFIER: {
           Identifier* ident = (Identifier*)exp->node;
-          Symbol* symbol = symbol_table_resolve(symbol_table, ident->value);
+          Symbol* symbol = symbol_table_resolve(c->symbol_table, ident->value);
           if (symbol == NULL) {
             sprintf(err, "undefined variable %s", ident->value);
             return err;
           }
-          emit(OP_GET_GLOBAL, i(symbol->index));
+          emit(c, OP_GET_GLOBAL, i(symbol->index));
         } break;
 
         case EXPRESSION_IF: {
           IfExpression* if_exp = (IfExpression*)exp->node;
-          err = compile(if_exp->condition, EXPRESSION_NODE);
+          err = compile(c, if_exp->condition, EXPRESSION_NODE);
           if (err)
             return err;
 
-          int jump_not_truthy_pos = emit(OP_JUMP_NOT_TRUTHY, BACKPATCH_LATER);
-          err = compile(if_exp->consequence, BLOCK_STATEMENTS_NODE);
+          int jump_not_truthy_pos =
+            emit(c, OP_JUMP_NOT_TRUTHY, BACKPATCH_LATER);
+          err = compile(c, if_exp->consequence, BLOCK_STATEMENTS_NODE);
           if (err)
             return err;
 
-          if (last_instruction.op_code == OP_POP) {
-            remove_last_pop();
+          if (c->last_instruction.op_code == OP_POP) {
+            remove_last_pop(c);
           }
 
-          int jump_pos = emit(OP_JUMP, BACKPATCH_LATER);
-          int after_conseq_pos = instructions->length;
-          change_operand(jump_not_truthy_pos, after_conseq_pos);
+          int jump_pos = emit(c, OP_JUMP, BACKPATCH_LATER);
+          int after_conseq_pos = c->instructions->length;
+          change_operand(c, jump_not_truthy_pos, after_conseq_pos);
 
           if (if_exp->alternative == NULL) {
-            emit(OP_NULL, _);
+            emit(c, OP_NULL, _);
           } else {
-            err = compile(if_exp->alternative, BLOCK_STATEMENTS_NODE);
+            err = compile(c, if_exp->alternative, BLOCK_STATEMENTS_NODE);
             if (err)
               return err;
 
-            if (last_instruction.op_code == OP_POP) {
-              remove_last_pop();
+            if (c->last_instruction.op_code == OP_POP) {
+              remove_last_pop(c);
             }
           }
-          int after_alt_pos = instructions->length;
-          change_operand(jump_pos, after_alt_pos);
+          int after_alt_pos = c->instructions->length;
+          change_operand(c, jump_pos, after_alt_pos);
         } break;
       }
       break;
@@ -218,43 +219,44 @@ CompilerErr compile(void* node, NodeType type) {
   return NULL;
 }
 
-int emit(OpCode op, IntBag operands) {
+int emit(Compiler c, OpCode op, IntBag operands) {
   Instruct* instruction = code_make_nv(op, operands);
-  int pos = add_instruction(instruction);
-  set_last_instruction(op, pos);
+  int pos = add_instruction(c, instruction);
+  set_last_instruction(c, op, pos);
   return pos;
 }
 
-static void replace_instruction(int pos, Instruct* new_instruction) {
+static void replace_instruction(
+  Compiler c, int pos, Instruct* new_instruction) {
   for (int i = 0; i < new_instruction->length; i++) {
-    instructions->bytes[pos + i] = new_instruction->bytes[i];
+    c->instructions->bytes[pos + i] = new_instruction->bytes[i];
   }
 }
 
-static void change_operand(int op_code_pos, int operand) {
-  OpCode op = instructions->bytes[op_code_pos];
+static void change_operand(Compiler c, int op_code_pos, int operand) {
+  OpCode op = c->instructions->bytes[op_code_pos];
   Instruct* new_instruction = code_make(op, operand);
-  replace_instruction(op_code_pos, new_instruction);
+  replace_instruction(c, op_code_pos, new_instruction);
 }
 
-static void remove_last_pop(void) {
-  instructions->length--;
-  last_instruction = previous_instruction;
+static void remove_last_pop(Compiler c) {
+  c->instructions->length--;
+  c->last_instruction = c->previous_instruction;
 }
 
-void set_last_instruction(OpCode op_code, int position) {
-  previous_instruction = last_instruction;
-  last_instruction.op_code = op_code;
-  last_instruction.position = position;
+void set_last_instruction(Compiler c, OpCode op_code, int position) {
+  c->previous_instruction = c->last_instruction;
+  c->last_instruction.op_code = op_code;
+  c->last_instruction.position = position;
 }
 
-CompilerErr compile_statements(List* statements) {
+CompilerErr compile_statements(Compiler c, List* statements) {
   CompilerErr err = NULL;
   List* current = statements;
   for (; current != NULL; current = current->next) {
     if (current->item != NULL) {
       Statement* stmt = (Statement*)current->item;
-      err = compile(stmt->node, ast_statement_node_type(stmt));
+      err = compile(c, stmt->node, ast_statement_node_type(stmt));
       if (err)
         return err;
     }
@@ -262,10 +264,10 @@ CompilerErr compile_statements(List* statements) {
   return NULL;
 }
 
-Bytecode* compiler_bytecode(void) {
+Bytecode* compiler_bytecode(Compiler c) {
   Bytecode* bytecode = malloc(sizeof(Bytecode));
-  bytecode->constants = constant_pool;
-  bytecode->instructions = instructions;
+  bytecode->constants = c->constant_pool;
+  bytecode->instructions = c->instructions;
   return bytecode;
 }
 
@@ -293,17 +295,17 @@ ConstantPool* make_constant_pool(int len, ...) {
   return pool;
 }
 
-int add_constant(Object* obj) {
-  constant_pool->constants[constant_pool->length] = *obj;
-  constant_pool->length += 1;
-  return constant_pool->length - 1;
+int add_constant(Compiler c, Object* obj) {
+  c->constant_pool->constants[c->constant_pool->length] = *obj;
+  c->constant_pool->length += 1;
+  return c->constant_pool->length - 1;
 }
 
-int add_instruction(Instruct* instruction) {
-  int insert_idx = instructions->length;
-  instructions->length += instruction->length;
+int add_instruction(Compiler c, Instruct* instruction) {
+  int insert_idx = c->instructions->length;
+  c->instructions->length += instruction->length;
   for (int i = 0; i < instruction->length; i++) {
-    instructions->bytes[insert_idx + i] = instruction->bytes[i];
+    c->instructions->bytes[insert_idx + i] = instruction->bytes[i];
   }
   free(instruction);
   return insert_idx;
