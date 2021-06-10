@@ -128,12 +128,12 @@ void run_vm_tests(int len, VmTest tests[len], char* test) {
       fail(ss("compiler error: %s", err), test);
     }
 
-    vm_init(compiler_bytecode(compiler));
-    err = vm_run();
+    Vm vm = vm_new(compiler_bytecode(compiler));
+    err = vm_run(vm);
     if (err)
       fail(ss("vm error: %s", err), test);
 
-    Object* last_popped = vm_last_popped();
+    Object* last_popped = vm_last_popped(vm);
     test_expected_object(
       t.expected, last_popped, ss("%s, input=`%s`", test, t.input));
   }

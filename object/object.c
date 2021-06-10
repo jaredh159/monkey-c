@@ -12,7 +12,7 @@ Object M_NULL = {NULL_OBJ, {0}};
 Object TRUE = {BOOLEAN_OBJ, {.b = true}};
 Object FALSE = {BOOLEAN_OBJ, {.b = false}};
 
-char *object_inspect(Object object) {
+char *object_inspect(const Object object) {
   char *inspect_str = malloc(INSPECT_STR_LEN);
   switch (object.type) {
     case INTEGER_OBJ:
@@ -44,7 +44,7 @@ char *object_inspect(Object object) {
   return inspect_str;
 }
 
-char *object_type(Object object) {
+char *object_type(const Object object) {
   switch (object.type) {
     case INTEGER_OBJ:
       return "INTEGER";
@@ -67,11 +67,11 @@ char *object_type(Object object) {
     case ERROR_OBJ:
       return "ERROR";
   }
-  printf("ERROR: unhandled type in object_type()\n");
+  printf("ERROR: unhandled type in object_type() = %d\n", object.type);
   exit(EXIT_FAILURE);
 }
 
-void object_print(Object object) {
+void object_print(const Object object) {
   printf("object.type=%s, object.value=%s\n", object_type(object),
     object_inspect(object));
 }

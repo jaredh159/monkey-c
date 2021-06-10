@@ -8,10 +8,13 @@
 
 typedef char* VmErr;
 
-void vm_init(Bytecode* bytecode);
-void vm_init_with_globals(Bytecode* bytecode, Object** globals);
-VmErr vm_run(void);
-Object* vm_stack_top(void);
-Object* vm_last_popped(void);
+// incomplete declaration for encapsulation
+typedef struct Vm_t* Vm;
+
+Vm vm_new(Bytecode* bytecode);
+Vm vm_new_with_globals(Bytecode* bytecode, Object** globals);
+VmErr vm_run(Vm vm);
+Object* vm_stack_top(Vm vm);
+Object* vm_last_popped(Vm vm);
 
 #endif  // __VM_H__

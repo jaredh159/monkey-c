@@ -24,8 +24,9 @@ void repl_start(void) {
   ConstantPool *constant_pool = malloc(sizeof(ConstantPool));
   constant_pool->length = 0;
   constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
-  Object **globals = malloc(GLOBALS_SIZE * sizeof(Object *));
+  Object **globals = calloc(GLOBALS_SIZE, sizeof(Object *));
   SymbolTable symbol_table = symbol_table_new();
+  Vm vm;
 
   do {
     printf(COLOR_CYAN ">> " COLOR_RESET);
@@ -45,13 +46,13 @@ void repl_start(void) {
 
       bytecode = compiler_bytecode(compiler);
       constant_pool = bytecode->constants;
-      vm_init_with_globals(bytecode, globals);
-      err = vm_run();
+      vm = vm_new_with_globals(bytecode, globals);
+      err = vm_run(vm);
       if (err) {
         printf("Whoops! Executing bytecode failed:\n %s\n", err);
         continue;
       }
-      Object *last_popped = vm_last_popped();
+      Object *last_popped = vm_last_popped(vm);
       printf("%s\n", object_inspect(*last_popped));
     }
   } while (num_chars != EOF);
