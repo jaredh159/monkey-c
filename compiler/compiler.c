@@ -64,7 +64,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
       break;
 
     case LET_STATEMENT_NODE: {
-      LetStatement* let_stmt = (LetStatement*)node;
+      LetStatement* let_stmt = node;
       err = compile(c, let_stmt->value, EXPRESSION_NODE);
       if (err)
         return err;
@@ -176,8 +176,17 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             return err;
           break;
 
+        case EXPRESSION_STRING_LITERAL: {
+          StringLiteral* str = exp->node;
+          Object* str_lit = malloc(sizeof(Object));
+          str_lit->type = STRING_OBJ;
+          str_lit->value.str = str->value;
+          int constant_idx = add_constant(c, str_lit);
+          emit(c, OP_CONSTANT, i(constant_idx));
+        } break;
+
         case EXPRESSION_IDENTIFIER: {
-          Identifier* ident = (Identifier*)exp->node;
+          Identifier* ident = exp->node;
           Symbol* symbol = symbol_table_resolve(c->symbol_table, ident->value);
           if (symbol == NULL) {
             sprintf(err, "undefined variable %s", ident->value);
@@ -187,7 +196,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
         } break;
 
         case EXPRESSION_IF: {
-          IfExpression* if_exp = (IfExpression*)exp->node;
+          IfExpression* if_exp = exp->node;
           err = compile(c, if_exp->condition, EXPRESSION_NODE);
           if (err)
             return err;
@@ -263,7 +272,7 @@ CompilerErr compile_statements(Compiler c, List* statements) {
   List* current = statements;
   for (; current != NULL; current = current->next) {
     if (current->item != NULL) {
-      Statement* stmt = (Statement*)current->item;
+      Statement* stmt = current->item;
       err = compile(c, stmt->node, ast_statement_node_type(stmt));
       if (err)
         return err;

@@ -103,13 +103,13 @@ bool token_literal_is(Token *token, char *literal) {
   return token_prop_is(token->literal, literal);
 }
 
-void fail(char *msg, char *test_name) {
+void fail(char *msg, const char *test_name) {
   printf(
     COLOR_RED "%sX %s: %s\n" COLOR_RESET, verbose ? "" : "\n", test_name, msg);
   exit(EXIT_FAILURE);
 }
 
-void assert(bool predicate, char *msg, char *test_name) {
+void assert(bool predicate, char *msg, const char *test_name) {
   if (!predicate) {
     fail(msg, test_name);
     return;
@@ -128,7 +128,8 @@ void assert(bool predicate, char *msg, char *test_name) {
     test_name, msg);
 }
 
-void assert_str_is(char *expected, char *actual, char *msg, char *test_name) {
+void assert_str_is(
+  char *expected, char *actual, char *msg, const char *test_name) {
   if (strcmp(expected, actual) == 0)
     assert(true, msg, test_name);
   else {
@@ -139,7 +140,7 @@ void assert_str_is(char *expected, char *actual, char *msg, char *test_name) {
   }
 }
 
-void assert_int_is(int expected, int actual, char *msg, char *test_name) {
+void assert_int_is(int expected, int actual, char *msg, const char *test_name) {
   if (expected == actual)
     assert(true, msg, test_name);
   else {
@@ -149,7 +150,8 @@ void assert_int_is(int expected, int actual, char *msg, char *test_name) {
   }
 }
 
-void assert_integer_object(int expected_int, Object actual, char *test_name) {
+void assert_integer_object(
+  int expected_int, Object actual, const char *test_name) {
   if (actual.type != INTEGER_OBJ) {
     char failmsg[200];
     sprintf(

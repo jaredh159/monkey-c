@@ -31,6 +31,11 @@ void repl_start(void) {
   do {
     printf(COLOR_CYAN ">> " COLOR_RESET);
     num_chars = getline(&buffer, &bufsize, stdin);
+
+    if (num_chars == 5 && strncmp(buffer, "exit", 4) == 0) {
+      exit(EXIT_SUCCESS);
+    }
+
     if (num_chars > 1) {
       Program *program = parse_program(buffer);
       if (parser_num_errors() > 0) {

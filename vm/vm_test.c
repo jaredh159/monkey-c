@@ -7,13 +7,14 @@
 #include "../test/test.h"
 #include "../utils/colors.h"
 
-enum ExpectedTypes { EXP_INT, EXP_BOOL, EXP_NULL };
+enum ExpectedTypes { EXP_INT, EXP_BOOL, EXP_NULL, EXP_STR };
 
 typedef struct Expected {
   int type;
   union {
     int i;
     bool b;
+    char* s;
   } v;
 } Expected;
 
@@ -24,8 +25,9 @@ typedef struct VmTest {
 
 Expected expect_int(int expected_int);
 Expected expect_bool(bool boolean);
+Expected expect_str(char* string);
 Expected expect_null();
-void run_vm_tests(int len, VmTest tests[len], char* test);
+void run_vm_tests(int len, VmTest tests[len], const char* test);
 void test_expected_object(Expected exp, Object* obj, char* test);
 
 void test_integer_arithmetic(void) {
@@ -107,8 +109,18 @@ void test_global_let_statements(void) {
   run_vm_tests(LEN(tests), tests, "global_let_statements");
 }
 
+void test_string_expressions(void) {
+  VmTest tests[] = {
+    {.input = "\"monkey\"", .expected = expect_str("monkey")},          //
+    {.input = "\"mon\" + \"key\"", .expected = expect_str("monkey")},   //
+    {.input = "\"a\" + \"b\" + \"c\"", .expected = expect_str("abc")},  //
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_string_expressions();
   test_conditionals();
   test_global_let_statements();
   test_boolean_expressions();
@@ -117,7 +129,7 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void run_vm_tests(int len, VmTest tests[len], char* test) {
+void run_vm_tests(int len, VmTest tests[len], const char* test) {
   char* err = NULL;
   for (int i = 0; i < len; i++) {
     VmTest t = tests[i];
@@ -150,6 +162,10 @@ void test_expected_object(Expected exp, Object* obj, char* test) {
     case EXP_NULL:
       assert(obj->type == NULL_OBJ, "null correct", test);
       break;
+    case EXP_STR:
+      assert(obj->type == STRING_OBJ, "string obj correct type", test);
+      assert_str_is(obj->value.str, exp.v.s, "string obj value correct", test);
+      break;
     default:
       printf("ERROR: unhandled expected object type=%d\n", exp.type);
       exit(EXIT_FAILURE);
@@ -166,4 +182,8 @@ Expected expect_int(int expected_int) {
 
 Expected expect_null() {
   return (Expected){.type = EXP_NULL};
+}
+
+Expected expect_str(char* string) {
+  return (Expected){.type = EXP_STR, .v = {.s = string}};
 }

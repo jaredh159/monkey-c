@@ -12,52 +12,33 @@ typedef struct CompilerTest {
   ConstantPool* expected_constants;
 } CompilerTest;
 
-void test_instructions(Instruct* expected, Instruct* actual, char* test) {
-  if (expected->length != actual->length) {
-    fail(ss("wrong instructions length, want=%s, got=%s",
-           instructions_str(*expected), instructions_str(*actual)),
-      test);
-  }
-  assert_int_is(expected->length, actual->length, "instructions length", test);
-  for (int i = 0; i < expected->length; i++) {
-    assert_int_is(expected->bytes[i], actual->bytes[i],
-      si("instruction byte at pos=%d", i), test);
-  }
-}
+void test_instructions(Instruct* expected, Instruct* actual, char* test);
+void test_constants(ConstantPool* expected, ConstantPool* actual, char* test);
+void run_compiler_tests(int len, CompilerTest tests[len], const char* test);
 
-void test_constants(ConstantPool* expected, ConstantPool* actual, char* test) {
-  assert_int_is(expected->length, actual->length, "constants length", test);
-  for (int i = 0; i < expected->length; i++) {
-    Object expected_constant = expected->constants[i];
-    Object actual_constant = actual->constants[i];
-    switch (expected_constant.type) {
-      case INTEGER_OBJ:
-        assert_integer_object(expected_constant.value.i, actual_constant, test);
-        break;
-      default:
-        printf(
-          "ERROR: unhandled constant type=%s\n", object_type(actual_constant));
-        exit(EXIT_FAILURE);
-    }
-  }
-}
-
-void run_compiler_tests(int len, CompilerTest tests[len], char* test) {
-  for (int i = 0; i < len; i++) {
-    CompilerTest t = tests[i];
-    Program* program = parse_program(t.input);
-    Compiler compiler = compiler_new();
-    char* err = compile(compiler, program, PROGRAM_NODE);
-    if (err) {
-      fail(ss("compiler error: %s", err), test);
-    }
-    Bytecode* bytecode = compiler_bytecode(compiler);
-    char test_input[256];
-    sprintf(test_input, "%s, input=`%s`", test, t.input);
-    test_instructions(
-      t.expected_instructions, bytecode->instructions, test_input);
-    test_constants(t.expected_constants, bytecode->constants, test_input);
-  }
+void test_string_expressions(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "\"monkey\"",                                //
+      .expected_constants = make_constant_pool(1,           //
+        (Object){STRING_OBJ, .value = {.str = "monkey"}}),  //
+      .expected_instructions = code_concat_ins(2,           //
+        code_make(OP_CONSTANT, 0),                          //
+        code_make(OP_POP)),                                 //
+    },
+    {
+      .input = "\"mon\" + \"key\"",                      //
+      .expected_constants = make_constant_pool(2,        //
+        (Object){STRING_OBJ, .value = {.str = "mon"}},   //
+        (Object){STRING_OBJ, .value = {.str = "key"}}),  //
+      .expected_instructions = code_concat_ins(4,        //
+        code_make(OP_CONSTANT, 0),                       //
+        code_make(OP_CONSTANT, 1),                       //
+        code_make(OP_ADD),                               //
+        code_make(OP_POP)),                              //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
 }
 
 void test_integer_arithmetic(void) {
@@ -298,10 +279,63 @@ void test_global_let_statements(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_string_expressions();
   test_global_let_statements();
   test_conditionals();
   test_boolean_expressions();
   test_integer_arithmetic();
   printf("\n");
   return 0;
+}
+
+void test_instructions(Instruct* expected, Instruct* actual, char* test) {
+  if (expected->length != actual->length) {
+    fail(ss("wrong instructions length, want=%s, got=%s",
+           instructions_str(*expected), instructions_str(*actual)),
+      test);
+  }
+  assert_int_is(expected->length, actual->length, "instructions length", test);
+  for (int i = 0; i < expected->length; i++) {
+    assert_int_is(expected->bytes[i], actual->bytes[i],
+      si("instruction byte at pos=%d", i), test);
+  }
+}
+
+void test_constants(ConstantPool* expected, ConstantPool* actual, char* test) {
+  assert_int_is(expected->length, actual->length, "constants length", test);
+  for (int i = 0; i < expected->length; i++) {
+    Object expected_constant = expected->constants[i];
+    Object actual_constant = actual->constants[i];
+    switch (expected_constant.type) {
+      case INTEGER_OBJ:
+        assert_integer_object(expected_constant.value.i, actual_constant, test);
+        break;
+      case STRING_OBJ:
+        assert_str_is(expected_constant.value.str, actual_constant.value.str,
+          "string constant correct", test);
+        break;
+      default:
+        printf(
+          "ERROR: unhandled constant type=%s\n", object_type(actual_constant));
+        exit(EXIT_FAILURE);
+    }
+  }
+}
+
+void run_compiler_tests(int len, CompilerTest tests[len], const char* test) {
+  for (int i = 0; i < len; i++) {
+    CompilerTest t = tests[i];
+    Program* program = parse_program(t.input);
+    Compiler compiler = compiler_new();
+    char* err = compile(compiler, program, PROGRAM_NODE);
+    if (err) {
+      fail(ss("compiler error: %s", err), test);
+    }
+    Bytecode* bytecode = compiler_bytecode(compiler);
+    char test_input[256];
+    sprintf(test_input, "%s, input=`%s`", test, t.input);
+    test_instructions(
+      t.expected_instructions, bytecode->instructions, test_input);
+    test_constants(t.expected_constants, bytecode->constants, test_input);
+  }
 }

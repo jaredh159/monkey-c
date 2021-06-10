@@ -2,10 +2,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../code/code.h"
 #include "../compiler/compiler.h"
 
 #define STACK_SIZE 2048
+
+#define SET_ERR(fmt, ...)             \
+  do {                                \
+    err = malloc(500 * sizeof(char)); \
+    sprintf(err, fmt, __VA_ARGS__);   \
+  } while (0)
 
 struct Vm_t {
   Instruct* instructions;
@@ -15,22 +22,22 @@ struct Vm_t {
   int sp;
 };
 
-static VmErr err = NULL;
-
 static VmErr push(Vm vm, Object* object);
 static Object* pop(Vm vm);
 static Object* bool_obj(bool boolean);
 static VmErr exec_binary_operation(Vm vm, OpCode op);
 static VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right);
+static VmErr exec_binary_str_operation(
+  Vm vm, OpCode op, char* left, char* right);
 static VmErr exec_comparison(Vm vm, OpCode op);
 static VmErr exec_int_comparison(Vm vm, OpCode op, int left, int right);
 static VmErr exec_bang_operator(Vm vm);
 static VmErr exec_minus_operator(Vm vm);
-static void err_init(void);
 void inspect_stack(Vm vm, const char* fn);
 
+static VmErr err = NULL;
+
 Vm vm_new(Bytecode* bytecode) {
-  err_init();
   struct Vm_t* vm = malloc(sizeof(struct Vm_t));
   vm->globals = calloc(GLOBALS_SIZE, sizeof(Object*));
   vm->instructions = bytecode->instructions;
@@ -40,7 +47,6 @@ Vm vm_new(Bytecode* bytecode) {
 }
 
 Vm vm_new_with_globals(Bytecode* bytecode, Object** globals) {
-  err_init();
   struct Vm_t* vm = malloc(sizeof(struct Vm_t));
   vm->globals = globals;
   vm->instructions = bytecode->instructions;
@@ -136,7 +142,7 @@ VmErr vm_run(Vm vm) {
 VmErr exec_minus_operator(Vm vm) {
   Object* operand = pop(vm);
   if (operand->type != INTEGER_OBJ) {
-    sprintf(err, "unsupported type for negation: %s", object_type(*operand));
+    SET_ERR("unsupported type for negation: %s", object_type(*operand));
     return err;
   }
   Object* inverse = malloc(sizeof(Object));
@@ -163,7 +169,7 @@ VmErr exec_comparison(Vm vm, OpCode op) {
     return exec_int_comparison(vm, op, left->value.i, right->value.i);
   }
   if (left->type != BOOLEAN_OBJ && right->type != BOOLEAN_OBJ) {
-    sprintf(err, "unsupported types for comparison operation: %s %s",
+    SET_ERR("unsupported types for comparison operation: %s %s",
       object_type(*left), object_type(*right));
     return err;
   }
@@ -173,7 +179,7 @@ VmErr exec_comparison(Vm vm, OpCode op) {
     case OP_NOT_EQUAL:
       return push(vm, bool_obj(right->value.b != left->value.b));
     default:
-      sprintf(err, "unknown operator: %d, (%s %s)", op, object_type(*left),
+      SET_ERR("unknown operator: %d, (%s %s)", op, object_type(*left),
         object_type(*right));
       return err;
   }
@@ -188,7 +194,7 @@ VmErr exec_int_comparison(Vm vm, OpCode op, int leftValue, int rightValue) {
     case OP_GREATER_THAN:
       return push(vm, bool_obj(leftValue > rightValue));
     default:
-      sprintf(err, "unknown operator: %d", op);
+      SET_ERR("unknown operator: %d", op);
       return err;
   }
 }
@@ -196,14 +202,19 @@ VmErr exec_int_comparison(Vm vm, OpCode op, int leftValue, int rightValue) {
 VmErr exec_binary_operation(Vm vm, OpCode op) {
   Object* right = pop(vm);
   Object* left = pop(vm);
+
   if (left->type == INTEGER_OBJ && right->type == INTEGER_OBJ)
     return exec_binary_int_operation(vm, op, left->value.i, right->value.i);
-  sprintf(err, "unsupported types for binary operation: %s %s",
-    object_type(*left), object_type(*right));
+
+  if (left->type == STRING_OBJ && right->type == STRING_OBJ)
+    return exec_binary_str_operation(vm, op, left->value.str, right->value.str);
+
+  SET_ERR("unsupported types for binary operation: %s %s", object_type(*left),
+    object_type(*right));
   return err;
 }
 
-VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right) {
+static VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right) {
   Object* object = malloc(sizeof object);
   object->type = INTEGER_OBJ;
   switch ((int)op) {
@@ -220,11 +231,24 @@ VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right) {
       object->value.i = left / right;
       break;
     default:
-      sprintf(err, "unknown integer operator: %d", op);
+      SET_ERR("unknown integer operator: %d", op);
       return err;
   }
-  push(vm, object);
-  return NULL;
+  return push(vm, object);
+}
+
+static VmErr exec_binary_str_operation(
+  Vm vm, OpCode op, char* left, char* right) {
+  if (op != OP_ADD) {
+    SET_ERR("unknown string operator: %d", op);
+    return err;
+  }
+  char* combined = malloc(strlen(left) + strlen(right) + 1);
+  sprintf(combined, "%s%s", left, right);
+  Object* object = malloc(sizeof(Object));
+  object->type = STRING_OBJ;
+  object->value.str = combined;
+  return push(vm, object);
 }
 
 VmErr push(Vm vm, Object* object) {
@@ -254,12 +278,6 @@ Object* vm_last_popped(Vm vm) {
 
 Object* bool_obj(bool boolean) {
   return boolean ? &TRUE : &FALSE;
-}
-
-static void err_init(void) {
-  if (err == NULL)
-    err = malloc(500);
-  *err = '\0';
 }
 
 void inspect_stack(Vm vm, const char* fn) {
