@@ -25,6 +25,7 @@ struct Vm_t {
 static VmErr push(Vm vm, Object* object);
 static Object* pop(Vm vm);
 static Object* bool_obj(bool boolean);
+static Object* build_array(Vm vm, int start_index, int end_index);
 static VmErr exec_binary_operation(Vm vm, OpCode op);
 static VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right);
 static VmErr exec_binary_str_operation(
@@ -134,9 +135,28 @@ VmErr vm_run(Vm vm) {
         ip += 2;
         vm->globals[global_index] = pop(vm);
         break;
+      case OP_ARRAY: {
+        int num_elements = read_uint16(&vm->instructions->bytes[ip + 1]);
+        ip += 2;
+        Object* array = build_array(vm, vm->sp - num_elements, vm->sp);
+        vm->sp = vm->sp - num_elements;
+        err = push(vm, array);
+        if (err)
+          return err;
+      } break;
     }
   }
   return NULL;
+}
+
+static Object* build_array(Vm vm, int start_index, int end_index) {
+  Object* array = malloc(sizeof(Object));
+  array->type = ARRAY_OBJ;
+  List* elements = NULL;
+  for (int i = start_index; i < end_index; i++)
+    elements = list_append(elements, vm->stack[i]);
+  array->value.list = elements;
+  return array;
 }
 
 VmErr exec_minus_operator(Vm vm) {

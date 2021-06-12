@@ -25,6 +25,7 @@ struct Compiler_t {
 static const IntBag _ = {0};
 
 static CompilerErr compile_statements(Compiler c, List* statements);
+static CompilerErr compile_expressions(Compiler c, List* expressions);
 static int add_constant(Compiler c, Object* object);
 static int emit(Compiler c, OpCode op_code, IntBag operands);
 static int add_instruction(Compiler c, Instruct* instructions);
@@ -195,6 +196,14 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           emit(c, OP_GET_GLOBAL, i(symbol->index));
         } break;
 
+        case EXPRESSION_ARRAY_LITERAL: {
+          ArrayLiteral* array = exp->node;
+          err = compile_expressions(c, array->elements);
+          if (err)
+            return err;
+          emit(c, OP_ARRAY, i(list_count(array->elements)));
+        } break;
+
         case EXPRESSION_IF: {
           IfExpression* if_exp = exp->node;
           err = compile(c, if_exp->condition, EXPRESSION_NODE);
@@ -267,10 +276,21 @@ void set_last_instruction(Compiler c, OpCode op_code, int position) {
   c->last_instruction.position = position;
 }
 
+CompilerErr compile_expressions(Compiler c, List* expressions) {
+  CompilerErr err = NULL;
+  for (List* current = expressions; current != NULL; current = current->next) {
+    if (current->item != NULL) {
+      err = compile(c, (Expression*)current->item, EXPRESSION_NODE);
+      if (err)
+        return err;
+    }
+  }
+  return NULL;
+}
+
 CompilerErr compile_statements(Compiler c, List* statements) {
   CompilerErr err = NULL;
-  List* current = statements;
-  for (; current != NULL; current = current->next) {
+  for (List* current = statements; current != NULL; current = current->next) {
     if (current->item != NULL) {
       Statement* stmt = current->item;
       err = compile(c, stmt->node, ast_statement_node_type(stmt));

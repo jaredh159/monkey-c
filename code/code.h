@@ -25,6 +25,7 @@ enum OpCodes {
   OP_JUMP_NOT_TRUTHY,
   OP_SET_GLOBAL,
   OP_GET_GLOBAL,
+  OP_ARRAY,
 };
 
 typedef struct Instruct {

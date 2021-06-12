@@ -182,6 +182,11 @@ Definition* code_opcode_lookup(OpCode op) {
       def->num_operands = 1;
       def->name = "OpGetGlobal";
       break;
+    case OP_ARRAY:
+      def->operand_widths[0] = 2;
+      def->num_operands = 1;
+      def->name = "OpArray";
+      break;
     case OP_ADD:
       def->name = "OpAdd";
       break;

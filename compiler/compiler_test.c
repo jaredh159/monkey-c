@@ -16,6 +16,54 @@ void test_instructions(Instruct* expected, Instruct* actual, char* test);
 void test_constants(ConstantPool* expected, ConstantPool* actual, char* test);
 void run_compiler_tests(int len, CompilerTest tests[len], const char* test);
 
+void test_array_literals(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "[]",                                //
+      .expected_constants = make_constant_pool(0),  //
+      .expected_instructions = code_concat_ins(2,   //
+        code_make(OP_ARRAY, 0),                     //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "[1, 2, 3]",                         //
+      .expected_constants = make_constant_pool(3,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 3}}),  //
+      .expected_instructions = code_concat_ins(5,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_ARRAY, 3),                     //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "[1 + 2, 3 - 4, 5 * 6]",             //
+      .expected_constants = make_constant_pool(6,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 3}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 4}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 5}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 6}}),  //
+      .expected_instructions = code_concat_ins(11,  //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_ADD),                          //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_CONSTANT, 3),                  //
+        code_make(OP_SUB),                          //
+        code_make(OP_CONSTANT, 4),                  //
+        code_make(OP_CONSTANT, 5),                  //
+        code_make(OP_MUL),                          //
+        code_make(OP_ARRAY, 3),                     //
+        code_make(OP_POP)),                         //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
 void test_string_expressions(void) {
   CompilerTest tests[] = {
     {
@@ -279,6 +327,7 @@ void test_global_let_statements(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_array_literals();
   test_string_expressions();
   test_global_let_statements();
   test_conditionals();

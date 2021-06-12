@@ -1,20 +1,27 @@
 #include "vm.h"
+#include <limits.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../compiler/compiler.h"
 #include "../parser/parser.h"
 #include "../test/test.h"
 #include "../utils/colors.h"
 
-enum ExpectedTypes { EXP_INT, EXP_BOOL, EXP_NULL, EXP_STR };
+#define MAX_EXP_ARR_LEN 10
+
+enum ExpectedTypes { EXP_INT, EXP_BOOL, EXP_NULL, EXP_STR, EXP_INT_ARR };
 
 typedef struct Expected {
   int type;
+  int arr_len;
   union {
     int i;
     bool b;
     char* s;
+    struct Expected* arr[MAX_EXP_ARR_LEN];
   } v;
 } Expected;
 
@@ -24,11 +31,14 @@ typedef struct VmTest {
 } VmTest;
 
 Expected expect_int(int expected_int);
+Expected expect_int_arr(int i1, ...);
 Expected expect_bool(bool boolean);
 Expected expect_str(char* string);
 Expected expect_null();
 void run_vm_tests(int len, VmTest tests[len], const char* test);
 void test_expected_object(Expected exp, Object* obj, char* test);
+
+static int _ = INT_MAX;
 
 void test_integer_arithmetic(void) {
   VmTest tests[] = {
@@ -118,8 +128,18 @@ void test_string_expressions(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_array_literals(void) {
+  VmTest tests[] = {
+    {.input = "[]", .expected = expect_int_arr(_)},                    //
+    {.input = "[1, 2, 3]", .expected = expect_int_arr(1, 2, 3, _)},    //
+    {.input = "[1 + 2, 3 * 4, 5 + 6]", expect_int_arr(3, 12, 11, _)},  //
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_array_literals();
   test_string_expressions();
   test_conditionals();
   test_global_let_statements();
@@ -166,6 +186,16 @@ void test_expected_object(Expected exp, Object* obj, char* test) {
       assert(obj->type == STRING_OBJ, "string obj correct type", test);
       assert_str_is(obj->value.str, exp.v.s, "string obj value correct", test);
       break;
+    case EXP_INT_ARR: {
+      assert(obj->type == ARRAY_OBJ, "array obj correct type", test);
+      assert_int_is(exp.arr_len, list_count(obj->value.list),
+        "correct num arr elements", test);
+      int index = 0;
+      for (List* cur = obj->value.list; cur != NULL; cur = cur->next, index++) {
+        Object* arr_element = cur->item;
+        assert_integer_object(exp.v.arr[index]->v.i, *arr_element, test);
+      }
+    } break;
     default:
       printf("ERROR: unhandled expected object type=%d\n", exp.type);
       exit(EXIT_FAILURE);
@@ -186,4 +216,28 @@ Expected expect_null() {
 
 Expected expect_str(char* string) {
   return (Expected){.type = EXP_STR, .v = {.s = string}};
+}
+
+Expected* make_exp_int(int integer) {
+  Expected exp_i = expect_int(integer);
+  return memcpy(malloc(sizeof exp_i), &exp_i, sizeof exp_i);
+}
+
+Expected expect_int_arr(int i1, ...) {
+  Expected ints = {.type = EXP_INT_ARR, .arr_len = 0};
+  if (i1 == INT_MAX)
+    return ints;
+
+  ints.v.arr[ints.arr_len++] = make_exp_int(i1);
+
+  va_list ap;
+  va_start(ap, i1);
+  for (;;) {
+    int next_int = va_arg(ap, int);
+    if (next_int == INT_MAX) {
+      va_end(ap);
+      return ints;
+    }
+    ints.v.arr[ints.arr_len++] = make_exp_int(next_int);
+  }
 }
