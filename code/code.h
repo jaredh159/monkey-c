@@ -26,6 +26,7 @@ enum OpCodes {
   OP_SET_GLOBAL,
   OP_GET_GLOBAL,
   OP_ARRAY,
+  OP_HASH,
 };
 
 typedef struct Instruct {

@@ -204,6 +204,22 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           emit(c, OP_ARRAY, i(list_count(array->elements)));
         } break;
 
+        case EXPRESSION_HASH_LITERAL: {
+          HashLiteralExpression* hash = exp->node;
+          int num_pairs = list_count(hash->pairs);
+          List* current = hash->pairs;
+          for (int i = 0; i < num_pairs; i++, current = current->next) {
+            HashLiteralPair* pair = current->item;
+            err = compile(c, pair->key, EXPRESSION_NODE);
+            if (err)
+              return err;
+            err = compile(c, pair->value, EXPRESSION_NODE);
+            if (err)
+              return err;
+          }
+          emit(c, OP_HASH, i(num_pairs * 2));
+        } break;
+
         case EXPRESSION_IF: {
           IfExpression* if_exp = exp->node;
           err = compile(c, if_exp->condition, EXPRESSION_NODE);

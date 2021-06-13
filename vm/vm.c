@@ -26,6 +26,7 @@ static VmErr push(Vm vm, Object* object);
 static Object* pop(Vm vm);
 static Object* bool_obj(bool boolean);
 static Object* build_array(Vm vm, int start_index, int end_index);
+static Object* build_hash(Vm vm, int start_index, int end_index);
 static VmErr exec_binary_operation(Vm vm, OpCode op);
 static VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right);
 static VmErr exec_binary_str_operation(
@@ -144,6 +145,15 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
       } break;
+      case OP_HASH: {
+        int num_elements = read_uint16(&vm->instructions->bytes[ip + 1]);
+        ip += 2;
+        Object* hash = build_hash(vm, vm->sp - num_elements, vm->sp);
+        vm->sp = vm->sp - num_elements;
+        err = push(vm, hash);
+        if (err)
+          return err;
+      } break;
     }
   }
   return NULL;
@@ -157,6 +167,22 @@ static Object* build_array(Vm vm, int start_index, int end_index) {
     elements = list_append(elements, vm->stack[i]);
   array->value.list = elements;
   return array;
+}
+
+static Object* build_hash(Vm vm, int start_index, int end_index) {
+  Object* hash = malloc(sizeof(Object));
+  hash->type = HASH_OBJ;
+  List* pairs = NULL;
+  for (int i = start_index; i < end_index; i += 2) {
+    Object* key = vm->stack[i];
+    Object* value = vm->stack[i + 1];
+    HashPair* pair = malloc(sizeof(HashPair));
+    pair->key = key;
+    pair->value = value;
+    pairs = list_append(pairs, pair);
+  }
+  hash->value.list = pairs;
+  return hash;
 }
 
 VmErr exec_minus_operator(Vm vm) {

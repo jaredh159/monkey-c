@@ -10,12 +10,17 @@
 #include "../test/test.h"
 #include "../utils/colors.h"
 
-#define MAX_EXP_ARR_LEN 10
-
-enum ExpectedTypes { EXP_INT, EXP_BOOL, EXP_NULL, EXP_STR, EXP_INT_ARR };
+#define MAX_EXP_ARR_LEN 24
 
 typedef struct Expected {
-  int type;
+  enum {
+    EXP_INT,
+    EXP_BOOL,
+    EXP_NULL,
+    EXP_STR,
+    EXP_INT_ARR,
+    EXP_HASH,
+  } type;
   int arr_len;
   union {
     int i;
@@ -35,6 +40,7 @@ Expected expect_int_arr(int i1, ...);
 Expected expect_bool(bool boolean);
 Expected expect_str(char* string);
 Expected expect_null();
+Expected* make_exp_int(int integer);
 void run_vm_tests(int len, VmTest tests[len], const char* test);
 void test_expected_object(Expected exp, Object* obj, char* test);
 
@@ -137,8 +143,59 @@ void test_array_literals(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_hash_literals(void) {
+  VmTest tests[] = {
+    {
+      .input = "{}",
+      .expected =
+        {
+          .type = EXP_HASH,
+          .arr_len = 0,
+        },
+    },
+    {
+      .input = "{1: 2, 2: 3}",
+      .expected =
+        {
+          .type = EXP_HASH,
+          .arr_len = 4,
+          .v =
+            {
+              .arr =
+                {
+                  make_exp_int(1),
+                  make_exp_int(2),
+                  make_exp_int(2),
+                  make_exp_int(3),
+                },
+            },
+        },
+    },
+    {
+      .input = "{1 + 1: 2 * 2, 3 + 3: 4 * 4}",
+      .expected =
+        {
+          .type = EXP_HASH,
+          .arr_len = 4,
+          .v =
+            {
+              .arr =
+                {
+                  make_exp_int(2),
+                  make_exp_int(4),
+                  make_exp_int(6),
+                  make_exp_int(16),
+                },
+            },
+        },
+    },
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_hash_literals();
   test_array_literals();
   test_string_expressions();
   test_conditionals();
@@ -194,6 +251,17 @@ void test_expected_object(Expected exp, Object* obj, char* test) {
       for (List* cur = obj->value.list; cur != NULL; cur = cur->next, index++) {
         Object* arr_element = cur->item;
         assert_integer_object(exp.v.arr[index]->v.i, *arr_element, test);
+      }
+    } break;
+    case EXP_HASH: {
+      assert(obj->type == HASH_OBJ, "hash obj correct type", test);
+      assert_int_is(exp.arr_len, list_count(obj->value.list) * 2,
+        "correct num hash elements", test);
+      int index = 0;
+      for (List* cur = obj->value.list; cur != NULL; cur = cur->next) {
+        HashPair* pair = cur->item;
+        test_expected_object(*exp.v.arr[index++], pair->key, test);
+        test_expected_object(*exp.v.arr[index++], pair->value, test);
       }
     } break;
     default:
