@@ -27,6 +27,9 @@ static Object* pop(Vm vm);
 static Object* bool_obj(bool boolean);
 static Object* build_array(Vm vm, int start_index, int end_index);
 static Object* build_hash(Vm vm, int start_index, int end_index);
+static VmErr exec_index_expr(Vm vm, Object* left, Object* index);
+static VmErr exec_array_index(Vm vm, Object* array, Object* index);
+static VmErr exec_hash_index(Vm vm, Object* hash, Object* index);
 static VmErr exec_binary_operation(Vm vm, OpCode op);
 static VmErr exec_binary_int_operation(Vm vm, OpCode op, int left, int right);
 static VmErr exec_binary_str_operation(
@@ -69,16 +72,19 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
       } break;
+
       case OP_TRUE:
         err = push(vm, &TRUE);
         if (err)
           return err;
         break;
+
       case OP_FALSE:
         err = push(vm, &FALSE);
         if (err)
           return err;
         break;
+
       case OP_ADD:  // fallthrough
       case OP_SUB:  // fallthrough
       case OP_MUL:  // fallthrough
@@ -87,6 +93,7 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
         break;
+
       case OP_EQUAL:         // fallthrough
       case OP_NOT_EQUAL:     // fallthrough
       case OP_GREATER_THAN:  // fallthrough
@@ -94,23 +101,28 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
         break;
+
       case OP_POP:
         pop(vm);
         break;
+
       case OP_MINUS:
         err = exec_minus_operator(vm);
         if (err)
           return err;
         break;
+
       case OP_BANG:
         err = exec_bang_operator(vm);
         if (err)
           return err;
         break;
+
       case OP_JUMP: {
         int pos = read_uint16(&vm->instructions->bytes[ip + 1]);
         ip = pos - 1;
       } break;
+
       case OP_JUMP_NOT_TRUTHY: {
         int pos = read_uint16(&vm->instructions->bytes[ip + 1]);
         ip += 2;
@@ -119,11 +131,13 @@ VmErr vm_run(Vm vm) {
           ip = pos - 1;
         }
       } break;
+
       case OP_NULL:
         err = push(vm, &M_NULL);
         if (err)
           return err;
         break;
+
       case OP_GET_GLOBAL:
         global_index = read_uint16(&vm->instructions->bytes[ip + 1]);
         ip += 2;
@@ -131,11 +145,13 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
         break;
+
       case OP_SET_GLOBAL:
         global_index = read_uint16(&vm->instructions->bytes[ip + 1]);
         ip += 2;
         vm->globals[global_index] = pop(vm);
         break;
+
       case OP_ARRAY: {
         int num_elements = read_uint16(&vm->instructions->bytes[ip + 1]);
         ip += 2;
@@ -145,6 +161,7 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
       } break;
+
       case OP_HASH: {
         int num_elements = read_uint16(&vm->instructions->bytes[ip + 1]);
         ip += 2;
@@ -154,9 +171,64 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
       } break;
+
+      case OP_INDEX: {
+        Object* index = pop(vm);
+        Object* left = pop(vm);
+        err = exec_index_expr(vm, left, index);
+        if (err)
+          return err;
+      } break;
     }
   }
   return NULL;
+}
+
+static VmErr exec_index_expr(Vm vm, Object* left, Object* index) {
+  if (left->type == ARRAY_OBJ && index->type == INTEGER_OBJ) {
+    return exec_array_index(vm, left, index);
+  } else if (left->type == HASH_OBJ) {
+    return exec_hash_index(vm, left, index);
+  } else {
+    SET_ERR("index operator not supported: %s", object_type(*left));
+    return err;
+  }
+}
+
+static VmErr exec_array_index(Vm vm, Object* array, Object* index) {
+  List* elements = array->value.list;
+  int i = index->value.i;
+  int max = list_count(elements) - 1;
+  if (i < 0 || i > max) {
+    return push(vm, &M_NULL);
+  }
+
+  List* current = elements;
+  for (int j = 0; j <= max; j++, current = current->next) {
+    if (j == i) {
+      return push(vm, current->item);
+    }
+  }
+
+  puts("unexpected error indexing into array");
+  exit(EXIT_FAILURE);
+}
+
+static VmErr exec_hash_index(Vm vm, Object* hash, Object* index) {
+  char* index_hash = object_hash(*index);
+  if (index_hash == NULL) {
+    SET_ERR("unusable as hash key: %s", object_type(*index));
+    return err;
+  }
+
+  for (List* current = hash->value.list; current; current = current->next) {
+    HashPair* pair = current->item;
+    char* key_hash = object_hash(*pair->key);
+    if (strcmp(key_hash, index_hash) == 0)
+      return push(vm, pair->value);
+  }
+
+  return push(vm, &M_NULL);
 }
 
 static Object* build_array(Vm vm, int start_index, int end_index) {

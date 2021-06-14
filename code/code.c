@@ -192,6 +192,9 @@ Definition* code_opcode_lookup(OpCode op) {
       def->num_operands = 1;
       def->name = "OpHash";
       break;
+    case OP_INDEX:
+      def->name = "OpIndex";
+      break;
     case OP_ADD:
       def->name = "OpAdd";
       break;

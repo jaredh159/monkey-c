@@ -220,6 +220,17 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           emit(c, OP_HASH, i(num_pairs * 2));
         } break;
 
+        case EXPRESSION_INDEX: {
+          IndexExpression* index_exp = exp->node;
+          err = compile(c, index_exp->left, EXPRESSION_NODE);
+          if (err)
+            return err;
+          err = compile(c, index_exp->index, EXPRESSION_NODE);
+          if (err)
+            return err;
+          emit(c, OP_INDEX, _);
+        } break;
+
         case EXPRESSION_IF: {
           IfExpression* if_exp = exp->node;
           err = compile(c, if_exp->condition, EXPRESSION_NODE);

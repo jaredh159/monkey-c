@@ -378,8 +378,51 @@ void test_global_let_statements(void) {
   run_compiler_tests(LEN(tests), tests, "global_let_statements");
 }
 
+void test_index_expressions(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "[1, 2, 3][1 + 1]",
+      .expected_constants = make_constant_pool(5,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 3}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(9,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_ARRAY, 3),                     //
+        code_make(OP_CONSTANT, 3),                  //
+        code_make(OP_CONSTANT, 4),                  //
+        code_make(OP_ADD),                          //
+        code_make(OP_INDEX),                        //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "{1: 2}[2 - 1]",
+      .expected_constants = make_constant_pool(4,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(8,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_HASH, 2),                      //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_CONSTANT, 3),                  //
+        code_make(OP_SUB),                          //
+        code_make(OP_INDEX),                        //
+        code_make(OP_POP)),                         //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_index_expressions();
   test_hash_literals();
   test_array_literals();
   test_string_expressions();

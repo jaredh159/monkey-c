@@ -193,8 +193,25 @@ void test_hash_literals(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_index_expressions(void) {
+  VmTest tests[] = {
+    {.input = "[1, 2, 3][1]", .expected = expect_int(2)},       //
+    {.input = "[1, 2, 3][0 + 2]", .expected = expect_int(3)},   //
+    {.input = "[[1, 1, 1]][0][0]", .expected = expect_int(1)},  //
+    {.input = "[][0]", .expected = expect_null()},              //
+    {.input = "[1, 2, 3][99]", .expected = expect_null()},      //
+    {.input = "[1][-1]", .expected = expect_null()},            //
+    {.input = "{1: 1, 2: 2}[1]", .expected = expect_int(1)},    //
+    {.input = "{1: 1, 2: 2}[2]", .expected = expect_int(2)},    //
+    {.input = "{1: 1}[0]", .expected = expect_null()},          //
+    {.input = "{}[0]", .expected = expect_null()},              //
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_index_expressions();
   test_hash_literals();
   test_array_literals();
   test_string_expressions();
