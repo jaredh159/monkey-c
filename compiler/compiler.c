@@ -115,6 +115,13 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
       }
       break;
 
+    case RETURN_STATEMENT_NODE:
+      err = compile(c, ((ReturnStatement*)node)->return_value, EXPRESSION_NODE);
+      if (err)
+        return err;
+      emit(c, OP_RETURN_VALUE, _);
+      break;
+
     case EXPRESSION_NODE: {
       Expression* exp = node;
       switch (exp->type) {
@@ -246,6 +253,19 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           if (err)
             return err;
           emit(c, OP_INDEX, _);
+        } break;
+
+        case EXPRESSION_FUNCTION_LITERAL: {
+          FunctionLiteral* fn_lit = exp->node;
+          compiler_enter_scope(c);
+          err = compile(c, fn_lit->body, BLOCK_STATEMENTS_NODE);
+          if (err)
+            return err;
+          Instruct* instructions = compiler_leave_scope(c);
+          Object* compiled_fn = malloc(sizeof(Object));
+          compiled_fn->type = COMPILED_FUNCTION_OBJ;
+          compiled_fn->value.instructions = instructions;
+          emit(c, OP_CONSTANT, i(add_constant(c, compiled_fn)));
         } break;
 
         case EXPRESSION_IF: {

@@ -434,19 +434,19 @@ void test_functions(void) {
   CompilerTest tests[] = {
     {
       .input = "fn() { return 5 + 10 }",
-      .expected_constants = make_constant_pool(3,  //
-        (Object){INTEGER_OBJ, .value = {.i = 1}},  //
-        (Object){INTEGER_OBJ, .value = {.i = 2}},  //
+      .expected_constants = make_constant_pool(3,   //
+        (Object){INTEGER_OBJ, .value = {.i = 5}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 10}},  //
         (Object){COMPILED_FUNCTION_OBJ,
           {
             .instructions = code_concat_ins(4,     //
-              code_make(OP_GET_GLOBAL, 0),         //
-              code_make(OP_SET_GLOBAL, 1),         //
-              code_make(OP_GET_GLOBAL, 1),         //
-              code_make(OP_POP)),                  //
+              code_make(OP_CONSTANT, 0),           //
+              code_make(OP_CONSTANT, 1),           //
+              code_make(OP_ADD),                   //
+              code_make(OP_RETURN_VALUE)),         //
           }}),                                     //
       .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 0),                 //
+        code_make(OP_CONSTANT, 2),                 //
         code_make(OP_POP)),                        //
     },
   };
@@ -495,7 +495,7 @@ void test_compiler_scopes(void) {
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
   test_compiler_scopes();
-  // test_functions(); // @TODO
+  test_functions();
   test_index_expressions();
   test_hash_literals();
   test_array_literals();
@@ -533,6 +533,14 @@ void test_constants(ConstantPool* expected, ConstantPool* actual, char* test) {
       case STRING_OBJ:
         assert_str_is(expected_constant.value.str, actual_constant.value.str,
           "string constant correct", test);
+        break;
+      case COMPILED_FUNCTION_OBJ:
+        assert_int_is(COMPILED_FUNCTION_OBJ, actual_constant.type,
+          "constant must be compiled fn", test);
+        char fn_test[256];
+        sprintf(fn_test, "%s compiled function constant=%d", test, i);
+        test_instructions(expected_constant.value.instructions,
+          actual_constant.value.instructions, fn_test);
         break;
       default:
         printf(
