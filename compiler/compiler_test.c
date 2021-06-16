@@ -16,6 +16,16 @@ void test_instructions(Instruct* expected, Instruct* actual, char* test);
 void test_constants(ConstantPool* expected, ConstantPool* actual, char* test);
 void run_compiler_tests(int len, CompilerTest tests[len], const char* test);
 
+// these are a bit sad, but he tests the internals of the compiler
+// and I don't really want to expose all the guts of the compiler in compiler.h
+Instruct* compiler_scope_instructions(Compiler c);
+OpCode compiler_scope_last_opcode(Compiler c);
+OpCode compiler_scope_prev_opcode(Compiler c);
+int compiler_scope_index(Compiler c);
+void compiler_test_emit(Compiler c, OpCode op_code);
+void compiler_enter_scope(Compiler c);
+Instruct* compiler_leave_scope(Compiler c);
+
 void test_hash_literals(void) {
   CompilerTest tests[] = {
     {
@@ -420,8 +430,72 @@ void test_index_expressions(void) {
   run_compiler_tests(LEN(tests), tests, __func__);
 }
 
+void test_functions(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "fn() { return 5 + 10 }",
+      .expected_constants = make_constant_pool(3,  //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},  //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(4,     //
+              code_make(OP_GET_GLOBAL, 0),         //
+              code_make(OP_SET_GLOBAL, 1),         //
+              code_make(OP_GET_GLOBAL, 1),         //
+              code_make(OP_POP)),                  //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 0),                 //
+        code_make(OP_POP)),                        //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
+void test_compiler_scopes(void) {
+  const char* t = __func__;
+  Compiler c = compiler_new();
+  assert_int_is(0, compiler_scope_index(c), "scope index starts at 0", t);
+  compiler_test_emit(c, OP_MUL);
+
+  compiler_enter_scope(c);
+  assert_int_is(1, compiler_scope_index(c), "scope should be 1 after enter", t);
+  compiler_test_emit(c, OP_SUB);
+
+  assert_int_is(1, compiler_scope_instructions(c)->length,
+    "inner scope instructions length should be 1", t);
+
+  OpCode op = compiler_scope_last_opcode(c);
+  assert_int_is(OP_SUB, op,
+    ss("last instruction op_code wrong, got=%s, want=%s", "OpSub",
+      code_opcode_lookup(op)),
+    t);
+
+  compiler_leave_scope(c);
+  assert_int_is(0, compiler_scope_index(c), "scope index back to 0", t);
+
+  compiler_test_emit(c, OP_ADD);
+  assert_int_is(2, compiler_scope_instructions(c)->length,
+    "outer scope instructions length should be 2", t);
+
+  op = compiler_scope_last_opcode(c);
+  assert_int_is(OP_ADD, op,
+    ss("last instruction op_code wrong, got=%s, want=%s", "OpAdd",
+      code_opcode_lookup(op)),
+    t);
+
+  op = compiler_scope_prev_opcode(c);
+  assert_int_is(OP_MUL, op,
+    ss("last instruction op_code wrong, got=%s, want=%s", "OpMul",
+      code_opcode_lookup(op)),
+    t);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_compiler_scopes();
+  // test_functions(); // @TODO
   test_index_expressions();
   test_hash_literals();
   test_array_literals();

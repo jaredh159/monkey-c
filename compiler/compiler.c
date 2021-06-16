@@ -1,4 +1,5 @@
 #include "compiler.h"
+#include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,19 +8,25 @@
 #include "../parser/parser.h"
 #include "symbol_table.h"
 
-#define BACKPATCH_LATER i(255)
+#define BACKPATCH_LATER i(UCHAR_MAX)
+#define MAX_SCOPES 128
 
-typedef struct EmittedInstruction {
+typedef struct {
   OpCode op_code;
   int position;
 } EmittedInstruction;
 
-struct Compiler_t {
+typedef struct {
   Instruct* instructions;
-  ConstantPool* constant_pool;
   EmittedInstruction last_instruction;
   EmittedInstruction previous_instruction;
+} Scope;
+
+struct Compiler_t {
+  ConstantPool* constant_pool;
   SymbolTable symbol_table;
+  Scope scopes[MAX_SCOPES];
+  int scope_index;
 };
 
 static const IntBag _ = {0};
@@ -33,16 +40,26 @@ static void set_last_instruction(Compiler c, OpCode op_code, int position);
 static void remove_last_pop(Compiler c);
 static void replace_instruction(Compiler c, int pos, Instruct* new_instruction);
 static void change_operand(Compiler c, int op_code_pos, int operand);
+static Scope make_scope(void);
+static Scope scope(Compiler c);
+
+// these are used by compiler_test.c, so should't be static
+void compiler_enter_scope(Compiler c);
+Instruct* compiler_leave_scope(Compiler c);
+Instruct* compiler_scope_ins(Compiler c);
+OpCode compiler_scope_last_opcode(Compiler c);
+OpCode compiler_scope_prev_opcode(Compiler c);
+int compiler_scope_index(Compiler c);
+void compiler_test_emit(Compiler c, OpCode op_code);
 
 Compiler compiler_new() {
   Compiler compiler = malloc(sizeof(struct Compiler_t));
-  compiler->instructions = malloc(sizeof(Instruct));
   compiler->constant_pool = malloc(sizeof(ConstantPool));
   compiler->constant_pool->length = 0;
   compiler->constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
-  compiler->instructions->length = 0;
-  compiler->instructions->bytes = malloc(sizeof(Byte) * MAX_INSTRUCTIONS);
   compiler->symbol_table = symbol_table_new();
+  compiler->scope_index = 0;
+  compiler->scopes[0] = make_scope();
   return compiler;
 }
 
@@ -243,12 +260,12 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           if (err)
             return err;
 
-          if (c->last_instruction.op_code == OP_POP) {
+          if (scope(c).last_instruction.op_code == OP_POP) {
             remove_last_pop(c);
           }
 
           int jump_pos = emit(c, OP_JUMP, BACKPATCH_LATER);
-          int after_conseq_pos = c->instructions->length;
+          int after_conseq_pos = scope(c).instructions->length;
           change_operand(c, jump_not_truthy_pos, after_conseq_pos);
 
           if (if_exp->alternative == NULL) {
@@ -258,11 +275,11 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             if (err)
               return err;
 
-            if (c->last_instruction.op_code == OP_POP) {
+            if (scope(c).last_instruction.op_code == OP_POP) {
               remove_last_pop(c);
             }
           }
-          int after_alt_pos = c->instructions->length;
+          int after_alt_pos = scope(c).instructions->length;
           change_operand(c, jump_pos, after_alt_pos);
         } break;
       }
@@ -282,25 +299,25 @@ int emit(Compiler c, OpCode op, IntBag operands) {
 static void replace_instruction(
   Compiler c, int pos, Instruct* new_instruction) {
   for (int i = 0; i < new_instruction->length; i++) {
-    c->instructions->bytes[pos + i] = new_instruction->bytes[i];
+    scope(c).instructions->bytes[pos + i] = new_instruction->bytes[i];
   }
 }
 
 static void change_operand(Compiler c, int op_code_pos, int operand) {
-  OpCode op = c->instructions->bytes[op_code_pos];
+  OpCode op = scope(c).instructions->bytes[op_code_pos];
   Instruct* new_instruction = code_make(op, operand);
   replace_instruction(c, op_code_pos, new_instruction);
 }
 
 static void remove_last_pop(Compiler c) {
-  c->instructions->length--;
-  c->last_instruction = c->previous_instruction;
+  scope(c).instructions->length--;
+  c->scopes[c->scope_index].last_instruction = scope(c).previous_instruction;
 }
 
 void set_last_instruction(Compiler c, OpCode op_code, int position) {
-  c->previous_instruction = c->last_instruction;
-  c->last_instruction.op_code = op_code;
-  c->last_instruction.position = position;
+  c->scopes[c->scope_index].previous_instruction = scope(c).last_instruction;
+  c->scopes[c->scope_index].last_instruction.op_code = op_code;
+  c->scopes[c->scope_index].last_instruction.position = position;
 }
 
 CompilerErr compile_expressions(Compiler c, List* expressions) {
@@ -331,7 +348,7 @@ CompilerErr compile_statements(Compiler c, List* statements) {
 Bytecode* compiler_bytecode(Compiler c) {
   Bytecode* bytecode = malloc(sizeof(Bytecode));
   bytecode->constants = c->constant_pool;
-  bytecode->instructions = c->instructions;
+  bytecode->instructions = scope(c).instructions;
   return bytecode;
 }
 
@@ -366,11 +383,53 @@ int add_constant(Compiler c, Object* obj) {
 }
 
 int add_instruction(Compiler c, Instruct* instruction) {
-  int insert_idx = c->instructions->length;
-  c->instructions->length += instruction->length;
+  int insert_idx = scope(c).instructions->length;
+  scope(c).instructions->length += instruction->length;
   for (int i = 0; i < instruction->length; i++) {
-    c->instructions->bytes[insert_idx + i] = instruction->bytes[i];
+    scope(c).instructions->bytes[insert_idx + i] = instruction->bytes[i];
   }
   free(instruction);
   return insert_idx;
+}
+
+int compiler_scope_index(Compiler c) {
+  return c->scope_index;
+}
+
+Instruct* compiler_scope_instructions(Compiler c) {
+  return scope(c).instructions;
+}
+
+OpCode compiler_scope_last_opcode(Compiler c) {
+  return scope(c).last_instruction.op_code;
+}
+
+OpCode compiler_scope_prev_opcode(Compiler c) {
+  return scope(c).previous_instruction.op_code;
+}
+
+void compiler_test_emit(Compiler c, OpCode op_code) {
+  emit(c, op_code, _);
+}
+
+void compiler_enter_scope(Compiler c) {
+  c->scopes[++c->scope_index] = make_scope();
+}
+
+Instruct* compiler_leave_scope(Compiler c) {
+  Instruct* instructions = scope(c).instructions;
+  c->scope_index--;
+  return instructions;
+}
+
+static Scope make_scope(void) {
+  Scope scope;
+  scope.instructions = malloc(sizeof(Instruct));
+  scope.instructions->length = 0;
+  scope.instructions->bytes = malloc(sizeof(Byte) * MAX_INSTRUCTIONS);
+  return scope;
+}
+
+static Scope scope(Compiler c) {
+  return c->scopes[c->scope_index];
 }

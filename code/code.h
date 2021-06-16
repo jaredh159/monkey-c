@@ -28,6 +28,9 @@ enum OpCodes {
   OP_ARRAY,
   OP_HASH,
   OP_INDEX,
+  OP_CALL,
+  OP_RETURN,
+  OP_RETURN_VALUE,
 };
 
 typedef struct Instruct {

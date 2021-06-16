@@ -3,10 +3,12 @@
 
 #include <stdbool.h>
 #include "../ast/ast.h"
+#include "../code/code.h"
 #include "../utils/list.h"
 
 enum ObjectTypes {
   FUNCTION_OBJ,
+  COMPILED_FUNCTION_OBJ,
   INTEGER_OBJ,
   BOOLEAN_OBJ,
   STRING_OBJ,
@@ -42,6 +44,7 @@ typedef struct Object {
     Function *fn;
     struct Object (*builtin_fn)(List *args);
     List *list;  // List<Object> (for array elements) | List<HashPair>
+    Instruct *instructions;
   } value;
 } Object;
 

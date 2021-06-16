@@ -40,6 +40,12 @@ char *object_inspect(const Object object) {
     case ERROR_OBJ:
       sprintf(inspect_str, "ERROR: %s", object.value.str);
       break;
+    case COMPILED_FUNCTION_OBJ:
+      return "CompiledFunction";
+    default:
+      printf(
+        "unhandled object type %s for object_inspect())", object_type(object));
+      exit(EXIT_FAILURE);
   }
   return inspect_str;
 }
@@ -64,6 +70,8 @@ char *object_type(const Object object) {
       return "BUILT_IN";
     case HASH_OBJ:
       return "HASH";
+    case COMPILED_FUNCTION_OBJ:
+      return "COMPILED_FUNCTION_OBJ";
     case ERROR_OBJ:
       return "ERROR";
   }
