@@ -11,12 +11,12 @@
 #define BACKPATCH_LATER i(UCHAR_MAX)
 #define MAX_SCOPES 128
 
-typedef struct {
+typedef struct EmittedInstructions {
   OpCode op_code;
   int position;
 } EmittedInstruction;
 
-typedef struct {
+typedef struct Scope {
   Instruct* instructions;
   EmittedInstruction last_instruction;
   EmittedInstruction previous_instruction;
@@ -42,6 +42,8 @@ static void replace_instruction(Compiler c, int pos, Instruct* new_instruction);
 static void change_operand(Compiler c, int op_code_pos, int operand);
 static Scope make_scope(void);
 static Scope scope(Compiler c);
+static bool last_instruction_is(Compiler c, OpCode op_code);
+static void replace_last_pop_with_return(Compiler c);
 
 // these are used by compiler_test.c, so should't be static
 void compiler_enter_scope(Compiler c);
@@ -261,6 +263,10 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           err = compile(c, fn_lit->body, BLOCK_STATEMENTS_NODE);
           if (err)
             return err;
+          if (last_instruction_is(c, OP_POP))
+            replace_last_pop_with_return(c);
+          if (!last_instruction_is(c, OP_RETURN_VALUE))
+            emit(c, OP_RETURN, _);
           Instruct* instructions = compiler_leave_scope(c);
           Object* compiled_fn = malloc(sizeof(Object));
           compiled_fn->type = COMPILED_FUNCTION_OBJ;
@@ -280,7 +286,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           if (err)
             return err;
 
-          if (scope(c).last_instruction.op_code == OP_POP) {
+          if (last_instruction_is(c, OP_POP)) {
             remove_last_pop(c);
           }
 
@@ -295,7 +301,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             if (err)
               return err;
 
-            if (scope(c).last_instruction.op_code == OP_POP) {
+            if (last_instruction_is(c, OP_POP)) {
               remove_last_pop(c);
             }
           }
@@ -327,6 +333,19 @@ static void change_operand(Compiler c, int op_code_pos, int operand) {
   OpCode op = scope(c).instructions->bytes[op_code_pos];
   Instruct* new_instruction = code_make(op, operand);
   replace_instruction(c, op_code_pos, new_instruction);
+}
+
+static bool last_instruction_is(Compiler c, OpCode op_code) {
+  if (scope(c).instructions->length == 0) {
+    return false;
+  }
+  return scope(c).last_instruction.op_code == op_code;
+}
+
+static void replace_last_pop_with_return(Compiler c) {
+  int last_pos = scope(c).last_instruction.position;
+  replace_instruction(c, last_pos, code_make(OP_RETURN_VALUE));
+  c->scopes[c->scope_index].last_instruction.op_code = OP_RETURN_VALUE;
 }
 
 static void remove_last_pop(Compiler c) {

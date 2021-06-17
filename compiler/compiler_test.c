@@ -449,6 +449,52 @@ void test_functions(void) {
         code_make(OP_CONSTANT, 2),                 //
         code_make(OP_POP)),                        //
     },
+    {
+      .input = "fn() { 5 + 10 }",
+      .expected_constants = make_constant_pool(3,   //
+        (Object){INTEGER_OBJ, .value = {.i = 5}},   //
+        (Object){INTEGER_OBJ, .value = {.i = 10}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(4,     //
+              code_make(OP_CONSTANT, 0),           //
+              code_make(OP_CONSTANT, 1),           //
+              code_make(OP_ADD),                   //
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 2),                 //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "fn() { 1; 2 }",
+      .expected_constants = make_constant_pool(3,  //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},  //
+        (Object){INTEGER_OBJ, .value = {.i = 2}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(4,     //
+              code_make(OP_CONSTANT, 0),           //
+              code_make(OP_POP),                   //
+              code_make(OP_CONSTANT, 1),           //
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 2),                 //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "fn() { }",
+      .expected_constants = make_constant_pool(1,  //
+        (Object){COMPILED_FUNCTION_OBJ,            //
+          {
+            .instructions = code_concat_ins(1,     //
+              code_make(OP_RETURN)),               //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 0),                 //
+        code_make(OP_POP)),                        //
+    },
   };
   run_compiler_tests(LEN(tests), tests, __func__);
 }
