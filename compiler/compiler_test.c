@@ -486,13 +486,50 @@ void test_functions(void) {
     {
       .input = "fn() { }",
       .expected_constants = make_constant_pool(1,  //
-        (Object){COMPILED_FUNCTION_OBJ,            //
-          {
-            .instructions = code_concat_ins(1,     //
-              code_make(OP_RETURN)),               //
-          }}),                                     //
+        (Object){
+          COMPILED_FUNCTION_OBJ,                   //
+          {.instructions = code_make(OP_RETURN)},  //
+        }),                                        //
       .expected_instructions = code_concat_ins(2,  //
         code_make(OP_CONSTANT, 0),                 //
+        code_make(OP_POP)),                        //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
+void test_function_calls(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "fn() { 24 }();",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 24}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(2,     //
+              code_make(OP_CONSTANT, 0),           // `24`
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(3,  //
+        code_make(OP_CONSTANT, 1),                 // the compiled fn
+        code_make(OP_CALL),                        //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "let noArg = fn() { 24 }; noArg();",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 24}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(2,     //
+              code_make(OP_CONSTANT, 0),           // `24`
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(5,  //
+        code_make(OP_CONSTANT, 1),                 // the compiled fn
+        code_make(OP_SET_GLOBAL, 0),               //
+        code_make(OP_GET_GLOBAL, 0),               //
+        code_make(OP_CALL),                        //
         code_make(OP_POP)),                        //
     },
   };
@@ -540,6 +577,7 @@ void test_compiler_scopes(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_function_calls();
   test_compiler_scopes();
   test_functions();
   test_index_expressions();

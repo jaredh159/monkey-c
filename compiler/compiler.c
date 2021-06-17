@@ -274,6 +274,13 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           emit(c, OP_CONSTANT, i(add_constant(c, compiled_fn)));
         } break;
 
+        case EXPRESSION_CALL:
+          err = compile(c, ((CallExpression*)exp->node)->fn, EXPRESSION_NODE);
+          if (err)
+            return err;
+          emit(c, OP_CALL, _);
+          break;
+
         case EXPRESSION_IF: {
           IfExpression* if_exp = exp->node;
           err = compile(c, if_exp->condition, EXPRESSION_NODE);
