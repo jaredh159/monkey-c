@@ -7,6 +7,7 @@
 #include "../compiler/compiler.h"
 
 #define STACK_SIZE 2048
+#define MAX_FRAMES 1024
 
 #define SET_ERR(fmt, ...)             \
   do {                                \
@@ -14,11 +15,17 @@
     sprintf(err, fmt, __VA_ARGS__);   \
   } while (0)
 
+typedef struct Frame {
+  Object* fn;
+  int ip;
+} Frame;
+
 struct Vm_t {
-  Instruct* instructions;
   ConstantPool* constant_pool;
   Object* stack[STACK_SIZE];
   Object** globals;
+  Frame* frames[MAX_FRAMES];
+  int frames_index;
   int sp;
 };
 
@@ -39,35 +46,42 @@ static VmErr exec_int_comparison(Vm vm, OpCode op, int left, int right);
 static VmErr exec_bang_operator(Vm vm);
 static VmErr exec_minus_operator(Vm vm);
 void inspect_stack(Vm vm, const char* fn);
+static Object* new_compiled_fn(Instruct* instructions);
+static Frame* new_frame(Object* fn);
+static Frame* current_frame(Vm vm);
+static void push_frame(Vm vm, Frame* frame);
+static Frame* pop_frame(Vm vm);
+static Instruct* current_instructions(Vm vm);
 
 static VmErr err = NULL;
 
 Vm vm_new(Bytecode* bytecode) {
-  struct Vm_t* vm = malloc(sizeof(struct Vm_t));
-  vm->globals = calloc(GLOBALS_SIZE, sizeof(Object*));
-  vm->instructions = bytecode->instructions;
-  vm->constant_pool = bytecode->constants;
-  vm->sp = 0;
-  return vm;
+  Object** globals = calloc(GLOBALS_SIZE, sizeof(Object*));
+  return vm_new_with_globals(bytecode, globals);
 }
 
 Vm vm_new_with_globals(Bytecode* bytecode, Object** globals) {
   struct Vm_t* vm = malloc(sizeof(struct Vm_t));
   vm->globals = globals;
-  vm->instructions = bytecode->instructions;
   vm->constant_pool = bytecode->constants;
   vm->sp = 0;
+  vm->frames[0] = new_frame(new_compiled_fn(bytecode->instructions));
+  vm->frames_index = 1;
   return vm;
 }
 
 VmErr vm_run(Vm vm) {
-  int global_index;
-  for (int ip = 0; ip < vm->instructions->length; ip++) {
-    OpCode op = vm->instructions->bytes[ip];
+  int global_index, ip;
+  Instruct* ins;
+  while (current_frame(vm)->ip < current_instructions(vm)->length - 1) {
+    current_frame(vm)->ip++;
+    ip = current_frame(vm)->ip;
+    ins = current_instructions(vm);
+    OpCode op = ins->bytes[ip];
     switch (op) {
       case OP_CONSTANT: {
-        int const_idx = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip += 2;
+        int const_idx = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip += 2;
         err = push(vm, &vm->constant_pool->constants[const_idx]);
         if (err)
           return err;
@@ -119,16 +133,16 @@ VmErr vm_run(Vm vm) {
         break;
 
       case OP_JUMP: {
-        int pos = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip = pos - 1;
+        int pos = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip = pos - 1;
       } break;
 
       case OP_JUMP_NOT_TRUTHY: {
-        int pos = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip += 2;
+        int pos = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip += 2;
         Object* condition = pop(vm);
         if (!is_truthy(*condition)) {
-          ip = pos - 1;
+          current_frame(vm)->ip = pos - 1;
         }
       } break;
 
@@ -139,22 +153,22 @@ VmErr vm_run(Vm vm) {
         break;
 
       case OP_GET_GLOBAL:
-        global_index = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip += 2;
+        global_index = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip += 2;
         err = push(vm, vm->globals[global_index]);
         if (err)
           return err;
         break;
 
       case OP_SET_GLOBAL:
-        global_index = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip += 2;
+        global_index = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip += 2;
         vm->globals[global_index] = pop(vm);
         break;
 
       case OP_ARRAY: {
-        int num_elements = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip += 2;
+        int num_elements = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip += 2;
         Object* array = build_array(vm, vm->sp - num_elements, vm->sp);
         vm->sp = vm->sp - num_elements;
         err = push(vm, array);
@@ -163,8 +177,8 @@ VmErr vm_run(Vm vm) {
       } break;
 
       case OP_HASH: {
-        int num_elements = read_uint16(&vm->instructions->bytes[ip + 1]);
-        ip += 2;
+        int num_elements = read_uint16(&ins->bytes[ip + 1]);
+        current_frame(vm)->ip += 2;
         Object* hash = build_hash(vm, vm->sp - num_elements, vm->sp);
         vm->sp = vm->sp - num_elements;
         err = push(vm, hash);
@@ -179,6 +193,31 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
       } break;
+
+      case OP_CALL: {
+        Object* fn = vm->stack[vm->sp - 1];
+        if (!fn || fn->type != COMPILED_FUNCTION_OBJ) {
+          return "calling non-function";
+        }
+        Frame* frame = new_frame(fn);
+        push_frame(vm, frame);
+      } break;
+
+      case OP_RETURN_VALUE: {
+        Object* return_value = pop(vm);
+        pop_frame(vm);
+        pop(vm);  // pop the function off the stack
+        err = push(vm, return_value);
+        if (err)
+          return err;
+      } break;
+
+      case OP_RETURN:
+        pop_frame(vm);
+        pop(vm);
+        err = push(vm, &M_NULL);
+        if (err)
+          return err;
     }
   }
   return NULL;
@@ -390,6 +429,20 @@ Object* vm_stack_top(Vm vm) {
   }
 }
 
+static Object* new_compiled_fn(Instruct* instructions) {
+  Object* compiled_fn = malloc(sizeof(Object));
+  compiled_fn->type = COMPILED_FUNCTION_OBJ;
+  compiled_fn->value.instructions = instructions;
+  return compiled_fn;
+}
+
+static Frame* new_frame(Object* fn) {
+  Frame* frame = malloc(sizeof(Frame));
+  frame->fn = fn;
+  frame->ip = -1;
+  return frame;
+}
+
 Object* vm_last_popped(Vm vm) {
   return vm->stack[vm->sp];
 }
@@ -404,4 +457,20 @@ void inspect_stack(Vm vm, const char* fn) {
     printf("vm->stack[%d]=%p\n", i, (void*)vm->stack[i]);
     object_print(*vm->stack[i]);
   }
+}
+
+static Frame* current_frame(Vm vm) {
+  return vm->frames[vm->frames_index - 1];
+}
+
+static void push_frame(Vm vm, Frame* frame) {
+  vm->frames[vm->frames_index++] = frame;
+}
+
+static Frame* pop_frame(Vm vm) {
+  return vm->frames[--vm->frames_index];
+}
+
+static Instruct* current_instructions(Vm vm) {
+  return current_frame(vm)->fn->value.instructions;
 }

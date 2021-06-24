@@ -209,8 +209,66 @@ void test_index_expressions(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_calling_fns_without_args(void) {
+  VmTest tests[] = {
+    {.input = "let add = fn() { 1 + 2; };"
+              "add();",
+      .expected = expect_int(3)},
+    {.input = "let one = fn() { 1; };"
+              "let two = fn() { 2; };"
+              "one() + two();",
+      .expected = expect_int(3)},
+    {.input = "let a = fn() { 1; };"
+              "let b = fn() { a() + 1; };"
+              "let c = fn() { b() + 1; };"
+              "c();",
+      .expected = expect_int(3)},
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
+void test_fns_with_return_statement(void) {
+  VmTest tests[] = {
+    {.input = "let earlyExit = fn() { return 99; 100; };"
+              "earlyExit();",
+      .expected = expect_int(99)},
+    {.input = "let earlyExit = fn() { return 99; return 100; };"
+              "earlyExit();",
+      .expected = expect_int(99)},
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
+void test_fns_without_return_value(void) {
+  VmTest tests[] = {
+    {.input = "let noReturn = fn() { };"
+              "noReturn();",
+      .expected = expect_null()},
+    {.input = "let noReturn = fn() { };"
+              "let noReturnTwo = fn() { noReturn(); };"
+              "noReturn();"
+              "noReturnTwo();",
+      .expected = expect_null()},
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
+void test_first_class_fns(void) {
+  VmTest tests[] = {
+    {.input = "let returnsOne = fn() { 1; };"
+              "let returnsOneReturner = fn() { returnsOne; };"
+              "returnsOneReturner()();",
+      .expected = expect_int(1)},
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_first_class_fns();
+  test_fns_without_return_value();
+  test_fns_with_return_statement();
+  test_calling_fns_without_args();
   test_index_expressions();
   test_hash_literals();
   test_array_literals();

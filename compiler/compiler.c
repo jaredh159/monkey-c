@@ -9,7 +9,7 @@
 #include "symbol_table.h"
 
 #define BACKPATCH_LATER i(UCHAR_MAX)
-#define MAX_SCOPES 128
+#define MAX_SCOPES 256
 
 typedef struct EmittedInstructions {
   OpCode op_code;
