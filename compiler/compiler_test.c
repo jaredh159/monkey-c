@@ -498,6 +498,65 @@ void test_functions(void) {
   run_compiler_tests(LEN(tests), tests, __func__);
 }
 
+void test_let_statement_scopes(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "let num = 55; fn() { num }",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 55}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(2,     //
+              code_make(OP_GET_GLOBAL, 0),         //
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(4,  //
+        code_make(OP_CONSTANT, 0),                 //
+        code_make(OP_SET_GLOBAL, 0),               //
+        code_make(OP_CONSTANT, 1),                 //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "fn() { let num = 55; num }",
+      .expected_constants = make_constant_pool(2,   //
+        (Object){INTEGER_OBJ, .value = {.i = 55}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(4,     //
+              code_make(OP_CONSTANT, 0),           //
+              code_make(OP_SET_LOCAL, 0),          //
+              code_make(OP_GET_LOCAL, 0),          //
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 1),                 //
+        code_make(OP_POP)),                        //
+    },
+    {
+      .input = "fn() { let a = 55; let b = 77; a + b }",
+      .expected_constants = make_constant_pool(3,   //
+        (Object){INTEGER_OBJ, .value = {.i = 55}},  //
+        (Object){INTEGER_OBJ, .value = {.i = 77}},  //
+        (Object){COMPILED_FUNCTION_OBJ,
+          {
+            .instructions = code_concat_ins(8,     //
+              code_make(OP_CONSTANT, 0),           //
+              code_make(OP_SET_LOCAL, 0),          //
+              code_make(OP_CONSTANT, 1),           //
+              code_make(OP_SET_LOCAL, 1),          //
+              code_make(OP_GET_LOCAL, 0),          //
+              code_make(OP_GET_LOCAL, 1),          //
+              code_make(OP_ADD),                   //
+              code_make(OP_RETURN_VALUE)),         //
+          }}),                                     //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 2),                 //
+        code_make(OP_POP)),                        //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
 void test_function_calls(void) {
   CompilerTest tests[] = {
     {
@@ -540,6 +599,7 @@ void test_compiler_scopes(void) {
   const char* t = __func__;
   Compiler c = compiler_new();
   assert_int_is(0, compiler_scope_index(c), "scope index starts at 0", t);
+  SymbolTable global_symbols = compiler_symbol_table(c);
   compiler_test_emit(c, OP_MUL);
 
   compiler_enter_scope(c);
@@ -555,8 +615,19 @@ void test_compiler_scopes(void) {
       code_opcode_lookup(op)),
     t);
 
+  if (symbol_table_outer(compiler_symbol_table(c)) != global_symbols) {
+    fail("compiler did not enclose symbol table", t);
+  }
+
   compiler_leave_scope(c);
   assert_int_is(0, compiler_scope_index(c), "scope index back to 0", t);
+
+  if (compiler_symbol_table(c) != global_symbols) {
+    fail("compiler did not restore global symbol table", t);
+  }
+  if (symbol_table_outer(compiler_symbol_table(c)) != NULL) {
+    fail("compiler modified global symbol table incorrectly", t);
+  }
 
   compiler_test_emit(c, OP_ADD);
   assert_int_is(2, compiler_scope_instructions(c)->length,
@@ -577,8 +648,9 @@ void test_compiler_scopes(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
-  test_function_calls();
   test_compiler_scopes();
+  test_let_statement_scopes();
+  test_function_calls();
   test_functions();
   test_index_expressions();
   test_hash_literals();

@@ -26,6 +26,12 @@ void test_make(void) {
       .expected = (Byte[1]){OP_ADD},
       .expected_len = 1,
     },
+    {
+      .op = OP_GET_LOCAL,
+      .operands = i(255),
+      .expected = (Byte[2]){OP_GET_LOCAL, 255},
+      .expected_len = 2,
+    },
   };
 
   for (int i = 0; i < LEN(tests); i++) {
@@ -54,6 +60,11 @@ void test_read_operands(void) {
       .operands = i(65535),
       .bytes_read = 2,
     },
+    {
+      .op = OP_GET_LOCAL,
+      .operands = i(255),
+      .bytes_read = 1,
+    },
   };
 
   for (int i = 0; i < LEN(tests); i++) {
@@ -76,16 +87,18 @@ void test_read_operands(void) {
 
 void test_instructions_string(void) {
   char* n = "instructions_string";
-  Instruct* ins = code_concat_ins(3,  //
+  Instruct* ins = code_concat_ins(4,  //
     code_make(OP_ADD),                //
+    code_make(OP_GET_LOCAL, 1),       //
     code_make(OP_CONSTANT, 2),        //
     code_make(OP_CONSTANT, 65535)     //
   );
 
   char* expected =
     "0000 OpAdd\n"
-    "0001 OpConstant 2\n"
-    "0004 OpConstant 65535\n";
+    "0001 OpGetLocal 1\n"
+    "0003 OpConstant 2\n"
+    "0006 OpConstant 65535\n";
 
   assert_str_is(
     expected, instructions_str(*ins), "instruction string correct", n);

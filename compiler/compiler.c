@@ -90,7 +90,8 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
         return err;
       Symbol* symbol =
         symbol_table_define(c->symbol_table, let_stmt->name->value);
-      emit(c, OP_SET_GLOBAL, i(symbol->index));
+      OpCode op = symbol->scope == SCOPE_GLOBAL ? OP_SET_GLOBAL : OP_SET_LOCAL;
+      emit(c, op, i(symbol->index));
     } break;
 
     case EXPRESSION_STATEMENT_NODE:
@@ -219,7 +220,9 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             sprintf(err, "undefined variable %s", ident->value);
             return err;
           }
-          emit(c, OP_GET_GLOBAL, i(symbol->index));
+          OpCode op =
+            symbol->scope == SCOPE_GLOBAL ? OP_GET_GLOBAL : OP_GET_LOCAL;
+          emit(c, op, i(symbol->index));
         } break;
 
         case EXPRESSION_ARRAY_LITERAL: {
@@ -460,11 +463,13 @@ void compiler_test_emit(Compiler c, OpCode op_code) {
 
 void compiler_enter_scope(Compiler c) {
   c->scopes[++c->scope_index] = make_scope();
+  c->symbol_table = symbol_table_new_enclosed(c->symbol_table);
 }
 
 Instruct* compiler_leave_scope(Compiler c) {
   Instruct* instructions = scope(c).instructions;
   c->scope_index--;
+  c->symbol_table = symbol_table_outer(c->symbol_table);
   return instructions;
 }
 
@@ -478,4 +483,8 @@ static Scope make_scope(void) {
 
 static Scope scope(Compiler c) {
   return c->scopes[c->scope_index];
+}
+
+SymbolTable compiler_symbol_table(Compiler c) {
+  return c->symbol_table;
 }

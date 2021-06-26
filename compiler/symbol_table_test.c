@@ -4,8 +4,8 @@
 #include <string.h>
 #include "../test/test.h"
 
-void assert_symbol_is(
-  Symbol* symbol, char* name, SymbolScope scope, int index, char* test_name);
+void assert_symbol_is(Symbol* symbol, char* name, SymbolScope scope, int index,
+  const char* test_name);
 
 void test_define(void) {
   SymbolTable global = symbol_table_new();
@@ -13,6 +13,26 @@ void test_define(void) {
   assert_symbol_is(abc, "abc", SCOPE_GLOBAL, 0, "test_define");
   Symbol* a = symbol_table_define(global, "a");
   assert_symbol_is(a, "a", SCOPE_GLOBAL, 1, "test_define");
+}
+
+void test_scoped_define(void) {
+  SymbolTable global = symbol_table_new();
+  Symbol* a = symbol_table_define(global, "a");
+  Symbol* b = symbol_table_define(global, "b");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, __func__);
+
+  SymbolTable local_1 = symbol_table_new_enclosed(global);
+  Symbol* c = symbol_table_define(local_1, "c");
+  Symbol* d = symbol_table_define(local_1, "d");
+  assert_symbol_is(c, "c", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(d, "d", SCOPE_LOCAL, 1, __func__);
+
+  SymbolTable local_2 = symbol_table_new_enclosed(local_1);
+  Symbol* e = symbol_table_define(local_2, "e");
+  Symbol* f = symbol_table_define(local_2, "f");
+  assert_symbol_is(e, "e", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(f, "f", SCOPE_LOCAL, 1, __func__);
 }
 
 void test_resolve(void) {
@@ -37,6 +57,53 @@ void test_resolve(void) {
   assert(unknown == NULL, "unknown ident is NULL", t);
 }
 
+void test_resolve_local(void) {
+  SymbolTable global = symbol_table_new();
+  symbol_table_define(global, "a");
+  symbol_table_define(global, "b");
+  SymbolTable local = symbol_table_new_enclosed(global);
+  symbol_table_define(local, "c");
+  symbol_table_define(local, "d");
+  Symbol* a = symbol_table_resolve(local, "a");
+  Symbol* b = symbol_table_resolve(local, "b");
+  Symbol* c = symbol_table_resolve(local, "c");
+  Symbol* d = symbol_table_resolve(local, "d");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, __func__);
+  assert_symbol_is(c, "c", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(d, "d", SCOPE_LOCAL, 1, __func__);
+}
+
+void test_resolve_nested_local(void) {
+  SymbolTable global = symbol_table_new();
+  symbol_table_define(global, "a");
+  symbol_table_define(global, "b");
+  SymbolTable local_1 = symbol_table_new_enclosed(global);
+  symbol_table_define(local_1, "c");
+  symbol_table_define(local_1, "d");
+  SymbolTable local_2 = symbol_table_new_enclosed(local_1);
+  symbol_table_define(local_2, "e");
+  symbol_table_define(local_2, "f");
+
+  Symbol* a = symbol_table_resolve(local_1, "a");
+  Symbol* b = symbol_table_resolve(local_1, "b");
+  Symbol* c = symbol_table_resolve(local_1, "c");
+  Symbol* d = symbol_table_resolve(local_1, "d");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, __func__);
+  assert_symbol_is(c, "c", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(d, "d", SCOPE_LOCAL, 1, __func__);
+
+  a = symbol_table_resolve(local_2, "a");
+  b = symbol_table_resolve(local_2, "b");
+  Symbol* e = symbol_table_resolve(local_2, "e");
+  Symbol* f = symbol_table_resolve(local_2, "f");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, __func__);
+  assert_symbol_is(e, "e", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(f, "f", SCOPE_LOCAL, 1, __func__);
+}
+
 void test_char_hash(void) {
   char* t = "char_hash";
   int symbol_char_hash(char ch);
@@ -50,6 +117,9 @@ void test_char_hash(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_scoped_define();
+  test_resolve_local();
+  test_resolve_nested_local();
   test_char_hash();
   test_resolve();
   test_define();
@@ -57,8 +127,13 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void assert_symbol_is(
-  Symbol* symbol, char* name, SymbolScope scope, int index, char* test_name) {
+void assert_symbol_is(Symbol* symbol, char* name, SymbolScope scope, int index,
+  const char* test_name) {
+  if (!symbol) {
+    fail(ss("name `%s` not resolvable", name), test_name);
+    return;
+  }
+
   if (strcmp(symbol->name, name) != 0) {
     fail(ss("symbol name incorrect, want=%s, got=%s", name, symbol->name),
       test_name);

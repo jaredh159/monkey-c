@@ -41,6 +41,10 @@ Instruct* code_make(int op_int, ...) {
       case 2:
         bytes[1] = operand >> 8;
         bytes[2] = operand & 0xff;
+        break;
+      case 1:
+        bytes[1] = operand & 0xff;
+        break;
     }
   }
 
@@ -138,6 +142,9 @@ ReadOpResult code_read_operands(Definition def, Instruct instructions) {
       case 2:
         operands.arr[i] = (int)read_uint16(&instructions.bytes[bytes_read + 1]);
         break;
+      case 1:
+        operands.arr[i] = (int)instructions.bytes[bytes_read + 1];
+        break;
     }
     bytes_read += width;
   }
@@ -181,6 +188,16 @@ Definition* code_opcode_lookup(OpCode op) {
       def->operand_widths[0] = 2;
       def->num_operands = 1;
       def->name = "OpGetGlobal";
+      break;
+    case OP_SET_LOCAL:
+      def->operand_widths[0] = 1;
+      def->num_operands = 1;
+      def->name = "OpSetLocal";
+      break;
+    case OP_GET_LOCAL:
+      def->operand_widths[0] = 1;
+      def->num_operands = 1;
+      def->name = "OpGetLocal";
       break;
     case OP_ARRAY:
       def->operand_widths[0] = 2;

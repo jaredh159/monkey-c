@@ -16,6 +16,7 @@ typedef struct HashNode {
 typedef HashNode Store;
 
 struct SymbolTable_t {
+  struct SymbolTable_t* outer;
   Store* store;
   int num_definitions;
 };
@@ -40,21 +41,33 @@ SymbolTable symbol_table_new() {
   return table;
 }
 
+SymbolTable symbol_table_new_enclosed(SymbolTable outer) {
+  SymbolTable table = symbol_table_new();
+  table->outer = outer;
+  return table;
+}
+
 Symbol* symbol_table_define(SymbolTable t, char* name) {
-  Symbol* symbol = new_symbol(name, t->num_definitions, SCOPE_GLOBAL);
+  SymbolScope scope = t->outer == NULL ? SCOPE_GLOBAL : SCOPE_LOCAL;
+  Symbol* symbol = new_symbol(name, t->num_definitions, scope);
   symbol_put(t->store, symbol, 0);
   t->num_definitions++;
   return symbol;
 }
 
 Symbol* symbol_table_resolve(SymbolTable t, char* name) {
-  return symbol_get(t->store, name);
+  Symbol* resolved = symbol_get(t->store, name);
+  if (!resolved && t->outer)
+    return symbol_table_resolve(t->outer, name);
+  return resolved;
 }
 
 char* symbol_scope_name(SymbolScope scope) {
   switch (scope) {
     case SCOPE_GLOBAL:
       return "GLOBAL";
+    case SCOPE_LOCAL:
+      return "LOCAL";
     default:
       printf("Unhandled scope %d in `symbol_scope_name()`\n", scope);
       exit(EXIT_FAILURE);
@@ -102,4 +115,8 @@ int symbol_char_hash(char ch) {
     return 62;
   printf("Unexpected char for ident hashing: %c\n", ch);
   exit(EXIT_FAILURE);
+}
+
+SymbolTable symbol_table_outer(SymbolTable table) {
+  return table->outer;
 }
