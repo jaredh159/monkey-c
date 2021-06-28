@@ -15,6 +15,7 @@ typedef struct CompilerTest {
 void test_instructions(Instruct* expected, Instruct* actual, char* test);
 void test_constants(ConstantPool* expected, ConstantPool* actual, char* test);
 void run_compiler_tests(int len, CompilerTest tests[len], const char* test);
+Object make_compiled_fn_obj(int num_locals, Instruct* instructions);
 
 // these are a bit sad, but he tests the internals of the compiler
 // and I don't really want to expose all the guts of the compiler in compiler.h
@@ -437,62 +438,56 @@ void test_functions(void) {
       .expected_constants = make_constant_pool(3,   //
         (Object){INTEGER_OBJ, .value = {.i = 5}},   //
         (Object){INTEGER_OBJ, .value = {.i = 10}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(4,     //
-              code_make(OP_CONSTANT, 0),           //
-              code_make(OP_CONSTANT, 1),           //
-              code_make(OP_ADD),                   //
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 2),                 //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(4,                        //
+            code_make(OP_CONSTANT, 0),              //
+            code_make(OP_CONSTANT, 1),              //
+            code_make(OP_ADD),                      //
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(2,   //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_POP)),                         //
     },
     {
       .input = "fn() { 5 + 10 }",
       .expected_constants = make_constant_pool(3,   //
         (Object){INTEGER_OBJ, .value = {.i = 5}},   //
         (Object){INTEGER_OBJ, .value = {.i = 10}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(4,     //
-              code_make(OP_CONSTANT, 0),           //
-              code_make(OP_CONSTANT, 1),           //
-              code_make(OP_ADD),                   //
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 2),                 //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(4,                        //
+            code_make(OP_CONSTANT, 0),              //
+            code_make(OP_CONSTANT, 1),              //
+            code_make(OP_ADD),                      //
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(2,   //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_POP)),                         //
     },
     {
       .input = "fn() { 1; 2 }",
       .expected_constants = make_constant_pool(3,  //
         (Object){INTEGER_OBJ, .value = {.i = 1}},  //
         (Object){INTEGER_OBJ, .value = {.i = 2}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(4,     //
-              code_make(OP_CONSTANT, 0),           //
-              code_make(OP_POP),                   //
-              code_make(OP_CONSTANT, 1),           //
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
+        make_compiled_fn_obj(0,                    //
+          code_concat_ins(4,                       //
+            code_make(OP_CONSTANT, 0),             //
+            code_make(OP_POP),                     //
+            code_make(OP_CONSTANT, 1),             //
+            code_make(OP_RETURN_VALUE))            //
+          )),                                      //
       .expected_instructions = code_concat_ins(2,  //
         code_make(OP_CONSTANT, 2),                 //
         code_make(OP_POP)),                        //
     },
     {
       .input = "fn() { }",
-      .expected_constants = make_constant_pool(1,  //
-        (Object){
-          COMPILED_FUNCTION_OBJ,                   //
-          {.instructions = code_make(OP_RETURN)},  //
-        }),                                        //
-      .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 0),                 //
-        code_make(OP_POP)),                        //
+      .expected_constants = make_constant_pool(1,        //
+        make_compiled_fn_obj(0, code_make(OP_RETURN))),  //
+      .expected_instructions = code_concat_ins(2,        //
+        code_make(OP_CONSTANT, 0),                       //
+        code_make(OP_POP)),                              //
     },
   };
   run_compiler_tests(LEN(tests), tests, __func__);
@@ -504,54 +499,51 @@ void test_let_statement_scopes(void) {
       .input = "let num = 55; fn() { num }",
       .expected_constants = make_constant_pool(2,   //
         (Object){INTEGER_OBJ, .value = {.i = 55}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(2,     //
-              code_make(OP_GET_GLOBAL, 0),         //
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(4,  //
-        code_make(OP_CONSTANT, 0),                 //
-        code_make(OP_SET_GLOBAL, 0),               //
-        code_make(OP_CONSTANT, 1),                 //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(2,                        //
+            code_make(OP_GET_GLOBAL, 0),            //
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(4,   //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_SET_GLOBAL, 0),                //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_POP)),                         //
     },
     {
       .input = "fn() { let num = 55; num }",
       .expected_constants = make_constant_pool(2,   //
         (Object){INTEGER_OBJ, .value = {.i = 55}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(4,     //
-              code_make(OP_CONSTANT, 0),           //
-              code_make(OP_SET_LOCAL, 0),          //
-              code_make(OP_GET_LOCAL, 0),          //
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 1),                 //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(4,                        //
+            code_make(OP_CONSTANT, 0),              //
+            code_make(OP_SET_LOCAL, 0),             //
+            code_make(OP_GET_LOCAL, 0),             //
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(2,   //
+        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_POP)),                         //
     },
     {
       .input = "fn() { let a = 55; let b = 77; a + b }",
       .expected_constants = make_constant_pool(3,   //
         (Object){INTEGER_OBJ, .value = {.i = 55}},  //
         (Object){INTEGER_OBJ, .value = {.i = 77}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(8,     //
-              code_make(OP_CONSTANT, 0),           //
-              code_make(OP_SET_LOCAL, 0),          //
-              code_make(OP_CONSTANT, 1),           //
-              code_make(OP_SET_LOCAL, 1),          //
-              code_make(OP_GET_LOCAL, 0),          //
-              code_make(OP_GET_LOCAL, 1),          //
-              code_make(OP_ADD),                   //
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 2),                 //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(8,                        //
+            code_make(OP_CONSTANT, 0),              //
+            code_make(OP_SET_LOCAL, 0),             //
+            code_make(OP_CONSTANT, 1),              //
+            code_make(OP_SET_LOCAL, 1),             //
+            code_make(OP_GET_LOCAL, 0),             //
+            code_make(OP_GET_LOCAL, 1),             //
+            code_make(OP_ADD),                      //
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(2,   //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_POP)),                         //
     },
   };
   run_compiler_tests(LEN(tests), tests, __func__);
@@ -563,33 +555,31 @@ void test_function_calls(void) {
       .input = "fn() { 24 }();",
       .expected_constants = make_constant_pool(2,   //
         (Object){INTEGER_OBJ, .value = {.i = 24}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(2,     //
-              code_make(OP_CONSTANT, 0),           // `24`
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(3,  //
-        code_make(OP_CONSTANT, 1),                 // the compiled fn
-        code_make(OP_CALL),                        //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(2,                        //
+            code_make(OP_CONSTANT, 0),              // `24`
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(3,   //
+        code_make(OP_CONSTANT, 1),                  // the compiled fn
+        code_make(OP_CALL),                         //
+        code_make(OP_POP)),                         //
     },
     {
       .input = "let noArg = fn() { 24 }; noArg();",
       .expected_constants = make_constant_pool(2,   //
         (Object){INTEGER_OBJ, .value = {.i = 24}},  //
-        (Object){COMPILED_FUNCTION_OBJ,
-          {
-            .instructions = code_concat_ins(2,     //
-              code_make(OP_CONSTANT, 0),           // `24`
-              code_make(OP_RETURN_VALUE)),         //
-          }}),                                     //
-      .expected_instructions = code_concat_ins(5,  //
-        code_make(OP_CONSTANT, 1),                 // the compiled fn
-        code_make(OP_SET_GLOBAL, 0),               //
-        code_make(OP_GET_GLOBAL, 0),               //
-        code_make(OP_CALL),                        //
-        code_make(OP_POP)),                        //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(2,                        //
+            code_make(OP_CONSTANT, 0),              // `24`
+            code_make(OP_RETURN_VALUE))             //
+          )),                                       //
+      .expected_instructions = code_concat_ins(5,   //
+        code_make(OP_CONSTANT, 1),                  // the compiled fn
+        code_make(OP_SET_GLOBAL, 0),                //
+        code_make(OP_GET_GLOBAL, 0),                //
+        code_make(OP_CALL),                         //
+        code_make(OP_POP)),                         //
     },
   };
   run_compiler_tests(LEN(tests), tests, __func__);
@@ -695,8 +685,8 @@ void test_constants(ConstantPool* expected, ConstantPool* actual, char* test) {
           "constant must be compiled fn", test);
         char fn_test[256];
         sprintf(fn_test, "%s compiled function constant=%d", test, i);
-        test_instructions(expected_constant.value.instructions,
-          actual_constant.value.instructions, fn_test);
+        test_instructions(expected_constant.value.compiled_fn->instructions,
+          actual_constant.value.compiled_fn->instructions, fn_test);
         break;
       default:
         printf(
@@ -722,4 +712,11 @@ void run_compiler_tests(int len, CompilerTest tests[len], const char* test) {
       t.expected_instructions, bytecode->instructions, test_input);
     test_constants(t.expected_constants, bytecode->constants, test_input);
   }
+}
+
+Object make_compiled_fn_obj(int num_locals, Instruct* instructions) {
+  CompiledFunction* compiled_fn = malloc(sizeof(CompiledFunction));
+  compiled_fn->num_locals = num_locals;
+  compiled_fn->instructions = instructions;
+  return (Object){.type = COMPILED_FUNCTION_OBJ, {.compiled_fn = compiled_fn}};
 }

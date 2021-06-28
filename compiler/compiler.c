@@ -270,11 +270,16 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             replace_last_pop_with_return(c);
           if (!last_instruction_is(c, OP_RETURN_VALUE))
             emit(c, OP_RETURN, _);
+          int num_locals =
+            symbol_table_num_definitions(compiler_symbol_table(c));
           Instruct* instructions = compiler_leave_scope(c);
-          Object* compiled_fn = malloc(sizeof(Object));
-          compiled_fn->type = COMPILED_FUNCTION_OBJ;
-          compiled_fn->value.instructions = instructions;
-          emit(c, OP_CONSTANT, i(add_constant(c, compiled_fn)));
+          CompiledFunction* compiled_fn = malloc(sizeof(CompiledFunction));
+          compiled_fn->num_locals = num_locals;
+          compiled_fn->instructions = instructions;
+          Object* compiled_fn_obj = malloc(sizeof(Object));
+          compiled_fn_obj->type = COMPILED_FUNCTION_OBJ;
+          compiled_fn_obj->value.compiled_fn = compiled_fn;
+          emit(c, OP_CONSTANT, i(add_constant(c, compiled_fn_obj)));
         } break;
 
         case EXPRESSION_CALL:

@@ -259,12 +259,82 @@ void test_first_class_fns(void) {
               "let returnsOneReturner = fn() { returnsOne; };"
               "returnsOneReturner()();",
       .expected = expect_int(1)},
+    {.input = "\
+      let returnsOneReturner = fn() {\
+        let returnsOne = fn() { 1; };\
+        returnsOne;\
+      }\
+      returnsOneReturner()();",
+      .expected = expect_int(1)},
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
+void test_calling_fns_with_bindings(void) {
+  VmTest tests[] = {
+    {
+      .input = "let one = fn() { let one = 1; one }; one();",
+      .expected = expect_int(1),
+    },
+    {
+      .input = "\
+      let oneAndTwo = fn(){\
+        let one = 1;\
+        let two = 2;\
+        one + two;\
+      };\
+      oneAndTwo();",
+      .expected = expect_int(3),
+    },
+    {
+      .input = "\
+      let oneAndTwo = fn(){\
+        let one = 1;\
+        let two = 2;\
+        one + two;\
+      };\
+      let threeAndFour = fn() {\
+        let three = 3;\
+        let four = 4;\
+        three + four;\
+      };\
+      oneAndTwo() + threeAndFour();",
+      .expected = expect_int(10),
+    },
+    {
+      .input = "\
+      let firstFoobar = fn(){\
+        let foobar = 50;\
+        foobar;\
+      };\
+      let secondFoobar = fn() {\
+        let foobar = 100;\
+        foobar;\
+      };\
+      firstFoobar() + secondFoobar();",
+      .expected = expect_int(150),
+    },
+    {
+      .input = "\
+      let globalSeed = 50;\
+      let minusOne = fn() {\
+        let num = 1;\
+        globalSeed - num;\
+      }\
+      let minusTwo = fn() {\
+        let num = 2;\
+        globalSeed - num;\
+      }\
+      minusOne() + minusTwo();",
+      .expected = expect_int(97),
+    },
   };
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_calling_fns_with_bindings();
   test_first_class_fns();
   test_fns_without_return_value();
   test_fns_with_return_statement();

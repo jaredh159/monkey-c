@@ -120,3 +120,7 @@ int symbol_char_hash(char ch) {
 SymbolTable symbol_table_outer(SymbolTable table) {
   return table->outer;
 }
+
+int symbol_table_num_definitions(SymbolTable table) {
+  return table->num_definitions;
+}

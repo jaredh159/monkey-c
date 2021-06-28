@@ -34,6 +34,11 @@ typedef struct Function {
   Env *env;
 } Function;
 
+typedef struct CompiledFunction {
+  Instruct *instructions;
+  int num_locals;
+} CompiledFunction;
+
 typedef struct Object {
   ObjectType type;
   union {
@@ -42,9 +47,9 @@ typedef struct Object {
     struct Object *return_value;
     char *str;
     Function *fn;
+    CompiledFunction *compiled_fn;
     struct Object (*builtin_fn)(List *args);
     List *list;  // List<Object> (for array elements) | List<HashPair>
-    Instruct *instructions;
   } value;
 } Object;
 

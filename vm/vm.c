@@ -18,6 +18,7 @@
 typedef struct Frame {
   Object* fn;
   int ip;
+  int base_pointer;
 } Frame;
 
 struct Vm_t {
@@ -46,8 +47,8 @@ static VmErr exec_int_comparison(Vm vm, OpCode op, int left, int right);
 static VmErr exec_bang_operator(Vm vm);
 static VmErr exec_minus_operator(Vm vm);
 void inspect_stack(Vm vm, const char* fn);
-static Object* new_compiled_fn(Instruct* instructions);
-static Frame* new_frame(Object* fn);
+static Object* new_compiled_fn(Instruct* instructions, int num_locals);
+static Frame* new_frame(Object* fn, int base_pointer);
 static Frame* current_frame(Vm vm);
 static void push_frame(Vm vm, Frame* frame);
 static Frame* pop_frame(Vm vm);
@@ -65,13 +66,13 @@ Vm vm_new_with_globals(Bytecode* bytecode, Object** globals) {
   vm->globals = globals;
   vm->constant_pool = bytecode->constants;
   vm->sp = 0;
-  vm->frames[0] = new_frame(new_compiled_fn(bytecode->instructions));
+  vm->frames[0] = new_frame(new_compiled_fn(bytecode->instructions, 0), 0);
   vm->frames_index = 1;
   return vm;
 }
 
 VmErr vm_run(Vm vm) {
-  int global_index, ip;
+  int global_index, local_index, ip;
   Instruct* ins;
   while (current_frame(vm)->ip < current_instructions(vm)->length - 1) {
     current_frame(vm)->ip++;
@@ -166,6 +167,22 @@ VmErr vm_run(Vm vm) {
         vm->globals[global_index] = pop(vm);
         break;
 
+      case OP_SET_LOCAL: {
+        local_index = (int)ins->bytes[ip + 1];
+        Frame* frame = current_frame(vm);
+        frame->ip += 1;
+        vm->stack[frame->base_pointer + local_index] = pop(vm);
+      } break;
+
+      case OP_GET_LOCAL: {
+        local_index = (int)ins->bytes[ip + 1];
+        Frame* frame = current_frame(vm);
+        frame->ip += 1;
+        err = push(vm, vm->stack[frame->base_pointer + local_index]);
+        if (err)
+          return err;
+      } break;
+
       case OP_ARRAY: {
         int num_elements = read_uint16(&ins->bytes[ip + 1]);
         current_frame(vm)->ip += 2;
@@ -199,25 +216,27 @@ VmErr vm_run(Vm vm) {
         if (!fn || fn->type != COMPILED_FUNCTION_OBJ) {
           return "calling non-function";
         }
-        Frame* frame = new_frame(fn);
+        Frame* frame = new_frame(fn, vm->sp);
         push_frame(vm, frame);
+        vm->sp = frame->base_pointer + fn->value.compiled_fn->num_locals;
       } break;
 
       case OP_RETURN_VALUE: {
         Object* return_value = pop(vm);
-        pop_frame(vm);
-        pop(vm);  // pop the function off the stack
+        Frame* frame = pop_frame(vm);
+        vm->sp = frame->base_pointer - 1;
         err = push(vm, return_value);
         if (err)
           return err;
       } break;
 
-      case OP_RETURN:
-        pop_frame(vm);
-        pop(vm);
+      case OP_RETURN: {
+        Frame* frame = pop_frame(vm);
+        vm->sp = frame->base_pointer - 1;
         err = push(vm, &M_NULL);
         if (err)
           return err;
+      } break;
     }
   }
   return NULL;
@@ -429,17 +448,21 @@ Object* vm_stack_top(Vm vm) {
   }
 }
 
-static Object* new_compiled_fn(Instruct* instructions) {
-  Object* compiled_fn = malloc(sizeof(Object));
-  compiled_fn->type = COMPILED_FUNCTION_OBJ;
-  compiled_fn->value.instructions = instructions;
-  return compiled_fn;
+static Object* new_compiled_fn(Instruct* instructions, int num_locals) {
+  CompiledFunction* compiled_fn = malloc(sizeof(CompiledFunction));
+  compiled_fn->num_locals = num_locals;
+  compiled_fn->instructions = instructions;
+  Object* obj = malloc(sizeof(Object));
+  obj->type = COMPILED_FUNCTION_OBJ;
+  obj->value.compiled_fn = compiled_fn;
+  return obj;
 }
 
-static Frame* new_frame(Object* fn) {
+static Frame* new_frame(Object* fn, int base_pointer) {
   Frame* frame = malloc(sizeof(Frame));
   frame->fn = fn;
   frame->ip = -1;
+  frame->base_pointer = base_pointer;
   return frame;
 }
 
@@ -472,5 +495,5 @@ static Frame* pop_frame(Vm vm) {
 }
 
 static Instruct* current_instructions(Vm vm) {
-  return current_frame(vm)->fn->value.instructions;
+  return current_frame(vm)->fn->value.compiled_fn->instructions;
 }
