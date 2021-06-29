@@ -562,7 +562,7 @@ void test_function_calls(void) {
           )),                                       //
       .expected_instructions = code_concat_ins(3,   //
         code_make(OP_CONSTANT, 1),                  // the compiled fn
-        code_make(OP_CALL),                         //
+        code_make(OP_CALL, 0),                      //
         code_make(OP_POP)),                         //
     },
     {
@@ -578,8 +578,48 @@ void test_function_calls(void) {
         code_make(OP_CONSTANT, 1),                  // the compiled fn
         code_make(OP_SET_GLOBAL, 0),                //
         code_make(OP_GET_GLOBAL, 0),                //
-        code_make(OP_CALL),                         //
+        code_make(OP_CALL, 0),                      //
         code_make(OP_POP)),                         //
+    },
+    {
+      .input = "let oneArg = fn(a) {a}; oneArg(24);",
+      .expected_constants = make_constant_pool(2,    //
+        make_compiled_fn_obj(0,                      //
+          code_concat_ins(2,                         //
+            code_make(OP_GET_LOCAL, 0),              //
+            code_make(OP_RETURN_VALUE))              //
+          ),                                         //
+        (Object){INTEGER_OBJ, .value = {.i = 24}}),  //
+      .expected_instructions = code_concat_ins(6,    //
+        code_make(OP_CONSTANT, 0),                   //
+        code_make(OP_SET_GLOBAL, 0),                 //
+        code_make(OP_GET_GLOBAL, 0),                 //
+        code_make(OP_CONSTANT, 1),                   //
+        code_make(OP_CALL, 1),                       //
+        code_make(OP_POP)),                          //
+    },
+    {
+      .input = "let manyArg = fn(a, b, c) {a; b; c}; manyArg(24, 25, 26);",
+      .expected_constants = make_constant_pool(4,           //
+        make_compiled_fn_obj(0,                             //
+          code_concat_ins(6,                                //
+            code_make(OP_GET_LOCAL, 0),                     //
+            code_make(OP_POP), code_make(OP_GET_LOCAL, 1),  //
+            code_make(OP_POP), code_make(OP_GET_LOCAL, 2),  //
+            code_make(OP_RETURN_VALUE))                     //
+          ),                                                //
+        (Object){INTEGER_OBJ, .value = {.i = 24}},          //
+        (Object){INTEGER_OBJ, .value = {.i = 25}},          //
+        (Object){INTEGER_OBJ, .value = {.i = 26}}),         //
+      .expected_instructions = code_concat_ins(8,           //
+        code_make(OP_CONSTANT, 0),                          //
+        code_make(OP_SET_GLOBAL, 0),                        //
+        code_make(OP_GET_GLOBAL, 0),                        //
+        code_make(OP_CONSTANT, 1),                          //
+        code_make(OP_CONSTANT, 2),                          //
+        code_make(OP_CONSTANT, 3),                          //
+        code_make(OP_CALL, 3),                              //
+        code_make(OP_POP)),                                 //
     },
   };
   run_compiler_tests(LEN(tests), tests, __func__);

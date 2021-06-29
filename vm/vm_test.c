@@ -332,8 +332,27 @@ void test_calling_fns_with_bindings(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_calling_fns_with_args_and_bindings(void) {
+  VmTest tests[] = {
+    {
+      .input = "\
+      let identity = fn(a) { a; };\
+      identity(4);",
+      .expected = expect_int(4),
+    },
+    {
+      .input = "\
+      let sum = fn(a, b) { a + b; };\
+      sum(1, 2);",
+      .expected = expect_int(3),
+    },
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_calling_fns_with_args_and_bindings();
   test_calling_fns_with_bindings();
   test_first_class_fns();
   test_fns_without_return_value();

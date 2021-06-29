@@ -216,6 +216,8 @@ Definition* code_opcode_lookup(OpCode op) {
       def->name = "OpReturnValue";
       break;
     case OP_CALL:
+      def->operand_widths[0] = 1;
+      def->num_operands = 1;
       def->name = "OpCall";
       break;
     case OP_INDEX:

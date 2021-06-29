@@ -212,11 +212,13 @@ VmErr vm_run(Vm vm) {
       } break;
 
       case OP_CALL: {
-        Object* fn = vm->stack[vm->sp - 1];
+        int num_args = (int)ins->bytes[ip + 1];
+        current_frame(vm)->ip += 1;
+        Object* fn = vm->stack[vm->sp - 1 - num_args];
         if (!fn || fn->type != COMPILED_FUNCTION_OBJ) {
           return "calling non-function";
         }
-        Frame* frame = new_frame(fn, vm->sp);
+        Frame* frame = new_frame(fn, vm->sp - num_args);
         push_frame(vm, frame);
         vm->sp = frame->base_pointer + fn->value.compiled_fn->num_locals;
       } break;

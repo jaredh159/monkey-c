@@ -263,6 +263,11 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
         case EXPRESSION_FUNCTION_LITERAL: {
           FunctionLiteral* fn_lit = exp->node;
           compiler_enter_scope(c);
+          for (List* current = fn_lit->parameters; current != NULL;
+               current = current->next) {
+            Identifier* identifier = current->item;
+            symbol_table_define(c->symbol_table, identifier->value);
+          }
           err = compile(c, fn_lit->body, BLOCK_STATEMENTS_NODE);
           if (err)
             return err;
@@ -282,12 +287,19 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           emit(c, OP_CONSTANT, i(add_constant(c, compiled_fn_obj)));
         } break;
 
-        case EXPRESSION_CALL:
-          err = compile(c, ((CallExpression*)exp->node)->fn, EXPRESSION_NODE);
+        case EXPRESSION_CALL: {
+          CallExpression* call_exp = exp->node;
+          err = compile(c, call_exp->fn, EXPRESSION_NODE);
           if (err)
             return err;
-          emit(c, OP_CALL, _);
-          break;
+          for (List* current = call_exp->arguments; current != NULL;
+               current = current->next) {
+            err = compile(c, current->item, EXPRESSION_NODE);
+            if (err)
+              return err;
+          }
+          emit(c, OP_CALL, i(list_count(call_exp->arguments)));
+        } break;
 
         case EXPRESSION_IF: {
           IfExpression* if_exp = exp->node;
