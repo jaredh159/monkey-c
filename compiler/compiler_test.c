@@ -625,6 +625,41 @@ void test_function_calls(void) {
   run_compiler_tests(LEN(tests), tests, __func__);
 }
 
+void test_builtins(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "len([]); push([], 1);",
+      .expected_constants = make_constant_pool(1,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(9,   //
+        code_make(OP_GET_BUILTIN, 0),               //
+        code_make(OP_ARRAY, 0),                     //
+        code_make(OP_CALL, 1),                      //
+        code_make(OP_POP),                          //
+        code_make(OP_GET_BUILTIN, 3),               //
+        code_make(OP_ARRAY, 0),                     //
+        code_make(OP_CONSTANT, 0),                  //
+        code_make(OP_CALL, 2),                      //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "fn() { len([]) }",
+      .expected_constants = make_constant_pool(1,  //
+        make_compiled_fn_obj(0,                    //
+          code_concat_ins(4,                       //
+            code_make(OP_GET_BUILTIN, 0),          //
+            code_make(OP_ARRAY, 0),                //
+            code_make(OP_CALL, 1),                 //
+            code_make(OP_RETURN_VALUE))            //
+          )),                                      //
+      .expected_instructions = code_concat_ins(2,  //
+        code_make(OP_CONSTANT, 0),                 //
+        code_make(OP_POP)),                        //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
 void test_compiler_scopes(void) {
   const char* t = __func__;
   Compiler c = compiler_new();
@@ -678,6 +713,7 @@ void test_compiler_scopes(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_builtins();
   test_compiler_scopes();
   test_let_statement_scopes();
   test_function_calls();

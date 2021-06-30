@@ -215,6 +215,11 @@ Definition* code_opcode_lookup(OpCode op) {
     case OP_RETURN_VALUE:
       def->name = "OpReturnValue";
       break;
+    case OP_GET_BUILTIN:
+      def->operand_widths[0] = 1;
+      def->num_operands = 1;
+      def->name = "OpGetBuiltin";
+      break;
     case OP_CALL:
       def->operand_widths[0] = 1;
       def->num_operands = 1;

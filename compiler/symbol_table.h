@@ -4,6 +4,7 @@
 enum Scopes {
   SCOPE_GLOBAL,
   SCOPE_LOCAL,
+  SCOPE_BUILTIN,
 };
 
 typedef int SymbolScope;
@@ -20,6 +21,7 @@ typedef struct Symbol {
 SymbolTable symbol_table_new();
 SymbolTable symbol_table_new_enclosed(SymbolTable outer);
 Symbol* symbol_table_define(SymbolTable table, char* name);
+Symbol* symbol_table_define_builtin(SymbolTable table, int index, char* name);
 Symbol* symbol_table_resolve(SymbolTable table, char* name);
 int symbol_table_num_definitions(SymbolTable table);
 char* symbol_scope_name(SymbolScope scope);

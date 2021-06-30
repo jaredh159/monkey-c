@@ -33,6 +33,7 @@ enum OpCodes {
   OP_CALL,
   OP_RETURN,
   OP_RETURN_VALUE,
+  OP_GET_BUILTIN,
 };
 
 typedef struct Instruct {

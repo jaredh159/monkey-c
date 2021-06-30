@@ -44,6 +44,8 @@ static Scope make_scope(void);
 static Scope scope(Compiler c);
 static bool last_instruction_is(Compiler c, OpCode op_code);
 static void replace_last_pop_with_return(Compiler c);
+static void define_builtins(Compiler c);
+static void load_symbol(Compiler c, Symbol* symbol);
 
 // these are used by compiler_test.c, so should't be static
 void compiler_enter_scope(Compiler c);
@@ -62,6 +64,7 @@ Compiler compiler_new() {
   compiler->symbol_table = symbol_table_new();
   compiler->scope_index = 0;
   compiler->scopes[0] = make_scope();
+  define_builtins(compiler);
   return compiler;
 }
 
@@ -220,9 +223,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             sprintf(err, "undefined variable %s", ident->value);
             return err;
           }
-          OpCode op =
-            symbol->scope == SCOPE_GLOBAL ? OP_GET_GLOBAL : OP_GET_LOCAL;
-          emit(c, op, i(symbol->index));
+          load_symbol(c, symbol);
         } break;
 
         case EXPRESSION_ARRAY_LITERAL: {
@@ -505,4 +506,28 @@ static Scope scope(Compiler c) {
 
 SymbolTable compiler_symbol_table(Compiler c) {
   return c->symbol_table;
+}
+
+static void define_builtins(Compiler c) {
+  SymbolTable table = c->symbol_table;
+  symbol_table_define_builtin(table, 0, "len");
+  symbol_table_define_builtin(table, 1, "first");
+  symbol_table_define_builtin(table, 2, "rest");
+  symbol_table_define_builtin(table, 3, "push");
+  symbol_table_define_builtin(table, 4, "puts");
+  symbol_table_define_builtin(table, 5, "last");
+}
+
+static void load_symbol(Compiler c, Symbol* symbol) {
+  switch (symbol->scope) {
+    case SCOPE_GLOBAL:
+      emit(c, OP_GET_GLOBAL, i(symbol->index));
+      return;
+    case SCOPE_LOCAL:
+      emit(c, OP_GET_LOCAL, i(symbol->index));
+      return;
+    case SCOPE_BUILTIN:
+      emit(c, OP_GET_BUILTIN, i(symbol->index));
+      return;
+  }
 }

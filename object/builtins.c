@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../object/object.h"
 #include "../utils/list.h"
+#include "object.h"
 
 Object wrong_num_args_error(int got, int want);
 Object wrong_arg_type_error(char *fn, char *expected_type, Object arg);
@@ -12,7 +12,7 @@ Object builtin_puts(List *args) {
     Object *object = cur->item;
     puts(object_inspect(*object));
   }
-  return (Object){NULL_OBJ, {.i = 0}};
+  return M_NULL;
 }
 
 Object builtin_len(List *args) {
@@ -50,7 +50,7 @@ Object builtin_first(List *args) {
     return *pi;
   }
 
-  return (Object){NULL_OBJ, {.i = 0}};
+  return M_NULL;
 }
 
 Object builtin_last(List *args) {
@@ -64,7 +64,7 @@ Object builtin_last(List *args) {
   }
 
   if (list_count(arg.value.list) == 0) {
-    return (Object){NULL_OBJ, {.i = 0}};
+    return M_NULL;
   }
 
   List *current = arg.value.list;
@@ -85,7 +85,7 @@ Object builtin_rest(List *args) {
   }
 
   if (list_count(arg.value.list) == 0) {
-    return (Object){NULL_OBJ, {.i = 0}};
+    return M_NULL;
   }
 
   List *current = arg.value.list->next;

@@ -55,6 +55,12 @@ Symbol* symbol_table_define(SymbolTable t, char* name) {
   return symbol;
 }
 
+Symbol* symbol_table_define_builtin(SymbolTable t, int index, char* name) {
+  Symbol* symbol = new_symbol(name, index, SCOPE_BUILTIN);
+  symbol_put(t->store, symbol, 0);
+  return symbol;
+}
+
 Symbol* symbol_table_resolve(SymbolTable t, char* name) {
   Symbol* resolved = symbol_get(t->store, name);
   if (!resolved && t->outer)

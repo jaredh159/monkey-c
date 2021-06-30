@@ -104,6 +104,25 @@ void test_resolve_nested_local(void) {
   assert_symbol_is(f, "f", SCOPE_LOCAL, 1, __func__);
 }
 
+void test_define_resolve_builtins(void) {
+  SymbolTable global = symbol_table_new();
+  SymbolTable local_1 = symbol_table_new_enclosed(global);
+  SymbolTable local_2 = symbol_table_new_enclosed(local_1);
+  SymbolTable tables[] = {global, local_1, local_2};
+  symbol_table_define_builtin(global, 0, "a");
+  symbol_table_define_builtin(global, 1, "b");
+  symbol_table_define_builtin(global, 2, "c");
+
+  for (int i = 0; i < LEN(tables); i++) {
+    Symbol* a = symbol_table_resolve(tables[i], "a");
+    Symbol* b = symbol_table_resolve(tables[i], "b");
+    Symbol* c = symbol_table_resolve(tables[i], "c");
+    assert_symbol_is(a, "a", SCOPE_BUILTIN, 0, __func__);
+    assert_symbol_is(b, "b", SCOPE_BUILTIN, 1, __func__);
+    assert_symbol_is(c, "c", SCOPE_BUILTIN, 2, __func__);
+  }
+}
+
 void test_char_hash(void) {
   char* t = "char_hash";
   int symbol_char_hash(char ch);
@@ -117,6 +136,7 @@ void test_char_hash(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_define_resolve_builtins();
   test_scoped_define();
   test_resolve_local();
   test_resolve_nested_local();
