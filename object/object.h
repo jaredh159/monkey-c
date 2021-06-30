@@ -37,6 +37,7 @@ typedef struct Function {
 typedef struct CompiledFunction {
   Instruct *instructions;
   int num_locals;
+  int num_params;
 } CompiledFunction;
 
 typedef struct Object {

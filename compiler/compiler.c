@@ -281,6 +281,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           CompiledFunction* compiled_fn = malloc(sizeof(CompiledFunction));
           compiled_fn->num_locals = num_locals;
           compiled_fn->instructions = instructions;
+          compiled_fn->num_params = list_count(fn_lit->parameters);
           Object* compiled_fn_obj = malloc(sizeof(Object));
           compiled_fn_obj->type = COMPILED_FUNCTION_OBJ;
           compiled_fn_obj->value.compiled_fn = compiled_fn;

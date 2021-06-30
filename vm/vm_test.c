@@ -20,6 +20,7 @@ typedef struct Expected {
     EXP_STR,
     EXP_INT_ARR,
     EXP_HASH,
+    EXP_ERR,
   } type;
   int arr_len;
   union {
@@ -39,6 +40,7 @@ Expected expect_int(int expected_int);
 Expected expect_int_arr(int i1, ...);
 Expected expect_bool(bool boolean);
 Expected expect_str(char* string);
+Expected expect_err(char* err_msg);
 Expected expect_null();
 Expected* make_exp_int(int integer);
 void run_vm_tests(int len, VmTest tests[len], const char* test);
@@ -346,12 +348,75 @@ void test_calling_fns_with_args_and_bindings(void) {
       sum(1, 2);",
       .expected = expect_int(3),
     },
+    {
+      .input = "\
+      let sum = fn(a, b) {\
+        let c = a + b;\
+        c;\
+      };\
+      sum(1, 2);",
+      .expected = expect_int(3),
+    },
+    {
+      .input = "\
+      let sum = fn(a, b) {\
+        let c = a + b;\
+        c;\
+      };\
+      sum(1, 2) + sum(3, 4);",
+      .expected = expect_int(10),
+    },
+    {
+      .input = "\
+      let sum = fn(a, b) {\
+        let c = a + b;\
+        c;\
+      };\
+      let outer = fn() {\
+        sum(1, 2) + sum(3, 4);\
+      }\
+      outer();",
+      .expected = expect_int(10),
+    },
+    {
+      .input = "\
+      let globalNum = 10;\
+      \
+      let sum = fn(a, b) {\
+        let c = a + b;\
+        c + globalNum;\
+      };\
+      let outer = fn() {\
+        sum(1, 2) + sum(3, 4) + globalNum;\
+      }\
+      outer() + globalNum;",
+      .expected = expect_int(50),
+    },
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
+void test_calling_functions_with_wrong_num_args(void) {
+  VmTest tests[] = {
+    {
+      .input = "fn() { 1; }(1);",
+      .expected = expect_err("wrong number of arguments: want=0, got=1"),
+    },
+    {
+      .input = "fn(a) { a; }();",
+      .expected = expect_err("wrong number of arguments: want=1, got=0"),
+    },
+    {
+      .input = "fn(a, b) { a + b; }(1);",
+      .expected = expect_err("wrong number of arguments: want=2, got=1"),
+    },
   };
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_calling_functions_with_wrong_num_args();
   test_calling_fns_with_args_and_bindings();
   test_calling_fns_with_bindings();
   test_first_class_fns();
@@ -383,6 +448,17 @@ void run_vm_tests(int len, VmTest tests[len], const char* test) {
 
     Vm vm = vm_new(compiler_bytecode(compiler));
     err = vm_run(vm);
+
+    if (t.expected.type == EXP_ERR) {
+      if (!err)
+        fail("expected VM error but resulted in none", test);
+      else if (strcmp(err, t.expected.v.s) != 0)
+        fail(ss("wrong VM error: want=%s, got=%s", t.expected.v.s, err), test);
+      else
+        assert_str_is(t.expected.v.s, err, "expected VM err correct", test);
+      return;
+    }
+
     if (err)
       fail(ss("vm error: %s", err), test);
 
@@ -448,6 +524,10 @@ Expected expect_null() {
 
 Expected expect_str(char* string) {
   return (Expected){.type = EXP_STR, .v = {.s = string}};
+}
+
+Expected expect_err(char* err_msg) {
+  return (Expected){.type = EXP_ERR, .v = {.s = err_msg}};
 }
 
 Expected* make_exp_int(int integer) {

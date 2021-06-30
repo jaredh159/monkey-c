@@ -218,6 +218,11 @@ VmErr vm_run(Vm vm) {
         if (!fn || fn->type != COMPILED_FUNCTION_OBJ) {
           return "calling non-function";
         }
+        if (num_args != fn->value.compiled_fn->num_params) {
+          SET_ERR("wrong number of arguments: want=%d, got=%d",
+            fn->value.compiled_fn->num_params, num_args);
+          return err;
+        }
         Frame* frame = new_frame(fn, vm->sp - num_args);
         push_frame(vm, frame);
         vm->sp = frame->base_pointer + fn->value.compiled_fn->num_locals;
