@@ -27,7 +27,7 @@ test_code:
 	clang -o .bin/test_code code/code.c code/code_test.c test/test.c token/token.c utils/list.c ast/ast.c object/object.c utils/argv.c $(FLAGS)
 
 test_vm:
-	clang -o .bin/test_vm vm/vm.c vm/vm_test.c compiler/compiler.c compiler/symbol_table.c test/test.c object/object.c code/code.c ast/ast.c token/token.c parser/parser.c parser/parselets.c lexer/lexer.c utils/list.c utils/argv.c $(FLAGS)
+	clang -o .bin/test_vm vm/vm.c vm/vm_test.c compiler/compiler.c compiler/symbol_table.c test/test.c object/object.c object/builtins.c code/code.c ast/ast.c token/token.c parser/parser.c parser/parselets.c lexer/lexer.c utils/list.c utils/argv.c $(FLAGS)
 
 test_symbol_table:
 	clang -o .bin/test_symbol_table compiler/symbol_table_test.c compiler/symbol_table.c test/test.c utils/argv.c object/object.c token/token.c utils/list.c ast/ast.c $(FLAGS)

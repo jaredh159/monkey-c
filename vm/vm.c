@@ -53,6 +53,9 @@ static Frame* current_frame(Vm vm);
 static void push_frame(Vm vm, Frame* frame);
 static Frame* pop_frame(Vm vm);
 static Instruct* current_instructions(Vm vm);
+static VmErr call_function(Vm vm, Object* fn, int num_args);
+static VmErr call_builtin(Vm vm, Object* fn, int num_args);
+static VmErr execute_call(Vm vm, int num_args);
 
 static VmErr err = NULL;
 
@@ -214,18 +217,9 @@ VmErr vm_run(Vm vm) {
       case OP_CALL: {
         int num_args = (int)ins->bytes[ip + 1];
         current_frame(vm)->ip += 1;
-        Object* fn = vm->stack[vm->sp - 1 - num_args];
-        if (!fn || fn->type != COMPILED_FUNCTION_OBJ) {
-          return "calling non-function";
-        }
-        if (num_args != fn->value.compiled_fn->num_params) {
-          SET_ERR("wrong number of arguments: want=%d, got=%d",
-            fn->value.compiled_fn->num_params, num_args);
+        err = execute_call(vm, num_args);
+        if (err)
           return err;
-        }
-        Frame* frame = new_frame(fn, vm->sp - num_args);
-        push_frame(vm, frame);
-        vm->sp = frame->base_pointer + fn->value.compiled_fn->num_locals;
       } break;
 
       case OP_RETURN_VALUE: {
@@ -241,6 +235,15 @@ VmErr vm_run(Vm vm) {
         Frame* frame = pop_frame(vm);
         vm->sp = frame->base_pointer - 1;
         err = push(vm, &M_NULL);
+        if (err)
+          return err;
+      } break;
+
+      case OP_GET_BUILTIN: {
+        int builtin_index = (int)ins->bytes[ip + 1];
+        current_frame(vm)->ip += 1;
+        Object* builtin = get_builtin_by_index(builtin_index);
+        err = push(vm, builtin);
         if (err)
           return err;
       } break;
@@ -503,4 +506,41 @@ static Frame* pop_frame(Vm vm) {
 
 static Instruct* current_instructions(Vm vm) {
   return current_frame(vm)->fn->value.compiled_fn->instructions;
+}
+
+static VmErr execute_call(Vm vm, int num_args) {
+  Object* fn = vm->stack[vm->sp - 1 - num_args];
+  switch (fn->type) {
+    case COMPILED_FUNCTION_OBJ:
+      return call_function(vm, fn, num_args);
+    case BUILT_IN_OBJ:
+      return call_builtin(vm, fn, num_args);
+    case 0:
+      return "null pointer for execute_call()";
+    default:
+      return "calling non-function and non-built-in";
+  }
+}
+
+static VmErr call_function(Vm vm, Object* fn, int num_args) {
+  if (num_args != fn->value.compiled_fn->num_params) {
+    SET_ERR("wrong number of arguments: want=%d, got=%d",
+      fn->value.compiled_fn->num_params, num_args);
+    return err;
+  }
+  Frame* frame = new_frame(fn, vm->sp - num_args);
+  push_frame(vm, frame);
+  vm->sp = frame->base_pointer + fn->value.compiled_fn->num_locals;
+  return NULL;
+}
+
+static VmErr call_builtin(Vm vm, Object* fn, int num_args) {
+  List* args = NULL;
+  for (int i = vm->sp - num_args; i < vm->sp; i++) {
+    args = list_append(args, vm->stack[i]);
+  }
+  Object result = (fn->value.builtin_fn)(args);
+  if (result.type == ERROR_OBJ)
+    return result.value.str;
+  return push(vm, memcpy(malloc(sizeof(Object)), &result, sizeof(Object)));
 }

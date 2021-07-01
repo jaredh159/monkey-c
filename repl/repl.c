@@ -26,6 +26,7 @@ void repl_start(void) {
   constant_pool->constants = malloc(sizeof(Object) * MAX_CONSTANTS);
   Object **globals = calloc(GLOBALS_SIZE, sizeof(Object *));
   SymbolTable symbol_table = symbol_table_new();
+  symbol_table_define_builtins(symbol_table);
   Vm vm;
 
   do {

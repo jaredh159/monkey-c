@@ -148,6 +148,35 @@ Object get_builtin(char *name) {
   return (Object){NOT_FOUND_OBJ, {.i = 0}};
 }
 
+Object *get_builtin_by_index(BuiltinIndex index) {
+  Object *obj = malloc(sizeof(Object));
+  obj->type = BUILT_IN_OBJ;
+  switch (index) {
+    case BUILTIN_LEN:
+      obj->value.builtin_fn = builtin_len;
+      break;
+    case BUILTIN_FIRST:
+      obj->value.builtin_fn = builtin_first;
+      break;
+    case BUILTIN_REST:
+      obj->value.builtin_fn = builtin_rest;
+      break;
+    case BUILTIN_PUSH:
+      obj->value.builtin_fn = builtin_push;
+      break;
+    case BUILTIN_PUTS:
+      obj->value.builtin_fn = builtin_puts;
+      break;
+    case BUILTIN_LAST:
+      obj->value.builtin_fn = builtin_last;
+      break;
+    default:
+      printf("unknown builtin index %d\n", index);
+      exit(EXIT_FAILURE);
+  }
+  return obj;
+}
+
 Object wrong_num_args_error(int got, int want) {
   char *msg = malloc(100);
   sprintf(msg, "wrong number of arguments. got=%d, want=%d", got, want);

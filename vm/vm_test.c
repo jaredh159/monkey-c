@@ -414,8 +414,83 @@ void test_calling_functions_with_wrong_num_args(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_builtin_fns(void) {
+  VmTest tests[] = {
+    {
+      .input = "len(\"\")",
+      .expected = expect_int(0),
+    },
+    {
+      .input = "len(\"four\")",
+      .expected = expect_int(4),
+    },
+    {
+      .input = "len(\"hello world\")",
+      .expected = expect_int(11),
+    },
+    {
+      .input = "len(1)",
+      .expected = expect_err("argument to `len` not supported, got INTEGER"),
+    },
+    {
+      .input = "len(\"one\", \"two\")",
+      .expected = expect_err("wrong number of arguments. got=2, want=1"),
+    },
+    {
+      .input = "len([1, 2, 3])",
+      .expected = expect_int(3),
+    },
+    {
+      .input = "puts(\"hello\", \"world\")",
+      .expected = expect_null(),
+    },
+    {
+      .input = "first([1, 2, 3])",
+      .expected = expect_int(1),
+    },
+    {
+      .input = "first([])",
+      .expected = expect_null(),
+    },
+    {
+      .input = "first(1)",
+      .expected = expect_err("argument to `first` must be ARRAY, got INTEGER"),
+    },
+    {
+      .input = "last([1, 2, 3])",
+      .expected = expect_int(3),
+    },
+    {
+      .input = "last([])",
+      .expected = expect_null(),
+    },
+    {
+      .input = "last(1)",
+      .expected = expect_err("argument to `last` must be ARRAY, got INTEGER"),
+    },
+    {
+      .input = "rest([1, 2, 3])",
+      .expected = expect_int_arr(2, 3, _),
+    },
+    {
+      .input = "rest([])",
+      .expected = expect_null(),
+    },
+    {
+      .input = "push([], 1)",
+      .expected = expect_int_arr(1, _),
+    },
+    {
+      .input = "push(1, 1)",
+      .expected = expect_err("arguemnt to `push` must be ARRAY, got INTEGER"),
+    },
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_builtin_fns();
   test_calling_functions_with_wrong_num_args();
   test_calling_fns_with_args_and_bindings();
   test_calling_fns_with_bindings();

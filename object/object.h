@@ -81,4 +81,18 @@ bool env_has(Env *env, char *name);
 Object env_get(Env *env, char *name);
 void env_set(Env *env, char *name, Object val);
 
+enum BuiltinIndexes {
+  BUILTIN_LEN,
+  BUILTIN_FIRST,
+  BUILTIN_REST,
+  BUILTIN_PUSH,
+  BUILTIN_PUTS,
+  BUILTIN_LAST,
+};
+
+typedef int BuiltinIndex;
+
+Object get_builtin(char *name);
+Object *get_builtin_by_index(BuiltinIndex index);
+
 #endif  // __OBJECT_H__

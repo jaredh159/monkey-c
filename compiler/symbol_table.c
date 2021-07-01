@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../object/object.h"
 
 // 26 (uppercase) + 26 (lowercase) + 10 (digits) + 1 (underscore)
 #define NUM_IDENT_CHARS 63
@@ -129,4 +130,13 @@ SymbolTable symbol_table_outer(SymbolTable table) {
 
 int symbol_table_num_definitions(SymbolTable table) {
   return table->num_definitions;
+}
+
+void symbol_table_define_builtins(SymbolTable table) {
+  symbol_table_define_builtin(table, BUILTIN_LEN, "len");
+  symbol_table_define_builtin(table, BUILTIN_FIRST, "first");
+  symbol_table_define_builtin(table, BUILTIN_REST, "rest");
+  symbol_table_define_builtin(table, BUILTIN_PUSH, "push");
+  symbol_table_define_builtin(table, BUILTIN_PUTS, "puts");
+  symbol_table_define_builtin(table, BUILTIN_LAST, "last");
 }

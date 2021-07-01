@@ -632,11 +632,11 @@ void test_builtins(void) {
       .expected_constants = make_constant_pool(1,   //
         (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
       .expected_instructions = code_concat_ins(9,   //
-        code_make(OP_GET_BUILTIN, 0),               //
+        code_make(OP_GET_BUILTIN, BUILTIN_LEN),     //
         code_make(OP_ARRAY, 0),                     //
         code_make(OP_CALL, 1),                      //
         code_make(OP_POP),                          //
-        code_make(OP_GET_BUILTIN, 3),               //
+        code_make(OP_GET_BUILTIN, BUILTIN_PUSH),    //
         code_make(OP_ARRAY, 0),                     //
         code_make(OP_CONSTANT, 0),                  //
         code_make(OP_CALL, 2),                      //
@@ -644,17 +644,17 @@ void test_builtins(void) {
     },
     {
       .input = "fn() { len([]) }",
-      .expected_constants = make_constant_pool(1,  //
-        make_compiled_fn_obj(0,                    //
-          code_concat_ins(4,                       //
-            code_make(OP_GET_BUILTIN, 0),          //
-            code_make(OP_ARRAY, 0),                //
-            code_make(OP_CALL, 1),                 //
-            code_make(OP_RETURN_VALUE))            //
-          )),                                      //
-      .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 0),                 //
-        code_make(OP_POP)),                        //
+      .expected_constants = make_constant_pool(1,    //
+        make_compiled_fn_obj(0,                      //
+          code_concat_ins(4,                         //
+            code_make(OP_GET_BUILTIN, BUILTIN_LEN),  //
+            code_make(OP_ARRAY, 0),                  //
+            code_make(OP_CALL, 1),                   //
+            code_make(OP_RETURN_VALUE))              //
+          )),                                        //
+      .expected_instructions = code_concat_ins(2,    //
+        code_make(OP_CONSTANT, 0),                   //
+        code_make(OP_POP)),                          //
     },
   };
   run_compiler_tests(LEN(tests), tests, __func__);

@@ -44,7 +44,6 @@ static Scope make_scope(void);
 static Scope scope(Compiler c);
 static bool last_instruction_is(Compiler c, OpCode op_code);
 static void replace_last_pop_with_return(Compiler c);
-static void define_builtins(Compiler c);
 static void load_symbol(Compiler c, Symbol* symbol);
 
 // these are used by compiler_test.c, so should't be static
@@ -64,7 +63,7 @@ Compiler compiler_new() {
   compiler->symbol_table = symbol_table_new();
   compiler->scope_index = 0;
   compiler->scopes[0] = make_scope();
-  define_builtins(compiler);
+  symbol_table_define_builtins(compiler->symbol_table);
   return compiler;
 }
 
@@ -506,16 +505,6 @@ static Scope scope(Compiler c) {
 
 SymbolTable compiler_symbol_table(Compiler c) {
   return c->symbol_table;
-}
-
-static void define_builtins(Compiler c) {
-  SymbolTable table = c->symbol_table;
-  symbol_table_define_builtin(table, 0, "len");
-  symbol_table_define_builtin(table, 1, "first");
-  symbol_table_define_builtin(table, 2, "rest");
-  symbol_table_define_builtin(table, 3, "push");
-  symbol_table_define_builtin(table, 4, "puts");
-  symbol_table_define_builtin(table, 5, "last");
 }
 
 static void load_symbol(Compiler c, Symbol* symbol) {

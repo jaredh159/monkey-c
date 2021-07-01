@@ -22,6 +22,7 @@ SymbolTable symbol_table_new();
 SymbolTable symbol_table_new_enclosed(SymbolTable outer);
 Symbol* symbol_table_define(SymbolTable table, char* name);
 Symbol* symbol_table_define_builtin(SymbolTable table, int index, char* name);
+void symbol_table_define_builtins(SymbolTable table);
 Symbol* symbol_table_resolve(SymbolTable table, char* name);
 int symbol_table_num_definitions(SymbolTable table);
 char* symbol_scope_name(SymbolScope scope);
