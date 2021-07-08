@@ -285,7 +285,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           Object* compiled_fn_obj = malloc(sizeof(Object));
           compiled_fn_obj->type = COMPILED_FUNCTION_OBJ;
           compiled_fn_obj->value.compiled_fn = compiled_fn;
-          emit(c, OP_CONSTANT, i(add_constant(c, compiled_fn_obj)));
+          emit(c, OP_CLOSURE, ii(add_constant(c, compiled_fn_obj), 0));
         } break;
 
         case EXPRESSION_CALL: {

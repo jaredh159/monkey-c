@@ -40,6 +40,8 @@ char *object_inspect(const Object object) {
     case ERROR_OBJ:
       sprintf(inspect_str, "ERROR: %s", object.value.str);
       break;
+    case CLOSURE_OBJ:
+      return "Closure";
     case COMPILED_FUNCTION_OBJ:
       return "CompiledFunction";
     default:
@@ -72,6 +74,8 @@ char *object_type(const Object object) {
       return "HASH";
     case COMPILED_FUNCTION_OBJ:
       return "COMPILED_FUNCTION_OBJ";
+    case CLOSURE_OBJ:
+      return "CLOSURE_OBJ";
     case ERROR_OBJ:
       return "ERROR";
   }

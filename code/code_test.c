@@ -17,29 +17,33 @@ void test_make(void) {
     {
       .op = OP_CONSTANT,
       .operands = i(65534),
-      .expected = (Byte[3]){OP_CONSTANT, 255, 254},
+      .expected = (Byte[]){OP_CONSTANT, 255, 254},
       .expected_len = 3,
     },
     {
       .op = OP_ADD,
       .operands = (IntBag){0},
-      .expected = (Byte[1]){OP_ADD},
+      .expected = (Byte[]){OP_ADD},
       .expected_len = 1,
     },
     {
       .op = OP_GET_LOCAL,
       .operands = i(255),
-      .expected = (Byte[2]){OP_GET_LOCAL, 255},
+      .expected = (Byte[]){OP_GET_LOCAL, 255},
       .expected_len = 2,
+    },
+    {
+      .op = OP_CLOSURE,
+      .operands = ii(65534, 255),
+      .expected = (Byte[]){OP_CLOSURE, 255, 254, 255},
+      .expected_len = 4,
     },
   };
 
   for (int i = 0; i < LEN(tests); i++) {
     struct MakeTest t = tests[i];
-    Instruct* code = code_make(t.op, t.operands);
-
+    Instruct* code = code_make_nv(t.op, t.operands);
     assert_int_is(t.expected_len, code->length, "num operands", n);
-
     for (int j = 0; j < t.expected_len; j++) {
       assert_int_is(t.expected[j], code->bytes[j], si("byte at pos=%d", j), n);
     }
@@ -87,18 +91,20 @@ void test_read_operands(void) {
 
 void test_instructions_string(void) {
   char* n = "instructions_string";
-  Instruct* ins = code_concat_ins(4,  //
-    code_make(OP_ADD),                //
-    code_make(OP_GET_LOCAL, 1),       //
-    code_make(OP_CONSTANT, 2),        //
-    code_make(OP_CONSTANT, 65535)     //
+  Instruct* ins = code_concat_ins(5,   //
+    code_make(OP_ADD),                 //
+    code_make(OP_GET_LOCAL, 1),        //
+    code_make(OP_CONSTANT, 2),         //
+    code_make(OP_CONSTANT, 65535),     //
+    code_make(OP_CLOSURE, 65535, 255)  //
   );
 
   char* expected =
     "0000 OpAdd\n"
     "0001 OpGetLocal 1\n"
     "0003 OpConstant 2\n"
-    "0006 OpConstant 65535\n";
+    "0006 OpConstant 65535\n"
+    "0009 OpClosure 65535 255\n";
 
   assert_str_is(
     expected, instructions_str(*ins), "instruction string correct", n);
@@ -124,11 +130,11 @@ void test_another_instructions_string(void) {
 }
 
 int main(int argc, char** argv) {
+  test_make();
   pass_argv(argc, argv);
   test_read_operands();
   test_instructions_string();
   test_another_instructions_string();
-  test_make();
   printf("\n");
   return 0;
 }

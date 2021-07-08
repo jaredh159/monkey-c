@@ -34,16 +34,17 @@ Instruct* code_make(int op_int, ...) {
   va_list ap;
   va_start(ap, op_int);
 
+  int byte_pos = 1;
   for (int i = 0; i < def->num_operands; i++) {
     int width = def->operand_widths[i];
     int operand = va_arg(ap, int);
     switch (width) {
       case 2:
-        bytes[1] = operand >> 8;
-        bytes[2] = operand & 0xff;
+        bytes[byte_pos++] = operand >> 8;
+        bytes[byte_pos++] = operand & 0xff;
         break;
       case 1:
-        bytes[1] = operand & 0xff;
+        bytes[byte_pos++] = operand & 0xff;
         break;
     }
   }
@@ -108,6 +109,10 @@ char* instructions_str(Instruct ins) {
         break;
       case 1:
         pos += sprintf(&str[pos], "%s %d\n", def->name, res.operands.arr[0]);
+        break;
+      case 2:
+        pos += sprintf(&str[pos], "%s %d %d\n", def->name, res.operands.arr[0],
+          res.operands.arr[1]);
         break;
       default:
         pos += sprintf(
@@ -203,6 +208,12 @@ Definition* code_opcode_lookup(OpCode op) {
       def->operand_widths[0] = 2;
       def->num_operands = 1;
       def->name = "OpArray";
+      break;
+    case OP_CLOSURE:
+      def->operand_widths[0] = 2;
+      def->operand_widths[1] = 1;
+      def->num_operands = 2;
+      def->name = "OpClosure";
       break;
     case OP_HASH:
       def->operand_widths[0] = 2;

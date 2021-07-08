@@ -16,7 +16,7 @@
   } while (0)
 
 typedef struct Frame {
-  Object* fn;
+  Closure* cl;
   int ip;
   int base_pointer;
 } Frame;
@@ -48,14 +48,15 @@ static VmErr exec_bang_operator(Vm vm);
 static VmErr exec_minus_operator(Vm vm);
 void inspect_stack(Vm vm, const char* fn);
 static Object* new_compiled_fn(Instruct* instructions, int num_locals);
-static Frame* new_frame(Object* fn, int base_pointer);
+static Frame* new_frame(Closure* cl, int base_pointer);
 static Frame* current_frame(Vm vm);
 static void push_frame(Vm vm, Frame* frame);
 static Frame* pop_frame(Vm vm);
 static Instruct* current_instructions(Vm vm);
-static VmErr call_function(Vm vm, Object* fn, int num_args);
+static VmErr call_closure(Vm vm, Object* fn, int num_args);
 static VmErr call_builtin(Vm vm, Object* fn, int num_args);
 static VmErr execute_call(Vm vm, int num_args);
+static VmErr push_closure(Vm vm, int const_index);
 
 static VmErr err = NULL;
 
@@ -69,7 +70,10 @@ Vm vm_new_with_globals(Bytecode* bytecode, Object** globals) {
   vm->globals = globals;
   vm->constant_pool = bytecode->constants;
   vm->sp = 0;
-  vm->frames[0] = new_frame(new_compiled_fn(bytecode->instructions, 0), 0);
+  Object* main_fn = new_compiled_fn(bytecode->instructions, 0);
+  Closure* main_closure = malloc(sizeof(Closure));
+  main_closure->fn = main_fn->value.compiled_fn;
+  vm->frames[0] = new_frame(main_closure, 0);
   vm->frames_index = 1;
   return vm;
 }
@@ -247,9 +251,32 @@ VmErr vm_run(Vm vm) {
         if (err)
           return err;
       } break;
+
+      case OP_CLOSURE: {
+        int const_index = read_uint16(&ins->bytes[ip + 1]);
+        int __todo__ = (int)ins->bytes[ip + 3];
+        current_frame(vm)->ip += 3;
+        err = push_closure(vm, const_index);
+        if (err)
+          return err;
+      } break;
     }
   }
   return NULL;
+}
+
+static VmErr push_closure(Vm vm, int const_index) {
+  Object* constant = &vm->constant_pool->constants[const_index];
+  if (constant->type != COMPILED_FUNCTION_OBJ) {
+    SET_ERR("not a function: %s", object_type(*constant));
+    return err;
+  }
+  Closure* closure = malloc(sizeof(Closure));
+  closure->fn = constant->value.compiled_fn;
+  Object* object = malloc(sizeof(Object));
+  object->type = CLOSURE_OBJ;
+  object->value.closure = closure;
+  return push(vm, object);
 }
 
 static VmErr exec_index_expr(Vm vm, Object* left, Object* index) {
@@ -468,9 +495,9 @@ static Object* new_compiled_fn(Instruct* instructions, int num_locals) {
   return obj;
 }
 
-static Frame* new_frame(Object* fn, int base_pointer) {
+static Frame* new_frame(Closure* closure, int base_pointer) {
   Frame* frame = malloc(sizeof(Frame));
-  frame->fn = fn;
+  frame->cl = closure;
   frame->ip = -1;
   frame->base_pointer = base_pointer;
   return frame;
@@ -505,14 +532,14 @@ static Frame* pop_frame(Vm vm) {
 }
 
 static Instruct* current_instructions(Vm vm) {
-  return current_frame(vm)->fn->value.compiled_fn->instructions;
+  return current_frame(vm)->cl->fn->instructions;
 }
 
 static VmErr execute_call(Vm vm, int num_args) {
   Object* fn = vm->stack[vm->sp - 1 - num_args];
   switch (fn->type) {
-    case COMPILED_FUNCTION_OBJ:
-      return call_function(vm, fn, num_args);
+    case CLOSURE_OBJ:
+      return call_closure(vm, fn, num_args);
     case BUILT_IN_OBJ:
       return call_builtin(vm, fn, num_args);
     case 0:
@@ -522,15 +549,15 @@ static VmErr execute_call(Vm vm, int num_args) {
   }
 }
 
-static VmErr call_function(Vm vm, Object* fn, int num_args) {
-  if (num_args != fn->value.compiled_fn->num_params) {
+static VmErr call_closure(Vm vm, Object* fn, int num_args) {
+  if (num_args != fn->value.closure->fn->num_params) {
     SET_ERR("wrong number of arguments: want=%d, got=%d",
-      fn->value.compiled_fn->num_params, num_args);
+      fn->value.closure->fn->num_params, num_args);
     return err;
   }
-  Frame* frame = new_frame(fn, vm->sp - num_args);
+  Frame* frame = new_frame(fn->value.closure, vm->sp - num_args);
   push_frame(vm, frame);
-  vm->sp = frame->base_pointer + fn->value.compiled_fn->num_locals;
+  vm->sp = frame->base_pointer + fn->value.closure->fn->num_locals;
   return NULL;
 }
 

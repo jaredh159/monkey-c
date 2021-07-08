@@ -446,7 +446,7 @@ void test_functions(void) {
             code_make(OP_RETURN_VALUE))             //
           )),                                       //
       .expected_instructions = code_concat_ins(2,   //
-        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_CLOSURE, 2, 0),                //
         code_make(OP_POP)),                         //
     },
     {
@@ -462,7 +462,7 @@ void test_functions(void) {
             code_make(OP_RETURN_VALUE))             //
           )),                                       //
       .expected_instructions = code_concat_ins(2,   //
-        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_CLOSURE, 2, 0),                //
         code_make(OP_POP)),                         //
     },
     {
@@ -478,7 +478,7 @@ void test_functions(void) {
             code_make(OP_RETURN_VALUE))            //
           )),                                      //
       .expected_instructions = code_concat_ins(2,  //
-        code_make(OP_CONSTANT, 2),                 //
+        code_make(OP_CLOSURE, 2, 0),               //
         code_make(OP_POP)),                        //
     },
     {
@@ -486,7 +486,7 @@ void test_functions(void) {
       .expected_constants = make_constant_pool(1,        //
         make_compiled_fn_obj(0, code_make(OP_RETURN))),  //
       .expected_instructions = code_concat_ins(2,        //
-        code_make(OP_CONSTANT, 0),                       //
+        code_make(OP_CLOSURE, 0, 0),                     //
         code_make(OP_POP)),                              //
     },
   };
@@ -507,7 +507,7 @@ void test_let_statement_scopes(void) {
       .expected_instructions = code_concat_ins(4,   //
         code_make(OP_CONSTANT, 0),                  //
         code_make(OP_SET_GLOBAL, 0),                //
-        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_CLOSURE, 1, 0),                //
         code_make(OP_POP)),                         //
     },
     {
@@ -522,7 +522,7 @@ void test_let_statement_scopes(void) {
             code_make(OP_RETURN_VALUE))             //
           )),                                       //
       .expected_instructions = code_concat_ins(2,   //
-        code_make(OP_CONSTANT, 1),                  //
+        code_make(OP_CLOSURE, 1, 0),                //
         code_make(OP_POP)),                         //
     },
     {
@@ -542,7 +542,7 @@ void test_let_statement_scopes(void) {
             code_make(OP_RETURN_VALUE))             //
           )),                                       //
       .expected_instructions = code_concat_ins(2,   //
-        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_CLOSURE, 2, 0),                //
         code_make(OP_POP)),                         //
     },
   };
@@ -561,7 +561,7 @@ void test_function_calls(void) {
             code_make(OP_RETURN_VALUE))             //
           )),                                       //
       .expected_instructions = code_concat_ins(3,   //
-        code_make(OP_CONSTANT, 1),                  // the compiled fn
+        code_make(OP_CLOSURE, 1, 0),                // the compiled fn
         code_make(OP_CALL, 0),                      //
         code_make(OP_POP)),                         //
     },
@@ -575,7 +575,7 @@ void test_function_calls(void) {
             code_make(OP_RETURN_VALUE))             //
           )),                                       //
       .expected_instructions = code_concat_ins(5,   //
-        code_make(OP_CONSTANT, 1),                  // the compiled fn
+        code_make(OP_CLOSURE, 1, 0),                // the compiled fn
         code_make(OP_SET_GLOBAL, 0),                //
         code_make(OP_GET_GLOBAL, 0),                //
         code_make(OP_CALL, 0),                      //
@@ -591,7 +591,7 @@ void test_function_calls(void) {
           ),                                         //
         (Object){INTEGER_OBJ, .value = {.i = 24}}),  //
       .expected_instructions = code_concat_ins(6,    //
-        code_make(OP_CONSTANT, 0),                   //
+        code_make(OP_CLOSURE, 0, 0),                 //
         code_make(OP_SET_GLOBAL, 0),                 //
         code_make(OP_GET_GLOBAL, 0),                 //
         code_make(OP_CONSTANT, 1),                   //
@@ -612,7 +612,7 @@ void test_function_calls(void) {
         (Object){INTEGER_OBJ, .value = {.i = 25}},          //
         (Object){INTEGER_OBJ, .value = {.i = 26}}),         //
       .expected_instructions = code_concat_ins(8,           //
-        code_make(OP_CONSTANT, 0),                          //
+        code_make(OP_CLOSURE, 0, 0),                        //
         code_make(OP_SET_GLOBAL, 0),                        //
         code_make(OP_GET_GLOBAL, 0),                        //
         code_make(OP_CONSTANT, 1),                          //
@@ -653,7 +653,7 @@ void test_builtins(void) {
             code_make(OP_RETURN_VALUE))              //
           )),                                        //
       .expected_instructions = code_concat_ins(2,    //
-        code_make(OP_CONSTANT, 0),                   //
+        code_make(OP_CLOSURE, 0, 0),                 //
         code_make(OP_POP)),                          //
     },
   };

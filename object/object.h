@@ -1,6 +1,7 @@
 #ifndef __OBJECT_H__
 #define __OBJECT_H__
 
+#include <limits.h>
 #include <stdbool.h>
 #include "../ast/ast.h"
 #include "../code/code.h"
@@ -19,6 +20,7 @@ enum ObjectTypes {
   HASH_OBJ,
   BUILT_IN_OBJ,
   NOT_FOUND_OBJ,
+  CLOSURE_OBJ,
 };
 
 typedef int ObjectType;
@@ -40,6 +42,8 @@ typedef struct CompiledFunction {
   int num_params;
 } CompiledFunction;
 
+struct Closure;
+
 typedef struct Object {
   ObjectType type;
   union {
@@ -51,8 +55,16 @@ typedef struct Object {
     CompiledFunction *compiled_fn;
     struct Object (*builtin_fn)(List *args);
     List *list;  // List<Object> (for array elements) | List<HashPair>
+    struct Closure *closure;
   } value;
 } Object;
+
+#define MAX_FREE_VARIABLES UCHAR_MAX + 1
+
+typedef struct Closure {
+  CompiledFunction *fn;
+  Object *free[MAX_FREE_VARIABLES];
+} Closure;
 
 extern Object M_NULL;
 extern Object TRUE;
