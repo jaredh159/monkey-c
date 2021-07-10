@@ -288,6 +288,11 @@ Definition* code_opcode_lookup(OpCode op) {
       def->num_operands = 1;
       def->name = "OpJumpNotTruthy";
       break;
+    case OP_GET_FREE:
+      def->operand_widths[0] = 1;
+      def->num_operands = 1;
+      def->name = "OpGetFree";
+      break;
     default:
       free(def);
       return NULL;

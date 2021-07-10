@@ -268,6 +268,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             Identifier* identifier = current->item;
             symbol_table_define(c->symbol_table, identifier->value);
           }
+
           err = compile(c, fn_lit->body, BLOCK_STATEMENTS_NODE);
           if (err)
             return err;
@@ -275,9 +276,16 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
             replace_last_pop_with_return(c);
           if (!last_instruction_is(c, OP_RETURN_VALUE))
             emit(c, OP_RETURN, _);
-          int num_locals =
-            symbol_table_num_definitions(compiler_symbol_table(c));
+
+          SymbolTable symbol_table = compiler_symbol_table(c);
+          Symbol** free_symbols = symbol_table_get_free(symbol_table);
+          int num_free = symbol_table_num_free(symbol_table);
+          int num_locals = symbol_table_num_definitions(symbol_table);
           Instruct* instructions = compiler_leave_scope(c);
+
+          for (int i = 0; i < num_free; i++)
+            load_symbol(c, *(free_symbols + i));
+
           CompiledFunction* compiled_fn = malloc(sizeof(CompiledFunction));
           compiled_fn->num_locals = num_locals;
           compiled_fn->instructions = instructions;
@@ -285,7 +293,7 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
           Object* compiled_fn_obj = malloc(sizeof(Object));
           compiled_fn_obj->type = COMPILED_FUNCTION_OBJ;
           compiled_fn_obj->value.compiled_fn = compiled_fn;
-          emit(c, OP_CLOSURE, ii(add_constant(c, compiled_fn_obj), 0));
+          emit(c, OP_CLOSURE, ii(add_constant(c, compiled_fn_obj), num_free));
         } break;
 
         case EXPRESSION_CALL: {
@@ -517,6 +525,9 @@ static void load_symbol(Compiler c, Symbol* symbol) {
       return;
     case SCOPE_BUILTIN:
       emit(c, OP_GET_BUILTIN, i(symbol->index));
+      return;
+    case SCOPE_FREE:
+      emit(c, OP_GET_FREE, i(symbol->index));
       return;
   }
 }

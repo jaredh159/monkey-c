@@ -123,6 +123,73 @@ void test_define_resolve_builtins(void) {
   }
 }
 
+void test_resolve_free(void) {
+  SymbolTable global = symbol_table_new();
+  symbol_table_define(global, "a");
+  symbol_table_define(global, "b");
+  SymbolTable local_1 = symbol_table_new_enclosed(global);
+  symbol_table_define(local_1, "c");
+  symbol_table_define(local_1, "d");
+  SymbolTable local_2 = symbol_table_new_enclosed(local_1);
+  symbol_table_define(local_2, "e");
+  symbol_table_define(local_2, "f");
+
+  Symbol* a = symbol_table_resolve(local_1, "a");
+  Symbol* b = symbol_table_resolve(local_1, "b");
+  Symbol* c = symbol_table_resolve(local_1, "c");
+  Symbol* d = symbol_table_resolve(local_1, "d");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, __func__);
+  assert_symbol_is(c, "c", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(d, "d", SCOPE_LOCAL, 1, __func__);
+  assert_int_is(
+    0, symbol_table_num_free(local_1), "correct num free symbols", __func__);
+
+  a = symbol_table_resolve(local_2, "a");
+  b = symbol_table_resolve(local_2, "b");
+  c = symbol_table_resolve(local_2, "c");
+  d = symbol_table_resolve(local_2, "d");
+  Symbol* e = symbol_table_resolve(local_2, "e");
+  Symbol* f = symbol_table_resolve(local_2, "f");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(b, "b", SCOPE_GLOBAL, 1, __func__);
+  assert_symbol_is(c, "c", SCOPE_FREE, 0, __func__);
+  assert_symbol_is(d, "d", SCOPE_FREE, 1, __func__);
+  assert_symbol_is(e, "e", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(f, "f", SCOPE_LOCAL, 1, __func__);
+  assert_int_is(
+    2, symbol_table_num_free(local_2), "correct num free symbols", __func__);
+  Symbol** free = symbol_table_get_free(local_2);
+  Symbol* free_c = *(free + 0);
+  Symbol* free_d = *(free + 1);
+  assert_symbol_is(free_c, "c", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(free_d, "d", SCOPE_LOCAL, 1, __func__);
+}
+
+void test_unresolvable_free(void) {
+  SymbolTable global = symbol_table_new();
+  symbol_table_define(global, "a");
+  SymbolTable local_1 = symbol_table_new_enclosed(global);
+  symbol_table_define(local_1, "c");
+  SymbolTable local_2 = symbol_table_new_enclosed(local_1);
+  symbol_table_define(local_2, "e");
+  symbol_table_define(local_2, "f");
+
+  Symbol* a = symbol_table_resolve(local_2, "a");
+  Symbol* c = symbol_table_resolve(local_2, "c");
+  Symbol* e = symbol_table_resolve(local_2, "e");
+  Symbol* f = symbol_table_resolve(local_2, "f");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+  assert_symbol_is(c, "c", SCOPE_FREE, 0, __func__);
+  assert_symbol_is(e, "e", SCOPE_LOCAL, 0, __func__);
+  assert_symbol_is(f, "f", SCOPE_LOCAL, 1, __func__);
+
+  Symbol* b = symbol_table_resolve(local_2, "b");
+  assert(b == NULL, "b should be unresolvable", __func__);
+  Symbol* d = symbol_table_resolve(local_2, "d");
+  assert(d == NULL, "d should be unresolvable", __func__);
+}
+
 void test_char_hash(void) {
   char* t = "char_hash";
   int symbol_char_hash(char ch);
@@ -136,6 +203,8 @@ void test_char_hash(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_resolve_free();
+  test_unresolvable_free();
   test_define_resolve_builtins();
   test_scoped_define();
   test_resolve_local();
