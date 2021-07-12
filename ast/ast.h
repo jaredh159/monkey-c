@@ -116,6 +116,7 @@ typedef struct FunctionLiteral {
   Token *token;
   List *parameters;
   BlockStatement *body;
+  char *name;
 } FunctionLiteral;
 
 typedef struct CallExpression {

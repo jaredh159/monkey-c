@@ -190,6 +190,21 @@ void test_unresolvable_free(void) {
   assert(d == NULL, "d should be unresolvable", __func__);
 }
 
+void test_define_resolve_fn_name(void) {
+  SymbolTable global = symbol_table_new();
+  symbol_table_define_fn_name(global, "a");
+  Symbol* a = symbol_table_resolve(global, "a");
+  assert_symbol_is(a, "a", SCOPE_FUNCTION, 0, __func__);
+}
+
+void test_define_resolve_shadowing_fn_name(void) {
+  SymbolTable global = symbol_table_new();
+  symbol_table_define_fn_name(global, "a");
+  symbol_table_define(global, "a");
+  Symbol* a = symbol_table_resolve(global, "a");
+  assert_symbol_is(a, "a", SCOPE_GLOBAL, 0, __func__);
+}
+
 void test_char_hash(void) {
   char* t = "char_hash";
   int symbol_char_hash(char ch);
@@ -203,6 +218,8 @@ void test_char_hash(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_define_resolve_fn_name();
+  test_define_resolve_shadowing_fn_name();
   test_resolve_free();
   test_unresolvable_free();
   test_define_resolve_builtins();

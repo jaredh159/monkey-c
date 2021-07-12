@@ -764,6 +764,69 @@ void test_closures(void) {
   run_compiler_tests(LEN(tests), tests, __func__);
 }
 
+void test_recursive_functions(void) {
+  CompilerTest tests[] = {
+    {
+      .input = "let countDown = fn(x) { countDown(x - 1); }"
+               "countDown(1);",
+      .expected_constants = make_constant_pool(3,   //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},   //
+        make_compiled_fn_obj(0,                     //
+          code_concat_ins(6,                        //
+            code_make(OP_CURRENT_CLOSURE),          //
+            code_make(OP_GET_LOCAL, 0),             //
+            code_make(OP_CONSTANT, 0),              //
+            code_make(OP_SUB),                      //
+            code_make(OP_CALL, 1),                  //
+            code_make(OP_RETURN_VALUE))             //
+          ),                                        //
+        (Object){INTEGER_OBJ, .value = {.i = 1}}),  //
+      .expected_instructions = code_concat_ins(6,   //
+        code_make(OP_CLOSURE, 1, 0),                //
+        code_make(OP_SET_GLOBAL, 0),                //
+        code_make(OP_GET_GLOBAL, 0),                //
+        code_make(OP_CONSTANT, 2),                  //
+        code_make(OP_CALL, 1),                      //
+        code_make(OP_POP)),                         //
+    },
+    {
+      .input = "let wrapper = fn() {"
+               "  let countDown = fn(x) { countDown(x - 1); }"
+               "  countDown(1);"
+               "};"
+               "wrapper();",
+      .expected_constants = make_constant_pool(4,  //
+        (Object){INTEGER_OBJ, .value = {.i = 1}},  //
+        make_compiled_fn_obj(0,                    //
+          code_concat_ins(6,                       //
+            code_make(OP_CURRENT_CLOSURE),         //
+            code_make(OP_GET_LOCAL, 0),            //
+            code_make(OP_CONSTANT, 0),             //
+            code_make(OP_SUB),                     //
+            code_make(OP_CALL, 1),                 //
+            code_make(OP_RETURN_VALUE))            //
+          ),
+        (Object){INTEGER_OBJ, .value = {.i = 1}},  //
+        make_compiled_fn_obj(0,                    //
+          code_concat_ins(6,                       //
+            code_make(OP_CLOSURE, 1, 0),           //
+            code_make(OP_SET_LOCAL, 0),            //
+            code_make(OP_GET_LOCAL, 0),            //
+            code_make(OP_CONSTANT, 2),             //
+            code_make(OP_CALL, 1),                 //
+            code_make(OP_RETURN_VALUE))            //
+          )),                                      //
+      .expected_instructions = code_concat_ins(5,  //
+        code_make(OP_CLOSURE, 3, 0),               //
+        code_make(OP_SET_GLOBAL, 0),               //
+        code_make(OP_GET_GLOBAL, 0),               //
+        code_make(OP_CALL, 0),                     //
+        code_make(OP_POP)),                        //
+    },
+  };
+  run_compiler_tests(LEN(tests), tests, __func__);
+}
+
 void test_compiler_scopes(void) {
   const char* t = __func__;
   Compiler c = compiler_new();
@@ -817,6 +880,7 @@ void test_compiler_scopes(void) {
 
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_recursive_functions();
   test_closures();
   test_builtins();
   test_compiler_scopes();

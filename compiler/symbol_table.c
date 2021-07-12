@@ -74,6 +74,12 @@ Symbol* symbol_table_define_builtin(SymbolTable t, int index, char* name) {
   return symbol;
 }
 
+Symbol* symbol_table_define_fn_name(SymbolTable t, char* name) {
+  Symbol* symbol = new_symbol(name, 0, SCOPE_FUNCTION);
+  symbol_put(t->store, symbol, 0);
+  return symbol;
+}
+
 Symbol* symbol_table_resolve(SymbolTable t, char* name) {
   Symbol* resolved = symbol_get(t->store, name);
   if (!resolved && t->outer) {
@@ -98,6 +104,8 @@ char* symbol_scope_name(SymbolScope scope) {
       return "FREE";
     case SCOPE_BUILTIN:
       return "BUILTIN";
+    case SCOPE_FUNCTION:
+      return "FUNCTION";
     default:
       printf("Unhandled scope %d in `symbol_scope_name()`\n", scope);
       exit(EXIT_FAILURE);

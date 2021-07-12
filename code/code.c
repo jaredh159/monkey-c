@@ -278,6 +278,9 @@ Definition* code_opcode_lookup(OpCode op) {
     case OP_BANG:
       def->name = "OpBang";
       break;
+    case OP_CURRENT_CLOSURE:
+      def->name = "OpCurrentClosure";
+      break;
     case OP_JUMP:
       def->operand_widths[0] = 2;
       def->num_operands = 1;

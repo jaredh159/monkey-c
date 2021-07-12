@@ -56,7 +56,7 @@ static Instruct* current_instructions(Vm vm);
 static VmErr call_closure(Vm vm, Object* fn, int num_args);
 static VmErr call_builtin(Vm vm, Object* fn, int num_args);
 static VmErr execute_call(Vm vm, int num_args);
-static VmErr push_closure(Vm vm, int const_index);
+static VmErr push_closure(Vm vm, int const_index, int num_free);
 
 static VmErr err = NULL;
 
@@ -254,9 +254,28 @@ VmErr vm_run(Vm vm) {
 
       case OP_CLOSURE: {
         int const_index = read_uint16(&ins->bytes[ip + 1]);
-        int __todo__ = (int)ins->bytes[ip + 3];
+        int num_free = (int)ins->bytes[ip + 3];
         current_frame(vm)->ip += 3;
-        err = push_closure(vm, const_index);
+        err = push_closure(vm, const_index, num_free);
+        if (err)
+          return err;
+      } break;
+
+      case OP_CURRENT_CLOSURE: {
+        Closure* current_closure = current_frame(vm)->cl;
+        Object* object = malloc(sizeof(Object));
+        object->type = CLOSURE_OBJ;
+        object->value.closure = current_closure;
+        err = push(vm, object);
+        if (err)
+          return err;
+      } break;
+
+      case OP_GET_FREE: {
+        int free_index = (int)ins->bytes[ip + 1];
+        current_frame(vm)->ip += 1;
+        Closure* current_closure = current_frame(vm)->cl;
+        err = push(vm, current_closure->free[free_index]);
         if (err)
           return err;
       } break;
@@ -265,14 +284,20 @@ VmErr vm_run(Vm vm) {
   return NULL;
 }
 
-static VmErr push_closure(Vm vm, int const_index) {
+static VmErr push_closure(Vm vm, int const_index, int num_free) {
   Object* constant = &vm->constant_pool->constants[const_index];
   if (constant->type != COMPILED_FUNCTION_OBJ) {
     SET_ERR("not a function: %s", object_type(*constant));
     return err;
   }
+
   Closure* closure = malloc(sizeof(Closure));
   closure->fn = constant->value.compiled_fn;
+
+  for (int i = 0; i < num_free; i++)
+    closure->free[i] = vm->stack[vm->sp - num_free + i];
+  vm->sp -= num_free;
+
   Object* object = malloc(sizeof(Object));
   object->type = CLOSURE_OBJ;
   object->value.closure = closure;
@@ -537,13 +562,13 @@ static Instruct* current_instructions(Vm vm) {
 
 static VmErr execute_call(Vm vm, int num_args) {
   Object* fn = vm->stack[vm->sp - 1 - num_args];
+  if (fn == NULL)
+    return "null pointer for execute_call()";
   switch (fn->type) {
     case CLOSURE_OBJ:
       return call_closure(vm, fn, num_args);
     case BUILT_IN_OBJ:
       return call_builtin(vm, fn, num_args);
-    case 0:
-      return "null pointer for execute_call()";
     default:
       return "calling non-function and non-built-in";
   }

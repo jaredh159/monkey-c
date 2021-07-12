@@ -488,8 +488,111 @@ void test_builtin_fns(void) {
   run_vm_tests(LEN(tests), tests, __func__);
 }
 
+void test_closures(void) {
+  VmTest tests[] = {
+    {
+      .input = "\
+      let newClosure = fn(a) {\
+        fn() { a; }\
+      }\
+      let closure = newClosure(99);\
+      closure();",
+      .expected = expect_int(99),
+    },
+    {
+      .input = "\
+      let newAdderOuter = fn(a, b) {\
+        let c = a + b;\
+        fn(d) {\
+          let e = d + c;\
+          fn(f) { e + f; };\
+        };\
+      };\
+      let newAdderInner = newAdderOuter(1, 2);\
+      let adder = newAdderInner(3);\
+      adder(8);",
+      .expected = expect_int(14),
+    },
+    {
+      .input = "\
+      let a = 1;\
+      let newAdderOuter = fn(b) {\
+        fn(c) {\
+          fn(d) { a + b + c + d };\
+        };\
+      };\
+      let newAdderInner = newAdderOuter(2);\
+      let adder = newAdderInner(3);\
+      adder(8);",
+      .expected = expect_int(14),
+    },
+    {
+      .input = "\
+      let newClosure = fn(a, b) {\
+        let one = fn() { a; };\
+        let two = fn() { b; };\
+        fn() { one() + two(); };\
+      };\
+      let closure = newClosure(9, 90);\
+      closure();",
+      .expected = expect_int(99),
+    },
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
+void test_recursive_closures(void) {
+  VmTest tests[] = {
+    {
+      .input = "\
+      let countDown = fn(x) {\
+        if (x == 0) {\
+          return 0;\
+        } else {\
+          countDown(x - 1);\
+        }\
+      };\
+      countDown(1);",
+      .expected = expect_int(0),
+    },
+    {
+      .input = "\
+      let countDown = fn(x) {\
+        if (x == 0) {\
+          return 0;\
+        } else {\
+          countDown(x - 1);\
+        }\
+      };\
+      let wrapper = fn() {\
+        countDown(1);\
+      };\
+      wrapper();",
+      .expected = expect_int(0),
+    },
+    {
+      .input = "\
+      let wrapper = fn() {\
+        let countDown = fn(x) {\
+          if (x == 0) {\
+            return 0;\
+          } else {\
+            countDown(x - 1);\
+          }\
+        };\
+        countDown(1);\
+      };\
+      wrapper();",
+      .expected = expect_int(0),
+    },
+  };
+  run_vm_tests(LEN(tests), tests, __func__);
+}
+
 int main(int argc, char** argv) {
   pass_argv(argc, argv);
+  test_recursive_closures();
+  test_closures();
   test_builtin_fns();
   test_calling_functions_with_wrong_num_args();
   test_calling_fns_with_args_and_bindings();

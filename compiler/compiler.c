@@ -87,11 +87,11 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
 
     case LET_STATEMENT_NODE: {
       LetStatement* let_stmt = node;
+      Symbol* symbol =
+        symbol_table_define(c->symbol_table, let_stmt->name->value);
       err = compile(c, let_stmt->value, EXPRESSION_NODE);
       if (err)
         return err;
-      Symbol* symbol =
-        symbol_table_define(c->symbol_table, let_stmt->name->value);
       OpCode op = symbol->scope == SCOPE_GLOBAL ? OP_SET_GLOBAL : OP_SET_LOCAL;
       emit(c, op, i(symbol->index));
     } break;
@@ -263,6 +263,9 @@ CompilerErr compile(Compiler c, void* node, NodeType type) {
         case EXPRESSION_FUNCTION_LITERAL: {
           FunctionLiteral* fn_lit = exp->node;
           compiler_enter_scope(c);
+          if (fn_lit->name) {
+            symbol_table_define_fn_name(c->symbol_table, fn_lit->name);
+          }
           for (List* current = fn_lit->parameters; current != NULL;
                current = current->next) {
             Identifier* identifier = current->item;
@@ -528,6 +531,9 @@ static void load_symbol(Compiler c, Symbol* symbol) {
       return;
     case SCOPE_FREE:
       emit(c, OP_GET_FREE, i(symbol->index));
+      return;
+    case SCOPE_FUNCTION:
+      emit(c, OP_CURRENT_CLOSURE, _);
       return;
   }
 }

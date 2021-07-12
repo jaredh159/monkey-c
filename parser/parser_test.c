@@ -378,6 +378,19 @@ void test_parses_function_literal() {
   assert_infix_expression(body_stmt->expression, x, "+", y, t);
 }
 
+void test_function_literal_with_name(void) {
+  char *t = "function_literal_with_name";
+  Program *program = assert_program("let myFunction = fn() {};", 1, t);
+  Statement *stmt = program->statements->item;
+  assert(stmt->type == STATEMENT_LET, "first statement is let", t);
+  LetStatement *ls = stmt->node;
+  Expression *exp = ls->value;
+  assert(exp->type == EXPRESSION_FUNCTION_LITERAL,
+    "expression is function literal", t);
+  FunctionLiteral *fn = exp->node;
+  assert_str_is("myFunction", fn->name, "fn should know its name", t);
+}
+
 void test_function_parameter_parsing() {
   char *t = "function_parameter_parsing";
   typedef struct {
@@ -556,6 +569,7 @@ void test_parsing_hash_literals(void) {
 
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_function_literal_with_name();
   test_parsing_hash_literals();
   test_parsing_hash_literals_with_expressions();
   test_parsing_empty_hash_literal();
