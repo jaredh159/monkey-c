@@ -1,17 +1,18 @@
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static int str_is_int(char *str);
+static bool str_is_int(char *str);
 
-int argv_has_flag(char flag, int argc, char *argv[]) {
+bool argv_has_flag(char flag, int argc, char *argv[]) {
   for (int i = 1; i < argc; i++)
     if (*argv[i] == '-')
       for (size_t j = 1; j < strlen(argv[i]); j++)
         if (*(argv[i] + j) == flag)
-          return 1;
-  return 0;
+          return true;
+  return false;
 }
 
 int argv_idx(char *needle, int argc, char *argv[]) {
@@ -28,9 +29,9 @@ int argv_int_opt(char prefix, int argc, char *argv[]) {
   return -1;
 }
 
-static int str_is_int(char *str) {
+static bool str_is_int(char *str) {
   while (*str != '\0')
     if (!isdigit(*str++))
-      return 0;
-  return 1;
+      return false;
+  return true;
 }

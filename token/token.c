@@ -6,7 +6,7 @@
 #include "../utils/colors.h"
 
 Token *new_token(int type, char *literal) {
-  Token *token = (Token *)malloc(sizeof(Token));
+  Token *token = malloc(sizeof(Token));
   token->type = type;
   token->literal = literal;
   return token;

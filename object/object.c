@@ -8,7 +8,11 @@ char *function_inspect(Function *fn);
 char *array_inspect(List *elements);
 char *hash_inspect(List *pairs);
 
-char *object_inspect(Object object) {
+Object M_NULL = {NULL_OBJ, {0}};
+Object TRUE = {BOOLEAN_OBJ, {.b = true}};
+Object FALSE = {BOOLEAN_OBJ, {.b = false}};
+
+char *object_inspect(const Object object) {
   char *inspect_str = malloc(INSPECT_STR_LEN);
   switch (object.type) {
     case INTEGER_OBJ:
@@ -36,11 +40,19 @@ char *object_inspect(Object object) {
     case ERROR_OBJ:
       sprintf(inspect_str, "ERROR: %s", object.value.str);
       break;
+    case CLOSURE_OBJ:
+      return "Closure";
+    case COMPILED_FUNCTION_OBJ:
+      return "CompiledFunction";
+    default:
+      printf(
+        "unhandled object type %s for object_inspect())", object_type(object));
+      exit(EXIT_FAILURE);
   }
   return inspect_str;
 }
 
-char *object_type(Object object) {
+char *object_type(const Object object) {
   switch (object.type) {
     case INTEGER_OBJ:
       return "INTEGER";
@@ -60,14 +72,18 @@ char *object_type(Object object) {
       return "BUILT_IN";
     case HASH_OBJ:
       return "HASH";
+    case COMPILED_FUNCTION_OBJ:
+      return "COMPILED_FUNCTION_OBJ";
+    case CLOSURE_OBJ:
+      return "CLOSURE_OBJ";
     case ERROR_OBJ:
       return "ERROR";
   }
-  printf("ERROR: unhandled type in object_type()\n");
-  exit(1);
+  printf("ERROR: unhandled type in object_type() = %d\n", object.type);
+  exit(EXIT_FAILURE);
 }
 
-void object_print(Object object) {
+void object_print(const Object object) {
   printf("object.type=%s, object.value=%s\n", object_type(object),
     object_inspect(object));
 }
@@ -156,7 +172,7 @@ Object *object_copy(const Object proto) {
       break;
     default:
       printf("ERROR: unhandled object copy type %s\n", object_type(proto));
-      exit(1);
+      exit(EXIT_FAILURE);
   }
   return copy;
 }
@@ -179,4 +195,13 @@ char *object_hash(const Object object) {
     default:
       return NULL;
   }
+}
+
+bool is_truthy(Object obj) {
+  if (obj.type == NULL_OBJ)
+    return false;
+  else if (obj.type == BOOLEAN_OBJ && obj.value.b == false)
+    return false;
+  else
+    return true;
 }

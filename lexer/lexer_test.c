@@ -87,8 +87,7 @@ void test_realistic_code() {
     {TOKEN_SEMICOLON, ";"},
     {TOKEN_EOF, ""},
   };
-  assert_lexing(
-    input, expected, sizeof(expected) / sizeof(Token), "realistic_code");
+  assert_lexing(input, expected, LEN(expected), "realistic_code");
 }
 
 void test_more_single_char_tokens() {
@@ -137,7 +136,7 @@ void test_next_token(void) {
     {TOKEN_RIGHT_BRACKET, "]"},
     {TOKEN_COLON, ":"},
   };
-  assert_lexing(input, expected, sizeof expected / sizeof(Token), "text_token");
+  assert_lexing(input, expected, LEN(expected), "text_token");
 }
 
 int main(int argc, char **argv) {

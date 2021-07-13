@@ -155,7 +155,7 @@ static bool is_letter(char c) {
 }
 
 static char *read_identifier() {
-  char *ident = (char *)malloc(MAX_IDENTIFIER_LEN);
+  char *ident = malloc(MAX_IDENTIFIER_LEN);
   char *loc = ident;
   while (is_letter(ch)) {
     *loc = ch;

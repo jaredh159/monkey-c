@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../object/object.h"
 #include "../utils/list.h"
+#include "object.h"
 
 Object wrong_num_args_error(int got, int want);
 Object wrong_arg_type_error(char *fn, char *expected_type, Object arg);
@@ -12,7 +12,7 @@ Object builtin_puts(List *args) {
     Object *object = cur->item;
     puts(object_inspect(*object));
   }
-  return (Object){NULL_OBJ, {.i = 0}};
+  return M_NULL;
 }
 
 Object builtin_len(List *args) {
@@ -50,7 +50,7 @@ Object builtin_first(List *args) {
     return *pi;
   }
 
-  return (Object){NULL_OBJ, {.i = 0}};
+  return M_NULL;
 }
 
 Object builtin_last(List *args) {
@@ -64,7 +64,7 @@ Object builtin_last(List *args) {
   }
 
   if (list_count(arg.value.list) == 0) {
-    return (Object){NULL_OBJ, {.i = 0}};
+    return M_NULL;
   }
 
   List *current = arg.value.list;
@@ -85,7 +85,7 @@ Object builtin_rest(List *args) {
   }
 
   if (list_count(arg.value.list) == 0) {
-    return (Object){NULL_OBJ, {.i = 0}};
+    return M_NULL;
   }
 
   List *current = arg.value.list->next;
@@ -146,6 +146,35 @@ Object get_builtin(char *name) {
     return (Object){BUILT_IN_OBJ, {.builtin_fn = builtin_last}};
   }
   return (Object){NOT_FOUND_OBJ, {.i = 0}};
+}
+
+Object *get_builtin_by_index(BuiltinIndex index) {
+  Object *obj = malloc(sizeof(Object));
+  obj->type = BUILT_IN_OBJ;
+  switch (index) {
+    case BUILTIN_LEN:
+      obj->value.builtin_fn = builtin_len;
+      break;
+    case BUILTIN_FIRST:
+      obj->value.builtin_fn = builtin_first;
+      break;
+    case BUILTIN_REST:
+      obj->value.builtin_fn = builtin_rest;
+      break;
+    case BUILTIN_PUSH:
+      obj->value.builtin_fn = builtin_push;
+      break;
+    case BUILTIN_PUTS:
+      obj->value.builtin_fn = builtin_puts;
+      break;
+    case BUILTIN_LAST:
+      obj->value.builtin_fn = builtin_last;
+      break;
+    default:
+      printf("unknown builtin index %d\n", index);
+      exit(EXIT_FAILURE);
+  }
+  return obj;
 }
 
 Object wrong_num_args_error(int got, int want) {

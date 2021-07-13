@@ -5,7 +5,7 @@
 #include "../test/test.h"
 #include "../token/token.h"
 
-void test_string() {
+void test_string(void) {
   Token myVarLetToken = {TOKEN_LET, "let"};
   Token myVarIdentToken = {TOKEN_IDENTIFIER, "myVar"};
   Token anotherVarIdentToken = {TOKEN_IDENTIFIER, "anotherVar"};

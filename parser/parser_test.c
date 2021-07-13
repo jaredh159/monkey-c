@@ -139,8 +139,8 @@ void test_parses_prefix_expressions() {
     Expression *exp = es->expression;
     assert_int_is(exp->type, EXPRESSION_PREFIX, "expression type is PREFIX", t);
     PrefixExpression *prefix = exp->node;
-    assert_str_is(test.operator, prefix->operator,
-      str_embed("operator is %s", test.operator), t);
+    assert_str_is(
+      test.operator, prefix->operator, ss("operator is %s", test.operator), t);
     assert_literal_expression(prefix->right, &test.value, t);
   }
 }
@@ -168,8 +168,7 @@ void test_parses_infix_expressions() {
     {"5 != 5;", five, "!=", five},
   };
 
-  int num_tests = sizeof(tests) / sizeof(InfixTest);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     InfixTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
@@ -290,9 +289,8 @@ void test_operator_precedence_parsing() {
       "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
     },
   };
-  int num_tests = sizeof(tests) / sizeof(PrecedenceTest);
 
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     PrecedenceTest test = tests[i];
     Program *program = assert_program(test.input, i == 0 ? 2 : 1, t);
     char *actual = program_string(program);
@@ -380,6 +378,19 @@ void test_parses_function_literal() {
   assert_infix_expression(body_stmt->expression, x, "+", y, t);
 }
 
+void test_function_literal_with_name(void) {
+  char *t = "function_literal_with_name";
+  Program *program = assert_program("let myFunction = fn() {};", 1, t);
+  Statement *stmt = program->statements->item;
+  assert(stmt->type == STATEMENT_LET, "first statement is let", t);
+  LetStatement *ls = stmt->node;
+  Expression *exp = ls->value;
+  assert(exp->type == EXPRESSION_FUNCTION_LITERAL,
+    "expression is function literal", t);
+  FunctionLiteral *fn = exp->node;
+  assert_str_is("myFunction", fn->name, "fn should know its name", t);
+}
+
 void test_function_parameter_parsing() {
   char *t = "function_parameter_parsing";
   typedef struct {
@@ -390,9 +401,8 @@ void test_function_parameter_parsing() {
 
   ParamTest tests[] = {{"fn() {}", 0, {"", "", ""}},
     {"fn(x) {}", 1, {"x", "", ""}}, {"fn(x, y, z) {}", 3, {"x", "y", "z"}}};
-  int num_tests = sizeof tests / sizeof(ParamTest);
 
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     ParamTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
@@ -426,8 +436,7 @@ void test_let_statements() {
     {"let foobar = y;", "foobar", y},
   };
 
-  int num_tests = sizeof tests / sizeof(LetTest);
-  for (int i = 0; i < num_tests; i++) {
+  for (int i = 0; i < LEN(tests); i++) {
     LetTest test = tests[i];
     Program *program = assert_program(test.input, 1, t);
     Statement *stmt = program->statements->item;
@@ -560,6 +569,7 @@ void test_parsing_hash_literals(void) {
 
 int main(int argc, char **argv) {
   pass_argv(argc, argv);
+  test_function_literal_with_name();
   test_parsing_hash_literals();
   test_parsing_hash_literals_with_expressions();
   test_parsing_empty_hash_literal();
@@ -684,7 +694,7 @@ Program *assert_program(
 
   check_parser_errors(test_name);
   assert_int_is(expected_num_statements, list_count(program->statements),
-    int_embed("program has %d statements", expected_num_statements), test_name);
+    si("program has %d statements", expected_num_statements), test_name);
 
   return program;
 }

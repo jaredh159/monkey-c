@@ -1,31 +1,101 @@
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../object/object.h"
 #include "../token/token.h"
 #include "../utils/argv.h"
 #include "../utils/colors.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wvariadic-macros"
-#define debug(a, args...) printf("<%s:%d> " a "\n", __FILE__, __LINE__, ##args)
-#pragma clang diagnostic push
+#define MAX_ROW_DOTS 100
 
+static int num_passes = 0;
+static bool testing_all = false;
 static bool verbose = false;
 static char embedded[500];
 
 void pass_argv(int argc, char *argv[]) {
+  num_passes = 0;
+  testing_all = false;
+  char *env_var = getenv("TEST_ALL");
+  if (env_var && strcmp(env_var, "true") == 0)
+    testing_all = true;
   if (argv_has_flag('v', argc, argv) || argv_idx("--verbose", argc, argv) != -1)
     verbose = true;
 }
 
-char *int_embed(char *format, int integer) {
-  sprintf(embedded, format, integer);
+char *ss(char *format, ...) {
+  int args_len = 0;
+
+  for (char *p = format; *p; p++) {
+    if (*p == '%' && *(p + 1) != '%') {
+      args_len++;
+    }
+  }
+
+  va_list ap;
+  va_start(ap, format);
+
+  char *strs[args_len];
+  for (int i = 0; i < args_len; i++) {
+    strs[i] = va_arg(ap, char *);
+  }
+
+  va_end(ap);
+
+  switch (args_len) {
+    case 1:
+      sprintf(embedded, format, strs[0]);
+      break;
+    case 2:
+      sprintf(embedded, format, strs[0], strs[1]);
+      break;
+    case 3:
+      sprintf(embedded, format, strs[0], strs[1], strs[2]);
+      break;
+    default:
+      printf("Unhandled arg count=%d\n", args_len);
+      exit(EXIT_FAILURE);
+  }
+
   return embedded;
 }
 
-char *str_embed(char *format, char *str) {
-  sprintf(embedded, format, str);
+char *si(char *format, ...) {
+  int args_len = 0;
+
+  for (char *p = format; *p; p++) {
+    if (*p == '%' && *(p + 1) != '%') {
+      args_len++;
+    }
+  }
+
+  va_list ap;
+  va_start(ap, format);
+
+  int ints[args_len];
+  for (int i = 0; i < args_len; i++) {
+    ints[i] = va_arg(ap, int);
+  }
+
+  va_end(ap);
+
+  switch (args_len) {
+    case 1:
+      sprintf(embedded, format, ints[0]);
+      break;
+    case 2:
+      sprintf(embedded, format, ints[0], ints[1]);
+      break;
+    case 3:
+      sprintf(embedded, format, ints[0], ints[1], ints[2]);
+      break;
+    default:
+      printf("Unhandled arg count=%d\n", args_len);
+      exit(EXIT_FAILURE);
+  }
+
   return embedded;
 }
 
@@ -33,19 +103,24 @@ bool token_literal_is(Token *token, char *literal) {
   return token_prop_is(token->literal, literal);
 }
 
-void fail(char *msg, char *test_name) {
+void fail(char *msg, const char *test_name) {
   printf(
     COLOR_RED "%sX %s: %s\n" COLOR_RESET, verbose ? "" : "\n", test_name, msg);
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
-void assert(bool predicate, char *msg, char *test_name) {
+void assert(bool predicate, char *msg, const char *test_name) {
   if (!predicate) {
     fail(msg, test_name);
     return;
   }
 
+  num_passes++;
   if (!verbose) {
+    if (num_passes == MAX_ROW_DOTS) {
+      printf("\n%s", testing_all ? "          " : "");
+      num_passes = 1;
+    }
     printf(COLOR_GREEN "•" COLOR_RESET);
     return;
   }
@@ -53,7 +128,8 @@ void assert(bool predicate, char *msg, char *test_name) {
     test_name, msg);
 }
 
-void assert_str_is(char *expected, char *actual, char *msg, char *test_name) {
+void assert_str_is(
+  char *expected, char *actual, char *msg, const char *test_name) {
   if (strcmp(expected, actual) == 0)
     assert(true, msg, test_name);
   else {
@@ -64,7 +140,7 @@ void assert_str_is(char *expected, char *actual, char *msg, char *test_name) {
   }
 }
 
-void assert_int_is(int expected, int actual, char *msg, char *test_name) {
+void assert_int_is(int expected, int actual, char *msg, const char *test_name) {
   if (expected == actual)
     assert(true, msg, test_name);
   else {
@@ -72,4 +148,25 @@ void assert_int_is(int expected, int actual, char *msg, char *test_name) {
     sprintf(failmsg, "expected `%d`, got `%d` --  %s", expected, actual, msg);
     fail(failmsg, test_name);
   }
+}
+
+void assert_integer_object(
+  int expected_int, Object actual, const char *test_name) {
+  if (actual.type != INTEGER_OBJ) {
+    char failmsg[200];
+    sprintf(
+      failmsg, "object was not type=INTEGER, got=%s", object_type(actual));
+    fail(failmsg, test_name);
+    return;
+  }
+
+  if (actual.value.i == expected_int) {
+    assert(true, "integer object correct", test_name);
+    return;
+  }
+
+  char failmsg[200];
+  sprintf(failmsg, "incorrect integer object value, want=%d, got=%d",
+    expected_int, actual.value.i);
+  fail(failmsg, test_name);
 }

@@ -220,6 +220,10 @@ Statement *parse_let_statement() {
 
   parser_next_token();
   let_statement->value = parse_expression(PRECEDENCE_LOWEST);
+  if (let_statement->value->type == EXPRESSION_FUNCTION_LITERAL) {
+    FunctionLiteral *fn = let_statement->value->node;
+    fn->name = let_statement->name->value;
+  }
 
   if (parser_peek_token_is(TOKEN_SEMICOLON))
     parser_next_token();

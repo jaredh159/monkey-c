@@ -8,13 +8,27 @@
 
 static char *expression_string(Expression *exp);
 
+NodeType ast_statement_node_type(Statement *statement) {
+  switch (statement->type) {
+    case STATEMENT_RETURN:
+      return RETURN_STATEMENT_NODE;
+    case STATEMENT_LET:
+      return LET_STATEMENT_NODE;
+    case STATEMENT_EXPRESSION:
+      return EXPRESSION_STATEMENT_NODE;
+    default:
+      printf("Unknown statement type: %d\n", statement->type);
+      exit(EXIT_FAILURE);
+  }
+}
+
 void statement_invariant(
   Statement *statement, bool type_predicate, char *type) {
   if (type_predicate)
     return;
   printf(COLOR_RED "statement not of required type `%s`\n" COLOR_RESET, type);
   printf("statement: %s", statement_string(statement));
-  exit(1);
+  exit(EXIT_FAILURE);
 }
 
 ReturnStatement *get_return(Statement *statement) {

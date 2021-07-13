@@ -22,5 +22,41 @@
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "make test_eval"
     },
+    {
+      "name": "test_code",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_code",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_code"
+    },
+    {
+      "name": "test_compiler",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_compiler",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_compiler"
+    },
+    {
+      "name": "test_vm",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_vm",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_vm"
+    },
+    {
+      "name": "test_symbol_table",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/.bin/test_symbol_table",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make test_symbol_table"
+    },
   ]
 }

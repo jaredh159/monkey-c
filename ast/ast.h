@@ -5,6 +5,19 @@
 #include "../token/token.h"
 #include "../utils/list.h"
 
+enum NodeTypes {
+  PROGRAM_NODE,
+  EXPRESSION_NODE,
+  EXPRESSION_STATEMENT_NODE,
+  RETURN_STATEMENT_NODE,
+  LET_STATEMENT_NODE,
+  INTEGER_LITERAL_NODE,
+  BOOLEAN_LITERAL_NODE,
+  BLOCK_STATEMENTS_NODE,
+};
+
+typedef int NodeType;
+
 typedef struct StringLiteral {
   Token *token;
   char *value;
@@ -103,6 +116,7 @@ typedef struct FunctionLiteral {
   Token *token;
   List *parameters;
   BlockStatement *body;
+  char *name;
 } FunctionLiteral;
 
 typedef struct CallExpression {
@@ -116,6 +130,7 @@ typedef struct Program {
   List *statements;
 } Program;
 
+NodeType ast_statement_node_type(Statement *statement);
 char *program_string(Program *program);
 char *statement_string(Statement *statement);
 char *let_statement_string(LetStatement *let_statement);
