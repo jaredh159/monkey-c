@@ -1,9 +1,13 @@
+ifeq ($(OPTIMIZE), true)
+FLAGS = -O3
+else
 FLAGS = -Wall -O -W -pedantic -g
+endif
 
 .SILENT: test_all test_lexer test_parser test_ast test_code test_compiler test_vm test_eval test_bb test_symbol_table monkey
 
 monkey:
-	clang -o .bin/monkey monkey.c repl/repl.c token/token.c code/code.c vm/vm.c compiler/compiler.c compiler/symbol_table.c lexer/lexer.c parser/parser.c parser/parselets.c evaluator/evaluator.c object/builtins.c object/object.c object/environment.c utils/argv.c ast/ast.c utils/list.c $(FLAGS)
+	clang -o .bin/monkey monkey.c repl/repl.c run/run.c token/token.c code/code.c vm/vm.c compiler/compiler.c compiler/symbol_table.c lexer/lexer.c parser/parser.c parser/parselets.c evaluator/evaluator.c object/builtins.c object/object.c object/environment.c utils/argv.c ast/ast.c utils/list.c $(FLAGS)
 
 test_parser:
 	clang -o .bin/test_parser parser/parser_test.c parser/parser.c parser/parselets.c test/test.c lexer/lexer.c token/token.c object/object.c ast/ast.c utils/argv.c utils/list.c $(FLAGS)
