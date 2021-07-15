@@ -5,3 +5,4 @@ ltest
 monkey
 .bin/*
 !.bin/.gitkeep
+web-playground/generated*

@@ -1,3 +1,4 @@
+#include "argv.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -6,7 +7,14 @@
 
 static bool str_is_int(char *str);
 
-bool argv_has_flag(char flag, int argc, char *argv[]) {
+bool argv_has_opt(char abbrev, char *full, int argc, char **argv) {
+  if (full == NULL) {
+    return argv_has_flag(abbrev, argc, argv);
+  }
+  return argv_has_flag(abbrev, argc, argv) || argv_idx(full, argc, argv) != -1;
+}
+
+bool argv_has_flag(char flag, int argc, char **argv) {
   for (int i = 1; i < argc; i++)
     if (*argv[i] == '-')
       for (size_t j = 1; j < strlen(argv[i]); j++)
@@ -15,14 +23,14 @@ bool argv_has_flag(char flag, int argc, char *argv[]) {
   return false;
 }
 
-int argv_idx(char *needle, int argc, char *argv[]) {
+int argv_idx(char *needle, int argc, char **argv) {
   for (int i = 1; i < argc; i++)
     if (strcmp(needle, argv[i]) == 0)
       return i;
   return -1;
 }
 
-int argv_int_opt(char prefix, int argc, char *argv[]) {
+int argv_int_opt(char prefix, int argc, char **argv) {
   for (int i = 1; i < argc; i++)
     if (*argv[i] == prefix && str_is_int(argv[i] + 1))
       return atof(argv[i] + 1);
